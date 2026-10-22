@@ -57,7 +57,9 @@ router.post('/register', (req, res) => {
   const n = auth.normalizeSid(b.prefix, b.sid);
   if (!/^\d{6,20}$/.test(n.snum)) return res.status(400).json({ error: '学号应该是 6–20 位数字' });
   if (!auth.validPassword(b.password)) return res.status(400).json({ error: '密码请设置 6–32 位' });
-  if (db.findUserBySid(n.sid)) return res.status(409).json({ error: '这个学号已经注册过了，直接登录或找回密码' });
+  if (db.findUserBySid(n.sid) || db.findUserBySnum(n.snum)) {
+    return res.status(409).json({ error: '这个学号已经注册过了，点「忘记密码」输入学校简称+学号就能直接重置并登录' });
+  }
 
   const user = {
     id: 'u_' + crypto.randomBytes(8).toString('hex'),
@@ -82,7 +84,9 @@ router.post('/login', (req, res) => {
   if (!auth.rateLimit('login:' + ipOf(req), 20)) return res.status(429).json({ error: '尝试次数过多，稍后再试' });
   const b = req.body || {};
   const n = auth.normalizeSid(b.prefix, b.sid);
-  const user = db.findUserBySid(n.sid);
+  let user = db.findUserBySid(n.sid);
+  // 兜底：学校简称选错时，仍按学号找到唯一账号
+  if (!user) user = db.findUserBySnum(n.snum);
   if (!user) return res.status(401).json({ error: '账号不存在，检查一下学校简称和学号' });
   if (!auth.verifyPassword(b.password, user.pwd)) return res.status(401).json({ error: '密码不对，可以点“忘记密码”用学号重置' });
   const token = issue(res, user);
@@ -96,7 +100,9 @@ router.post('/reset', (req, res) => {
   const n = auth.normalizeSid(b.prefix, b.sid);
   if (!/^\d{6,20}$/.test(n.snum)) return res.status(400).json({ error: '学号应该是 6–20 位数字' });
   if (!auth.validPassword(b.password)) return res.status(400).json({ error: '新密码请设置 6–32 位' });
-  const user = db.findUserBySid(n.sid);
+  let user = db.findUserBySid(n.sid);
+  // 兜底：学校简称选错时，仍按学号找到唯一账号
+  if (!user) user = db.findUserBySnum(n.snum);
   if (!user) return res.status(404).json({ error: '没有找到这个学号的账号，先注册吧' });
   db.updateUser(user.id, { pwd: auth.hashPassword(b.password) });
   const token = issue(res, user);

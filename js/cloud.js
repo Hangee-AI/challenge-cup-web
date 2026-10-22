@@ -352,7 +352,7 @@
       .catch(function (err) {
         var msg = err.message || '操作失败';
         if (err.status === 409) {
-          msg = '这个学号已经注册过了，已帮你切到「登录」，输入密码即可';
+          msg = '这个学号注册过了：记得密码就登录，忘了就点「忘记密码」，只要学校简称+学号';
           setAuthMode('login');
           if ($('pwdInput')) $('pwdInput').focus();
         }

@@ -67,6 +67,19 @@ function findUserBySid(sid) {
   return load().users.find(u => u.sid === sid) || null;
 }
 
+/**
+ * 只按「学号数字部分」找账号（忽略学校简称）。
+ * 用途：用户在下拉里选错了学校简称、或早期数据里 sid 存得不规范时，
+ * 仍然能用「学号」找到唯一账号，不至于出现「注册说已存在、登录/重置又说找不到」。
+ * 只有唯一匹配时才返回，避免不同学校同学号串号。
+ */
+function findUserBySnum(snum) {
+  const key = String(snum || '').replace(/[^0-9]/g, '');
+  if (!key) return null;
+  const hits = load().users.filter(u => u.snum === key);
+  return hits.length === 1 ? hits[0] : null;
+}
+
 function findUserById(id) {
   return load().users.find(u => u.id === id) || null;
 }
@@ -175,7 +188,7 @@ function streakOf(user, day) {
 }
 
 module.exports = {
-  load, save, findUserBySid, findUserById, createUser, updateUser,
+  load, save, findUserBySid, findUserBySnum, findUserById, createUser, updateUser,
   createSession, getSession, dropSession, cleanSessions,
   stats, markLight, markCheckin, todayKey, streakOf
 };
