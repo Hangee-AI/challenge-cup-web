@@ -79,6 +79,61 @@ const MAJOR_ROWS = [
   ['inter',       '集成电路设计与集成系统',   '🔌', '芯片与电路']
 ];
 
+/* ---------------- 2.1 专业对应的零基础视频课程 ----------------
+   一个专业一条视频，优先国家级精品课 / 完整公开课 / 高播放入门课。
+   url 统一指向 B 站，选「视频讲解」后会在关卡讲解区直接播放。 */
+const VIDEO_COURSES = {
+  '哲学': { title: '王德峰《哲学导论》全15讲30节', url: 'https://www.bilibili.com/video/BV1oB4y117AQ' },
+  '逻辑学': { title: '台湾大学《逻辑学》全100集', url: 'https://www.bilibili.com/video/BV1iCdoYKEgf' },
+  '法学': { title: '罗翔讲刑法 83讲', url: 'https://www.bilibili.com/video/BV1u3411Y73R' },
+  '知识产权': { title: '王迁《知识产权法》66讲', url: 'https://www.bilibili.com/video/BV18kNx6ME6W' },
+  '社会学': { title: '北京大学《社会学概论》卢晖临 64讲', url: 'https://www.bilibili.com/video/BV1xExTzyEJv' },
+  '经济学': { title: '清华大学《经济学原理》钱颖一 77讲', url: 'https://www.bilibili.com/video/BV11bnGzCEFj' },
+  '金融学': { title: '国家级精品课《金融学基础》40讲', url: 'https://www.bilibili.com/video/BV1ovaGzfE3B' },
+  '国际经济与贸易': { title: '上海对外经贸大学《国际贸易实务》41讲', url: 'https://www.bilibili.com/video/BV1qbQGYAEo6' },
+  '财政学': { title: '中南财经政法大学《财政学》61课', url: 'https://www.bilibili.com/video/BV18rLNz9E27' },
+  '教育学': { title: '北京师范大学《教育学导论》', url: 'https://www.bilibili.com/video/BV1Xm1VY7EvY' },
+  '学前教育': { title: '陕西师范大学《学前教育原理》国家级精品课', url: 'https://www.bilibili.com/video/av292228245' },
+  '教育技术学': { title: '北京师范大学《教育技术学导论》含课件', url: 'https://www.bilibili.com/video/BV1hp4y1k7fB' },
+  '汉语言文学': { title: '陕西师范大学《中国古代文学史》国家级精品课', url: 'https://www.bilibili.com/video/BV1UE411L7ke' },
+  '英语': { title: '英语兔《全网最适合中国人的免费音标课》', url: 'https://www.bilibili.com/video/BV1iV411z7Nj' },
+  '新闻学': { title: '复旦大学《新闻学概论》全12P', url: 'https://www.bilibili.com/video/BV1uK411j74F' },
+  '广告学': { title: '中国传媒大学《广告学概论》丁俊杰 73讲', url: 'https://www.bilibili.com/video/BV18r4y1P7cz' },
+  '历史学': { title: '央视《中国通史》全100集', url: 'https://www.bilibili.com/bangumi/play/ep327052/' },
+  '考古学': { title: '北京大学《考古是什么》+《考古学通论》', url: 'https://www.bilibili.com/video/av29859306' },
+  '数学与应用数学': { title: '宋浩《高等数学》2.0版', url: 'https://www.bilibili.com/video/BV1CAxaeHEeH' },
+  '物理学': { title: '清华大学《普通物理》完整版', url: 'https://www.bilibili.com/video/BV15MTx6EEYF' },
+  '化学': { title: '北京大学《普通化学》严纯华', url: 'https://www.bilibili.com/video/BV1pu4y1q7F9' },
+  '生物科学': { title: '清华大学《普通生物学》', url: 'https://www.bilibili.com/video/BV14E41127Gr' },
+  '统计学': { title: '宋浩《概率论与数理统计》2.0版', url: 'https://www.bilibili.com/video/BV1ot411y7mU' },
+  '计算机科学与技术': { title: '浙江大学翁恺《C语言入门与进阶》129讲', url: 'https://www.bilibili.com/video/BV1ALSyBREDu' },
+  '软件工程': { title: '电子科技大学《软件工程基础》48讲', url: 'https://www.bilibili.com/video/BV1VzqoBCEXJ' },
+  '电子信息工程': { title: '清华大学《模拟电子技术基础》华成英 56讲', url: 'https://www.bilibili.com/video/av87698745' },
+  '自动化': { title: '西北工业大学卢京潮《自动控制原理》', url: 'https://www.bilibili.com/video/BV1pw411d78U' },
+  '机械设计制造及其自动化': { title: '《机械原理》8小时零基础速成课', url: 'https://www.bilibili.com/video/BV1FfMvzuEjQ' },
+  '土木工程': { title: '同济大学《土木工程概论》36讲', url: 'https://www.bilibili.com/video/av11154768' },
+  '材料科学与工程': { title: '西北工业大学《材料科学基础》93讲', url: 'https://www.bilibili.com/video/BV1qxwTziEKf' },
+  '人工智能': { title: '吴恩达《机器学习》中文配音 2025版', url: 'https://www.bilibili.com/video/BV1MBKRzqEBR' },
+  '数据科学与大数据技术': { title: 'Python数据分析教程 69集（NumPy+Pandas+Matplotlib）', url: 'https://www.bilibili.com/video/BV18ohHzkEnw' },
+  '集成电路设计与集成系统': { title: '复旦大学合作《半导体与集成电路》公开课', url: 'https://www.bilibili.com/video/BV1rVd1BiEPq' },
+  '农学': { title: '扬州大学《作物栽培学》戴其根 91讲', url: 'https://m.bilibili.com/video/BV15X4y1m7BE' },
+  '园艺': { title: '华中农业大学《园艺植物栽培学》52讲', url: 'https://www.bilibili.com/video/av757148590' },
+  '动物医学': { title: '中国农业大学《动物解剖学》陈耀星', url: 'https://www.bilibili.com/video/BV19v411A7gt' },
+  '食品科学与工程': { title: '江南大学《食品化学》35讲', url: 'https://m.bilibili.com/video/BV1UzP9zFERY' },
+  '临床医学': { title: '霍琨《系统解剖学》全集', url: 'https://www.bilibili.com/video/BV1S1QAY8Eqk' },
+  '口腔医学': { title: '四川大学华西口腔医学院《口腔解剖学》全集', url: 'https://www.bilibili.com/video/BV1gzmjBmEG3' },
+  '护理学': { title: '四川大学《护理学基础》62讲', url: 'https://www.bilibili.com/video/BV1ZiNwzNEkb' },
+  '药学': { title: '复旦大学《药理学》程能能 国家级精品课', url: 'https://www.bilibili.com/video/BV1H4GwzdE4d' },
+  '工商管理': { title: '东北财经大学《管理学》国家级精品课', url: 'https://www.bilibili.com/video/BV1nG411b7iJ' },
+  '会计学': { title: '复旦大学《会计学原理》徐晔 国家精品课', url: 'https://www.bilibili.com/video/BV1NDuCz6EwP' },
+  '市场营销': { title: '清华大学《营销的逻辑》全9讲', url: 'https://www.bilibili.com/video/BV1xhegzrEdr' },
+  '信息管理与信息系统': { title: '复旦大学《管理信息系统》28讲', url: 'https://www.bilibili.com/video/BV1ab411V7vf' },
+  '视觉传达设计': { title: 'PS零基础入门教程 100集（2026版）', url: 'https://www.bilibili.com/video/BV1uh9QBaECz' },
+  '环境设计': { title: '室内设计零基础全套教程 108集', url: 'https://www.bilibili.com/video/BV1oU7N6dE44' },
+  '音乐学': { title: '周海宏《音乐何须懂》音乐鉴赏讲座', url: 'https://www.bilibili.com/video/av8613616' },
+  '播音与主持艺术': { title: '中国传媒大学《普通话语音》完整课程', url: 'https://www.bilibili.com/video/BV1oDuM6kEEj' }
+};
+
 const MAJORS = MAJOR_ROWS.map(function (r) {
   return {
     id: r[0].toLowerCase() + '-' + r[1].replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, ''),
@@ -86,7 +141,8 @@ const MAJORS = MAJOR_ROWS.map(function (r) {
     name: r[1],
     emoji: r[2],
     desc: r[3],
-    ready: r[4] || 0
+    ready: r[4] || 0,
+    video: VIDEO_COURSES[r[1]] || null
   };
 });
 
@@ -205,9 +261,8 @@ const STYLES = [
     id: 'video',
     name: '视频讲解',
     emoji: '🎬',
-    desc: '每关先看一段讲解视频，再开始做题',
-    tag: '适合看不进文字的人',
-    soon: true          // 视频暂未开放：选了之后进关卡会看到「还没上线」页
+    desc: '每个专业配套一门零基础视频课，边看边学',
+    tag: '适合看不进文字的人'
   },
   {
     id: 'text',

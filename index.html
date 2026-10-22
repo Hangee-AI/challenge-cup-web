@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>引路 · 大学新生专业学习导航</title>
   <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=49videos" />
 </head>
 <body>
 
@@ -246,17 +246,21 @@
     </div>
   </section>
 
-  <!-- ==================== 7. 视频讲解：暂未开放 ==================== -->
+  <!-- ==================== 7. 视频讲解：本专业推荐课程 ==================== -->
   <section id="view-video" class="view" hidden>
     <div class="video-page">
-      <div class="video-coming">
-        <div class="video-coming-icon">🎬</div>
-        <h1>视频讲解还没上线</h1>
-        <p>你选的是「视频讲解」。这一版先把<strong>文字版</strong>做完整，视频会随后按关卡补上（每关 1–2 分钟）。</p>
-        <p class="muted" id="videoLevelName"></p>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="videoToText">先用文字版学习 →</button>
-          <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+      <div class="video-player-card">
+        <div class="video-frame" id="videoFrame"></div>
+        <div class="video-info">
+          <span class="video-kicker" id="videoMajorName"></span>
+          <h1 id="videoTitle">本专业推荐视频</h1>
+          <p class="muted" id="videoDesc"></p>
+          <span class="video-level" id="videoLevelName"></span>
+          <div class="video-actions">
+            <a class="btn btn-primary" id="videoOpen" href="#" target="_blank" rel="noopener">在 B 站打开完整课程 ↗</a>
+            <button class="btn btn-ghost" id="videoToText">改用文字版学习 →</button>
+            <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+          </div>
         </div>
       </div>
     </div>
@@ -314,8 +318,8 @@
   <div class="footer-sub">第二十届"挑战杯"南昌大学大学生课外学术科技作品竞赛 · 院赛作品原型</div>
 </footer>
 
-<script src="js/data.js"></script>
-<script src="js/docs.js"></script>
-<script src="js/app.js"></script>
+<script src="js/data.js?v=49videos"></script>
+<script src="js/docs.js?v=49videos"></script>
+<script src="js/app.js?v=49videos"></script>
 </body>
 </html>

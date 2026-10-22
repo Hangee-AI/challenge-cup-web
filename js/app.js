@@ -401,18 +401,62 @@
     state.fromMap = fromMap !== false;
     state.levelMeta = found;
 
-    // 视频讲解暂未开放：先给一个说明页
     if (state.style === 'video') { show('video'); return; }
 
     show('doc');
   }
 
-  /* 视频页 */
+  function bilibiliEmbed(url) {
+    if (!url) return '';
+    var m = url.match(/\/video\/(BV[0-9A-Za-z]+)/);
+    if (m) return 'https://player.bilibili.com/player.html?bvid=' + m[1] + '&page=1&high_quality=1&danmaku=0';
+    m = url.match(/\/video\/av(\d+)/);
+    if (m) return 'https://player.bilibili.com/player.html?aid=' + m[1] + '&page=1&high_quality=1&danmaku=0';
+    m = url.match(/\/bangumi\/play\/ep(\d+)/);
+    if (m) return 'https://player.bilibili.com/player.html?ep_id=' + m[1] + '&page=1&high_quality=1&danmaku=0';
+    return '';
+  }
+
+  /* 视频页：按当前专业播放对应的零基础课程 */
   function renderVideo() {
     var found = currentLevel();
-    $('videoLevelName').textContent = found
-      ? found.level.name + ' · ' + found.module.name
-      : '';
+    var path = getPath(state.majorId);
+    if (!found || !path) { show('map'); return; }
+
+    var major = path.major;
+    var video = major.video;
+    $('videoMajorName').textContent = major.name + ' · 零基础推荐课程';
+    $('videoTitle').textContent = video ? video.title : '本专业视频课程补充中';
+    $('videoDesc').textContent = video
+      ? '先看课程导论或第一章，再回到关卡做题；完整课程可在 B 站继续学习。'
+      : '这个专业的视频课程还在补充中，可以先切换文字版学习。';
+    $('videoLevelName').textContent = found.level.name + ' · ' + found.module.name;
+
+    var frame = $('videoFrame');
+    var open = $('videoOpen');
+    frame.innerHTML = '';
+    open.hidden = !video;
+    if (!video) {
+      frame.innerHTML = '<div class="video-empty"><span>🎬</span><b>视频补充中</b></div>';
+      return;
+    }
+
+    open.href = video.url;
+    var embed = bilibiliEmbed(video.url);
+    if (!embed) {
+      frame.innerHTML = '<a class="video-empty" href="' + video.url + '" target="_blank" rel="noopener"><span>▶</span><b>在 B 站打开课程</b></a>';
+      return;
+    }
+
+    var iframe = document.createElement('iframe');
+    iframe.src = embed;
+    iframe.title = video.title;
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('scrolling', 'no');
+    iframe.setAttribute('allowfullscreen', 'true');
+    iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+    frame.appendChild(iframe);
   }
 
   /* ---------------- 文字说明：文档页 ---------------- */
