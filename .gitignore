@@ -23,3 +23,6 @@ dist/
 *.mp4
 *.mov
 *.psd
+
+# IDE 本地数据
+.trae/

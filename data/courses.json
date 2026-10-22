@@ -1,0 +1,123 @@
+[
+  { "categoryId": "tools", "name": "Vim", "school": "csdiy.wiki", "url": "https://csdiy.wiki/%E5%BF%85%E5%AD%A6%E5%B7%A5%E5%85%B7/Vim/", "desc": "编辑器之神，值得花一周习惯它" },
+  { "categoryId": "tools", "name": "Git", "school": "csdiy.wiki", "url": "https://csdiy.wiki/%E5%BF%85%E5%AD%A6%E5%B7%A5%E5%85%B7/Git/", "desc": "版本控制是协作与自救的基本功" },
+  { "categoryId": "tools", "name": "GitHub", "school": "csdiy.wiki", "url": "https://csdiy.wiki/%E5%BF%85%E5%AD%A6%E5%B7%A5%E5%85%B7/GitHub/", "desc": "世界上最大的代码托管与开源社区" },
+  { "categoryId": "tools", "name": "Docker", "school": "csdiy.wiki", "url": "https://csdiy.wiki/%E5%BF%85%E5%AD%A6%E5%B7%A5%E5%85%B7/Docker/", "desc": "一次构建，到处运行" },
+  { "categoryId": "tools", "name": "LaTeX", "school": "csdiy.wiki", "url": "https://csdiy.wiki/%E5%BF%85%E5%AD%A6%E5%B7%A5%E5%85%B7/LaTeX/", "desc": "论文与公式排版的行业标准" },
+
+  { "categoryId": "math-base", "name": "MIT 18.01/18.02: Calculus", "school": "MIT", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MITmaths/", "desc": "单变量与多变量微积分" },
+  { "categoryId": "math-base", "name": "MIT 18.06: Linear Algebra", "school": "MIT", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MITLA/", "desc": "Gilbert Strang 的线性代数经典课" },
+  { "categoryId": "math-base", "name": "MIT 6.050J: Information Theory and Entropy", "school": "MIT", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/information/", "desc": "信息论与熵入门" },
+
+  { "categoryId": "math-adv", "name": "UCB CS70: Discrete Math and Probability Theory", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E8%BF%9B%E9%98%B6/CS70/", "desc": "CS 视角的离散数学与概率论" },
+  { "categoryId": "math-adv", "name": "UCB CS126: Probability Theory", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E8%BF%9B%E9%98%B6/CS126/", "desc": "深入的概率论训练" },
+  { "categoryId": "math-adv", "name": "MIT 6.042J: Mathematics for Computer Science", "school": "MIT", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E8%BF%9B%E9%98%B6/6.042J/", "desc": "面向计算机科学的数学基础" },
+  { "categoryId": "math-adv", "name": "Stanford EE364A: Convex Optimization", "school": "Stanford", "url": "https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E8%BF%9B%E9%98%B6/convex/", "desc": "凸优化，机器学习的数学基石之一" },
+
+  { "categoryId": "prog-c", "name": "Harvard CS50: This is CS50x", "school": "Harvard", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/", "desc": "风靡全球的计算机入门课，C 语言主线" },
+  { "categoryId": "prog-c", "name": "Duke: Introductory C Programming Specialization", "school": "Duke / Coursera", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/Duke-Coursera-Intro-C/", "desc": "体系化的 C 语言专项课程" },
+
+  { "categoryId": "prog-python", "name": "UCB CS61A: Structure and Interpretation of Computer Programs", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS61A/", "desc": "SICP 的 Python 改编版，无数人的自学起点" },
+  { "categoryId": "prog-python", "name": "CS50P: Introduction to Programming with Python", "school": "Harvard", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS50P/", "desc": "CS50 家族的 Python 入门课" },
+  { "categoryId": "prog-python", "name": "MIT 6.100L: Introduction to CS and Programming using Python", "school": "MIT", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/MIT6.100L/", "desc": "MIT 的 Python 计算机导论" },
+
+  { "categoryId": "prog-cpp", "name": "Stanford CS106L: Standard C++ Programming", "school": "Stanford", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/cpp/CS106L/", "desc": "现代 C++ 标准库与惯用法" },
+  { "categoryId": "prog-cpp", "name": "Stanford CS106B/X", "school": "Stanford", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/cpp/CS106B_CS106X/", "desc": "C++ 数据抽象与递归思维" },
+  { "categoryId": "prog-cpp", "name": "AUT AP1400-2: Advanced Programming", "school": "AmirKabir Univ.", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/cpp/AUT1400/", "desc": "进阶 C++ 程序设计" },
+
+  { "categoryId": "prog-java", "name": "MIT 6.092: Introduction To Programming In Java", "school": "MIT", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Java/MIT%206.092/", "desc": "Java 编程入门" },
+
+  { "categoryId": "prog-rust", "name": "Stanford CS110L: Safety in Systems Programming", "school": "Stanford", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Rust/CS110L/", "desc": "用 Rust 学安全的系统编程" },
+  { "categoryId": "prog-rust", "name": "KAIST CS220: Programming Principles", "school": "KAIST", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Rust/cs220/", "desc": "Rust 视角的程序设计原理" },
+  { "categoryId": "prog-rust", "name": "KAIST CS431: Concurrent Programming", "school": "KAIST", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Rust/cs431/", "desc": "Rust 并发编程" },
+
+  { "categoryId": "prog-func", "name": "Cornell CS3110: OCaml Programming", "school": "Cornell", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Functional/CS3110/", "desc": "函数式编程：正确、高效、优雅" },
+  { "categoryId": "prog-func", "name": "Haskell MOOC", "school": "Univ. of Helsinki", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Functional/Haskell-MOOC/", "desc": "赫尔辛基大学的 Haskell 公开课" },
+
+  { "categoryId": "ee-base", "name": "EE16A&B: Designing Information Devices and Systems I&II", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E7%94%B5%E5%AD%90%E5%9F%BA%E7%A1%80/EE16/", "desc": "信息器件与系统设计基础" },
+  { "categoryId": "ee-base", "name": "UCB EE120: Signal and Systems", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E7%94%B5%E5%AD%90%E5%9F%BA%E7%A1%80/signal/", "desc": "信号与系统" },
+  { "categoryId": "ee-base", "name": "MIT 6.007: Signals and Systems", "school": "MIT", "url": "https://csdiy.wiki/%E7%94%B5%E5%AD%90%E5%9F%BA%E7%A1%80/Signals_and_Systems_AVO/", "desc": "MIT 的信号与系统课" },
+
+  { "categoryId": "dsa", "name": "UCB CS61B: Data Structures and Algorithms", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS61B/", "desc": "Java 主讲的数据结构课，项目驱动" },
+  { "categoryId": "dsa", "name": "Coursera: Algorithms I & II", "school": "Princeton / Coursera", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/Algo/", "desc": "Sedgewick 的经典算法课" },
+  { "categoryId": "dsa", "name": "MIT 6.006: Introduction to Algorithms", "school": "MIT", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.006/", "desc": "算法导论配套课程" },
+  { "categoryId": "dsa", "name": "MIT 6.046: Design and Analysis of Algorithms", "school": "MIT", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.046/", "desc": "算法设计与分析进阶" },
+  { "categoryId": "dsa", "name": "UCB CS170: Efficient Algorithms and Intractable Problems", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS170/", "desc": "高效算法与难解问题" },
+
+  { "categoryId": "se", "name": "MIT 6.031: Software Construction", "school": "MIT", "url": "https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/6031/", "desc": "软件构造：健壮、可维护的代码" },
+  { "categoryId": "se", "name": "UCB CS169: Software Engineering", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/", "desc": "软件工程方法论与实践" },
+  { "categoryId": "se", "name": "CMU 17-803: Empirical Methods", "school": "CMU", "url": "https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/17803/", "desc": "软件工程中的实证方法" },
+
+  { "categoryId": "sys-base", "name": "CMU 15-213: CSAPP", "school": "CMU", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/", "desc": "深入理解计算机系统，CS 必读经典" },
+  { "categoryId": "sys-base", "name": "Stanford CS110: Principles of Computer Systems", "school": "Stanford", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CS110/", "desc": "计算机系统原理" },
+
+  { "categoryId": "arch", "name": "Nand2Tetris", "school": "Coursera", "url": "https://csdiy.wiki/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/N2T/", "desc": "从与非门一路造到能跑游戏的计算机" },
+  { "categoryId": "arch", "name": "UCB CS61C: Great Ideas in Computer Architecture", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/CS61C/", "desc": "体系结构核心思想" },
+  { "categoryId": "arch", "name": "ETHz: Digital Design and Computer Architecture", "school": "ETH Zürich", "url": "https://csdiy.wiki/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/DDCA/", "desc": "数字设计与计算机体系结构" },
+
+  { "categoryId": "os", "name": "MIT 6.1810 (6.S081): Operating System Engineering", "school": "MIT", "url": "https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6.S081/", "desc": "基于 xv6 的操作系统工程课" },
+  { "categoryId": "os", "name": "UCB CS162: Operating Systems and Systems Programming", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/CS162/", "desc": "操作系统与系统编程" },
+  { "categoryId": "os", "name": "NJU OS: Operating System Design and Implementation", "school": "Nanjing Univ.", "url": "https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/NJUOS/", "desc": "南京大学操作系统设计与实现" },
+  { "categoryId": "os", "name": "HIT OS: Operating System", "school": "HIT", "url": "https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/HITOS/", "desc": "哈工大操作系统课程" },
+
+  { "categoryId": "dist", "name": "CMU 15-418 / Stanford CS149: Parallel Computing", "school": "CMU / Stanford", "url": "https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/CS149/", "desc": "并行计算" },
+  { "categoryId": "dist", "name": "MIT 6.5840 (6.824): Distributed System", "school": "MIT", "url": "https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/MIT6.824/", "desc": "分布式系统经典课，Raft/Lab 硬核" },
+
+  { "categoryId": "security", "name": "UCB CS161: Computer Security", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E7%B3%BB%E7%BB%9F%E5%AE%89%E5%85%A8/CS161/", "desc": "计算机安全导论" },
+  { "categoryId": "security", "name": "MIT 6.1600: Foundations of Computer Security", "school": "MIT", "url": "https://csdiy.wiki/%E7%B3%BB%E7%BB%9F%E5%AE%89%E5%85%A8/MIT6.1600/", "desc": "计算机安全基础" },
+  { "categoryId": "security", "name": "SU SEED Labs", "school": "Syracuse Univ.", "url": "https://csdiy.wiki/%E7%B3%BB%E7%BB%9F%E5%AE%89%E5%85%A8/SEEDLabs/", "desc": "动手的安全实验系列" },
+
+  { "categoryId": "network", "name": "UCB CS168: Introduction to the Internet", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/CS168/", "desc": "互联网架构与协议" },
+  { "categoryId": "network", "name": "Stanford CS144: Computer Network", "school": "Stanford", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/CS144/", "desc": "亲手实现一个 TCP" },
+  { "categoryId": "network", "name": "USTC 计算机网络：自顶向下方法", "school": "USTC", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/topdown_ustc/", "desc": "中科大《自顶向下》课程" },
+
+  { "categoryId": "db", "name": "UCB CS186: Introduction to Database System", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/CS186/", "desc": "数据库系统导论" },
+  { "categoryId": "db", "name": "CMU 15-445: Database Systems", "school": "CMU", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/15445/", "desc": "BusTub 项目驱动的数据库内核课" },
+  { "categoryId": "db", "name": "CMU 15-799: Special Topics in Database Systems", "school": "CMU", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/15799/", "desc": "数据库前沿专题" },
+
+  { "categoryId": "compiler", "name": "Stanford CS143: Compilers", "school": "Stanford", "url": "https://csdiy.wiki/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/CS143/", "desc": "编译器原理与实现" },
+  { "categoryId": "compiler", "name": "PKU 编译原理实践", "school": "PKU", "url": "https://csdiy.wiki/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/PKU-Compilers/", "desc": "北大编译原理实践课" },
+  { "categoryId": "compiler", "name": "NJU 编译原理", "school": "Nanjing Univ.", "url": "https://csdiy.wiki/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/NJU-Compilers/", "desc": "南京大学编译原理" },
+
+  { "categoryId": "pl", "name": "Stanford CS242: Programming Languages", "school": "Stanford", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%88%86%E6%9E%90/CS242/", "desc": "编程语言的设计与实现" },
+  { "categoryId": "pl", "name": "NJU 软件分析", "school": "Nanjing Univ.", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%88%86%E6%9E%90/NJU-SoftwareAnalysis/", "desc": "静态程序分析" },
+  { "categoryId": "pl", "name": "Cambridge: Semantics of Programming Languages", "school": "Cambridge", "url": "https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%88%86%E6%9E%90/Cambridge-Semantics/", "desc": "编程语言语义学" },
+
+  { "categoryId": "graphics", "name": "GAMES101: 现代计算机图形学入门", "school": "GAMES / 闫令琪", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/GAMES101/", "desc": "中文世界最火的图形学入门课" },
+  { "categoryId": "graphics", "name": "GAMES202: 高质量实时渲染", "school": "GAMES", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/GAMES202/", "desc": "实时渲染进阶" },
+  { "categoryId": "graphics", "name": "CMU 15-462: Computer Graphics", "school": "CMU", "url": "https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/15462/", "desc": "CMU 图形学核心课" },
+
+  { "categoryId": "web", "name": "MIT Web Development Course", "school": "MIT", "url": "https://csdiy.wiki/Web%E5%BC%80%E5%8F%91/mitweb/", "desc": "MIT 的 Web 开发课" },
+  { "categoryId": "web", "name": "Stanford CS142: Web Applications", "school": "Stanford", "url": "https://csdiy.wiki/Web%E5%BC%80%E5%8F%91/CS142/", "desc": "Web 应用开发" },
+  { "categoryId": "web", "name": "Full Stack open", "school": "Univ. of Helsinki", "url": "https://csdiy.wiki/Web%E5%BC%80%E5%8F%91/fullstackopen/", "desc": "React + Node 的现代全栈课" },
+  { "categoryId": "web", "name": "CS571: Building UI (React & React Native)", "school": "UW–Madison", "url": "https://csdiy.wiki/Web%E5%BC%80%E5%8F%91/CS571/", "desc": "用户界面构建" },
+
+  { "categoryId": "data-sci", "name": "UCB Data100: Principles and Techniques of Data Science", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%A7%91%E5%AD%A6/Data100/", "desc": "数据科学原理与技术" },
+
+  { "categoryId": "ai", "name": "UCB CS188: Introduction to Artificial Intelligence", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/CS188/", "desc": "AI 入门经典，Pacman 项目" },
+  { "categoryId": "ai", "name": "CS50 AI: Introduction to AI with Python", "school": "Harvard", "url": "https://csdiy.wiki/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/CS50/", "desc": "用 Python 学 AI 基础" },
+  { "categoryId": "ai", "name": "Neural Networks: Zero to Hero", "school": "Andrej Karpathy", "url": "https://csdiy.wiki/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/Neural%20Networks%EF%BC%9AZero%20to%20Hero/", "desc": "从零手搓神经网络，Karpathy 亲授" },
+
+  { "categoryId": "ml", "name": "Coursera: Machine Learning", "school": "Stanford / Coursera", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/ML/", "desc": "吴恩达机器学习" },
+  { "categoryId": "ml", "name": "Stanford CS229: Machine Learning", "school": "Stanford", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/CS229/", "desc": "理论扎实的机器学习课" },
+  { "categoryId": "ml", "name": "UCB CS189: Introduction to Machine Learning", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/CS189/", "desc": "机器学习导论" },
+
+  { "categoryId": "ml-sys", "name": "CMU 10-414/714: Deep Learning Systems", "school": "CMU", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%B3%BB%E7%BB%9F/CMU10-414/", "desc": "深度学习系统：亲手实现框架" },
+  { "categoryId": "ml-sys", "name": "CMU 15-442/642: Machine Learning Systems", "school": "CMU", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%B3%BB%E7%BB%9F/CMU15-442/", "desc": "机器学习系统" },
+  { "categoryId": "ml-sys", "name": "智能计算系统 (AICS)", "school": "中科院计算所", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%B3%BB%E7%BB%9F/AICS/", "desc": "国产智能计算系统课程" },
+
+  { "categoryId": "dl", "name": "李宏毅机器学习", "school": "National Taiwan Univ.", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/LHY/", "desc": "中文圈最受欢迎的深度学习课" },
+  { "categoryId": "dl", "name": "Stanford CS231n: CNN for Visual Recognition", "school": "Stanford", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS231/", "desc": "计算机视觉经典课" },
+  { "categoryId": "dl", "name": "Stanford CS224n: Natural Language Processing", "school": "Stanford", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS224n/", "desc": "自然语言处理经典课" },
+  { "categoryId": "dl", "name": "Stanford CS224w: Machine Learning with Graphs", "school": "Stanford", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS224w/", "desc": "图机器学习" },
+  { "categoryId": "dl", "name": "UCB CS285: Deep Reinforcement Learning", "school": "UC Berkeley", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS285/", "desc": "深度强化学习" },
+  { "categoryId": "dl", "name": "Coursera: Deep Learning Specialization", "school": "DeepLearning.AI", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS230/", "desc": "吴恩达深度学习专项" },
+
+  { "categoryId": "llm", "name": "CMU 11-667: Large Language Models: Methods and Applications", "school": "CMU", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B/CMU11-667/", "desc": "大语言模型方法与应用" },
+  { "categoryId": "llm", "name": "CMU 11-868: Large Language Model System", "school": "CMU", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B/CMU11-868/", "desc": "大语言模型系统" },
+  { "categoryId": "llm", "name": "MIT 6.S184: Generative AI with Stochastic Differential Equations", "school": "MIT", "url": "https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/MIT6.S184/", "desc": "随机微分方程视角的生成式 AI" },
+
+  { "categoryId": "ml-adv", "name": "CMU 10-708: Probabilistic Graphical Models", "school": "CMU", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6/CMU10-708/", "desc": "概率图模型" },
+  { "categoryId": "ml-adv", "name": "Stanford STATS214 / CS229M: Machine Learning Theory", "school": "Stanford", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6/CS229M/", "desc": "机器学习理论" },
+  { "categoryId": "ml-adv", "name": "Columbia STAT 8201: Deep Generative Models", "school": "Columbia", "url": "https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6/STAT8201/", "desc": "深度生成模型" }
+]

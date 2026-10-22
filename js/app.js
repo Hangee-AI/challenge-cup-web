@@ -8,6 +8,7 @@
   'use strict';
 
   var STORE_KEY = 'yinlu_v1';
+  var ONLINE = false;  // 后端可用时为 true，自动判题走 POST，离线本地判题
 
   var state = {
     majorId: null,
@@ -453,6 +454,21 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  function revealResult(q, userChoice, serverAnswer) {
+    var opts = $('optionList').querySelectorAll('.option');
+    opts.forEach(function (b, idx) {
+      b.disabled = true;
+      if (idx === serverAnswer) b.classList.add('correct');
+      if (idx === userChoice && idx !== serverAnswer) b.classList.add('wrong');
+    });
+    var ok = userChoice === serverAnswer;
+    if (ok) state.levelCorrect++;
+    $('feedback').hidden = false;
+    $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[serverAnswer];
+    $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
+    $('feedbackExplain').textContent = q.explain;
+  }
+
   function chooseOption(i) {
     if (state.answered) return;
     var found = currentLevel();
@@ -460,20 +476,19 @@
     var q = found.level.questions[state.qi];
     state.answered = true;
 
-    var opts = $('optionList').querySelectorAll('.option');
-    opts.forEach(function (b, idx) {
-      b.disabled = true;
-      if (idx === q.answer) b.classList.add('correct');
-      if (idx === i && i !== q.answer) b.classList.add('wrong');
-    });
-
-    var ok = i === q.answer;
-    if (ok) state.levelCorrect++;
-
-    $('feedback').hidden = false;
-    $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[q.answer];
-    $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
-    $('feedbackExplain').textContent = q.explain;
+    if (ONLINE) {
+      fetch('/api/levels/' + found.level.id + '/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionIndex: state.qi, choice: i })
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (res) {
+          if (!res) return;
+          revealResult(q, i, res.answer);
+        });
+    } else {
+      revealResult(q, i, q.answer);
+    }
   }
 
   function nextQuestion() {
@@ -590,8 +605,10 @@
 
   /* ---------------- 启动 ---------------- */
   load();
-  // 注意：这里不要给 state.style 兜底默认值，
-  // 否则 selectMajor 里的 "还没选学习方式 → 先跳选方式页" 永远不会触发。
   renderHomeCats();
-  show('home');
+  // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题
+  fetch('/api/health', { cache: 'no-store' }).then(function (r) {
+    if (r.ok) ONLINE = true;
+  }).catch(function () { ONLINE = false; })
+    .finally(function () { show('home'); });
 })();

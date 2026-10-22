@@ -1,0 +1,12 @@
+{
+  "name": "challenge-cup-web",
+  "version": "0.2.0",
+  "private": true,
+  "description": "面向新生的闯关学习系统 · 第二十届挑战杯南昌大学院赛作品",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
