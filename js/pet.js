@@ -328,6 +328,10 @@
       if (j.ok && j.reply) {
         t.textContent = j.reply;
         history.push({ role: 'assistant', content: j.reply });
+      } else if (j.reason === 'login-required') {
+        t.textContent = j.hint || '先去个人中心用学号登录一下，就能跟我聊天了。';
+      } else if (j.reason === 'rate-limit' || j.reason === 'quota-day') {
+        t.textContent = j.hint || '问得有点快，等我缓一缓。';
       } else {
         ready = false;
         el.sub.textContent = '只连着本地（未配大模型）';

@@ -17,11 +17,14 @@
      DEEPSEEK_BASE       默认 https://api.deepseek.com
      DEEPSEEK_MODEL      默认 deepseek-chat（deepseek-reasoner 更慢更贵）
      DEEPSEEK_MAX_TOKENS 默认 500
+     CHAT_DAILY_CAP      全站每天最多回答多少条，默认 800（防刷爆余额）
+     CHAT_REQUIRE_LOGIN  设为 1 时，只有本站已登录用户才能对话
    ========================================================== */
 
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const db = require('../db');
 
 const KEY_FILE = path.join(__dirname, '..', 'data', 'deepseek.json');
 const BASE = (process.env.DEEPSEEK_BASE || 'https://api.deepseek.com').replace(/\/+$/, '');
@@ -53,8 +56,11 @@ function readKey() {
   return '';
 }
 
-/* ---------- 限流：每 IP 每小时 40 条，全站每天 800 条 ---------- */
+/* ---------- 限流：每 IP 每小时 40 条，全站每天 CHAT_DAILY_CAP 条 ---------- */
 const HOUR = 60 * 60 * 1000;
+const PER_IP_HOUR = Number(process.env.CHAT_PER_IP_HOUR || 40);
+const DAILY_CAP = Number(process.env.CHAT_DAILY_CAP || 800);
+const REQUIRE_LOGIN = String(process.env.CHAT_REQUIRE_LOGIN || '') === '1';
 const buckets = new Map();
 let dayKey = '';
 let dayCount = 0;
@@ -67,16 +73,30 @@ function todayKey() {
 function hitLimit(ip) {
   const now = Date.now();
   if (dayKey !== todayKey()) { dayKey = todayKey(); dayCount = 0; }
-  if (dayCount >= 800) return 'deny-day';
+  if (dayCount >= DAILY_CAP) return 'deny-day';
 
   let b = buckets.get(ip);
   if (!b || now - b.start > HOUR) { b = { start: now, n: 0 }; buckets.set(ip, b); }
-  if (b.n >= 40) return 'deny-ip';
+  if (b.n >= PER_IP_HOUR) return 'deny-ip';
 
   b.n += 1;
   dayCount += 1;
   if (buckets.size > 5000) buckets.clear();
   return '';
+}
+
+/* 取登录用户（可选）：开了 CHAT_REQUIRE_LOGIN 就必须是本站登录用户 */
+function currentUser(req) {
+  try {
+    const h = String(req.headers.authorization || '');
+    const token = h.indexOf('Bearer ') === 0 ? h.slice(7).trim() : '';
+    if (!token) return null;
+    const s = db.getSession(token);
+    if (!s) return null;
+    return db.findUserById(s.userId);
+  } catch (e) {
+    return null;
+  }
 }
 
 /* ---------- 请求体清洗 ---------- */
@@ -129,6 +149,7 @@ router.get('/chat/status', (req, res) => {
     ok: true,
     ready: !!key,
     model: MODEL,
+    requireLogin: REQUIRE_LOGIN,
     reason: key ? '' : 'no-key',
     note: key ? '' : '在服务器上配置 DEEPSEEK_API_KEY 或 server/data/deepseek.json 后即可对话'
   });
@@ -146,12 +167,23 @@ router.post('/chat', async (req, res) => {
   }
 
   const ip = (req.headers['x-forwarded-for'] || req.ip || '').toString().split(',')[0].trim();
+
+  /* 可选：只允许本站已登录用户使用（开 CHAT_REQUIRE_LOGIN=1） */
+  const user = currentUser(req);
+  if (REQUIRE_LOGIN && !user) {
+    return res.status(401).json({
+      ok: false,
+      reason: 'login-required',
+      hint: '先到「个人中心」用学号注册/登录，就能跟小引聊天了。'
+    });
+  }
+
   const denied = hitLimit(ip);
   if (denied) {
     return res.status(429).json({
       ok: false,
       reason: denied === 'deny-day' ? 'quota-day' : 'rate-limit',
-      hint: denied === 'deny-day' ? '今天全站的额度用完了，明天再来问我吧。' : '说得有点快，等我缓一缓（每小时 40 条）。'
+      hint: denied === 'deny-day' ? '今天全站的额度用完了，明天再来问我吧。' : '说得有点快，等我缓一缓（每小时 ' + PER_IP_HOUR + ' 条）。'
     });
   }
 
