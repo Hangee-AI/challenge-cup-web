@@ -298,6 +298,34 @@
     <p class="muted map-note">🗺️ 按住地图拖动，或者用滚轮 / 左右按钮横向浏览；点圆点进入关卡。</p>
   </section>
 
+  <!-- ==================== 6. 公共必修课：文字说明（分章 + 思维导图） ==================== -->
+  <section id="view-course" class="view view-doc view-course" hidden>
+    <div class="doc-wrap">
+
+      <aside class="doc-side">
+        <a class="back" href="#" id="courseBack">← 返回首页</a>
+        <div class="doc-side-title" id="courseSideTitle">公共必修课</div>
+        <div class="doc-side-sub" id="courseSideSub"></div>
+        <nav class="doc-nav" id="courseNav"></nav>
+      </aside>
+
+      <article class="doc-main">
+        <div class="doc-crumb" id="courseCrumb"></div>
+        <h1 class="doc-title" id="courseTitle"></h1>
+        <p class="doc-lead" id="courseLead"></p>
+        <div class="course-meta" id="courseMeta"></div>
+        <div class="doc-body" id="courseBody"></div>
+        <div class="doc-refs" id="courseRefs"></div>
+        <div class="doc-foot">
+          <a class="btn btn-ghost" href="#" data-go="home">返回首页</a>
+          <a class="btn btn-ghost" id="courseSrc" href="#" target="_blank" rel="noopener">原始资料 ↗</a>
+        </div>
+      </article>
+
+      <aside class="doc-toc" id="courseQuick"></aside>
+    </div>
+  </section>
+
   <!-- ==================== 6. 文字说明：文档页（左侧目录 + 正文） ==================== -->
   <section id="view-doc" class="view view-doc" hidden>
     <div class="doc-wrap">
@@ -604,6 +632,7 @@
 </div>
 
 <script src="js/data.js"></script>
+<script src="js/course-common.js"></script>
 <script src="js/docs.js"></script>
 <script src="js/videos.js"></script>
 <script src="js/config.js"></script>

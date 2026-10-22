@@ -62,6 +62,7 @@ challenge-cup-web/
 ├─ css/style.css       全部样式
 ├─ js/data.js          数据层：学科门类、专业、路径模板、讲解方式、示例关卡、公告 ANNOUNCEMENTS、鼓励语 HOME_QUOTES、头像 AVATARS
 ├─ js/docs.js          内容层：每关的文档正文（DOCS）+ 通用模板 + csdiy 延伸资源
+├─ js/course-common.js 公共必修课「文字说明」：分章重点 + 思维导图数据（COMMON_COURSES_DATA）
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
 ├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）
@@ -103,6 +104,7 @@ npm start          # 默认 http://localhost:3000，被占用就换端口：PORT
 | **加某个专业的文档** | `js/docs.js` 顶部新增 key（或改 `makeGenericDoc()` 里的通用模板） | 没有专门文档的关卡会自动用通用模板，不会白屏 |
 | **换视频课程** | `js/videos.js` 顶部 `BV_ID / BV_TITLE / BV_TOTAL` + `BV_CHAPTERS` | 换 B 站课程时重新生成章节数组；播放器地址由 `bvPlayerUrl()` 拼 |
 | **改某关对应哪几集** | `js/videos.js` 的 `VIDEO_MAP` | `main` 是本关必看、`extra` 是可选；都是 `[起始集, 结束集]`，没配的关卡用 `VIDEO_DEFAULT` |
+| **加公共必修课**（首页卡片 + 站内文字说明页） | `js/data.js` 的 `COMMON_COURSES` + `js/course-common.js` 的 `COMMON_COURSES_DATA` | 卡片一条 `{code, tag, name, desc, courseId, url}`；内容里 `chapters[].map` 是思维导图（根 → 分支 → 叶子），`pts` 是必背要点，`exam` 是考法提示。没有 `courseId` 的卡片仍然直接外链 |
 | 改文档页三栏布局 | `css/style.css` 的 `.doc-*` | 左栏 `.doc-side`、右栏 `.doc-toc`、正文 `.doc-main` |
 | 改视频页布局 | `css/style.css` 的 `.video-* / .player-* / .ep-*` | 左栏目录 + 右栏播放器，`.video-wrap` 控制两栏宽度 |
 | **改首页公告** | `js/data.js` 的 `ANNOUNCEMENTS` | 一条一个 `{tag, emoji, tone, title, desc}`，`tone` 决定渐变底色 |

@@ -32,7 +32,8 @@ const COMMON_COURSES = [
     code: '15040',
     tag: '思政',
     name: '习近平新时代中国特色社会主义思想概论',
-    desc: '自考重点汇总 · 知乎专栏「纪年的文章」',
+    desc: '导论 + 17 章重点整理 · 每章一张思维导图',
+    courseId: 'xi-thought',            // 站内「文字说明」用这个 id 取内容
     url: 'https://zhuanlan.zhihu.com/p/1903463551391240879'
   }
 ];

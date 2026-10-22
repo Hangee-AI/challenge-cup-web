@@ -12,6 +12,7 @@
 
   var state = {
     majorId: null,
+    courseId: null,       // 公共必修课（文字说明）当前课程 id
     style: null,          // 'video' | 'text'
     levelId: null,
     qi: 0,
@@ -74,7 +75,7 @@
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report', 'profile'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report', 'profile', 'course'];
   var curView = 'home';
 
   function show(name) {
@@ -83,6 +84,7 @@
     if (name === 'doc' && (!state.majorId || !state.levelId)) name = 'map';
     if (name === 'video' && !state.majorId) name = 'browse';
     if (name === 'level' && !state.levelId) name = 'map';
+    if (name === 'course' && !state.courseId) name = 'home';
     curView = name;
 
     VIEWS.forEach(function (v) {
@@ -103,6 +105,7 @@
     if (name === 'map') renderMap();
     if (name === 'doc') renderDoc();
     if (name === 'video') renderVideo();
+    if (name === 'course') renderCourse();
     if (name === 'report') renderReport();
     if (name === 'profile') { renderProfile(); renderCheckin(); }
   }
@@ -192,21 +195,29 @@
     });
   }
 
-  /* 公共必修课：数据来自 data.js 的 COMMON_COURSES，加课只改数组 */
+  /* 公共必修课：数据来自 data.js 的 COMMON_COURSES，加课只改数组
+     带 courseId 的课程走站内「文字说明」页，否则直接外链到资料 */
   function renderHomeCommon() {
     var box = $('homeCommon');
     if (!box || box.childElementCount) return;
     if (typeof COMMON_COURSES === 'undefined') return;
     COMMON_COURSES.forEach(function (c) {
-      var a = el('a', 'common-card');
-      a.href = c.url;
-      a.target = '_blank';
-      a.rel = 'noopener';
+      var inApp = c.courseId && getCourseData(c.courseId);
+      var a = el('a', 'common-card' + (inApp ? ' common-card-in' : ''));
+      if (inApp) {
+        a.href = '#';
+        a.setAttribute('data-course', c.courseId);
+      } else {
+        a.href = c.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+      }
       a.innerHTML =
         '<span class="common-tag">' + (c.tag || '公共课') + (c.code ? ' · ' + c.code : '') + '</span>' +
         '<span class="common-name">《' + c.name + '》</span>' +
         '<span class="common-desc">' + (c.desc || '') + '</span>' +
-        '<span class="common-go">打开资料 ↗</span>';
+        (inApp ? '<span class="common-meta">' + inApp.chapters.length + ' 章 · 每章一张思维导图</span>' : '') +
+        '<span class="common-go">' + (inApp ? '读重点整理 →' : '打开资料 ↗') + '</span>';
       box.appendChild(a);
     });
   }
@@ -888,6 +899,167 @@
     renderVideo();
   }
 
+  /* ---------------- 公共必修课：文字说明（分章 + 思维导图） ----------------
+     内容在 js/course-common.js 的 COMMON_COURSES_DATA 里，
+     这里只负责渲染：左栏章节目录 / 中间正文 / 右栏数字考点速记 */
+  var COURSE_ACCENTS = ['#4f6ef7', '#7a5bf7', '#0f9d8c', '#d98324', '#d9544d', '#2f7fd0'];
+  var courseIO = null;
+
+  function getCourseData(id) {
+    if (typeof COMMON_COURSES_DATA === 'undefined' || !id) return null;
+    return COMMON_COURSES_DATA[id] || null;
+  }
+
+  function openCourse(id) {
+    if (!getCourseData(id)) return;
+    state.courseId = id;
+    show('course');
+  }
+
+  function setActiveChapter(id) {
+    document.querySelectorAll('#courseNav [data-ch]').forEach(function (a) {
+      a.classList.toggle('is-on', a.getAttribute('data-ch') === id);
+    });
+  }
+
+  function goChapter(id) {
+    var node = document.getElementById('ch-' + id);
+    if (!node) return;
+    var top = node.getBoundingClientRect().top + window.pageYOffset - 76;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+    setActiveChapter(id);
+  }
+
+  function mindMapHtml(map) {
+    if (!map) return '';
+    var branches = (map.branches || []).map(function (b) {
+      var leaves = (b.leaves || []).map(function (x) {
+        return '<span class="mm-leaf">' + x + '</span>';
+      }).join('');
+      return '<div class="mm-branch">' +
+               '<div class="mm-label">' + b.label + '</div>' +
+               '<div class="mm-leaves">' + leaves + '</div>' +
+             '</div>';
+    }).join('');
+    return '<div class="mm">' +
+             '<div class="mm-root">' + map.root + '</div>' +
+             '<div class="mm-body">' + branches + '</div>' +
+           '</div>';
+  }
+
+  function chapterHtml(ch) {
+    var pts = (ch.pts || []).map(function (p) { return '<li>' + p + '</li>'; }).join('');
+    return '<div class="ch-head">' +
+             '<span class="ch-num">' + ch.num + '</span>' +
+             '<h2 class="ch-title">' + ch.title + '</h2>' +
+           '</div>' +
+           '<p class="ch-core">' + ch.core + '</p>' +
+           mindMapHtml(ch.map) +
+           '<h3 class="ch-h3">必背要点</h3>' +
+           '<ul class="kp-list">' + pts + '</ul>' +
+           (ch.exam ? '<div class="course-tip"><b>考法提示</b>' + ch.exam + '</div>' : '');
+  }
+
+  function renderCourse() {
+    var c = getCourseData(state.courseId);
+    if (!c) { show('home'); return; }
+
+    var byId = {};
+    c.chapters.forEach(function (ch) { byId[ch.id] = ch; });
+
+    /* 左栏：分组目录 */
+    $('courseSideTitle').textContent = c.emoji + ' ' + c.short;
+    $('courseSideSub').textContent = c.meta;
+    var nav = $('courseNav');
+    nav.innerHTML = '';
+    var groups = c.groups || [{ title: '', ids: c.chapters.map(function (x) { return x.id; }) }];
+    groups.forEach(function (g) {
+      if (g.title) nav.appendChild(el('div', 'doc-nav-stage', g.title));
+      g.ids.forEach(function (id) {
+        var ch = byId[id];
+        if (!ch) return;
+        var a = el('a', 'doc-nav-item');
+        a.href = '#ch-' + ch.id;
+        a.setAttribute('data-ch', ch.id);
+        a.innerHTML = '<span class="doc-nav-dot">·</span>' +
+                      '<span class="doc-nav-txt">' + ch.num + ' ' + ch.title + '</span>';
+        nav.appendChild(a);
+      });
+    });
+
+    /* 中间：课程头 + 各章正文 */
+    $('courseCrumb').textContent = '公共必修课 · ' + (c.tag || '思政');
+    $('courseTitle').textContent = c.name;
+    $('courseLead').textContent = c.lead;
+    $('courseMeta').innerHTML =
+      '<span class="cm-chip">📚 ' + c.meta + '</span>' +
+      '<span class="cm-chip">🧭 ' + c.chapters.length + ' 章</span>' +
+      '<span class="cm-chip">🗺️ 每章 1 张思维导图</span>';
+
+    var body = $('courseBody');
+    body.innerHTML = '';
+
+    /* 开篇：全书逻辑主线 */
+    if (c.map) {
+      var intro = el('div', 'course-map');
+      intro.innerHTML = '<h3 class="ch-h3">全书逻辑主线 · 先看这张图</h3>' + mindMapHtml(c.map);
+      body.appendChild(intro);
+    }
+
+    c.chapters.forEach(function (ch, i) {
+      var sec = el('section', 'course-ch');
+      sec.id = 'ch-' + ch.id;
+      sec.style.setProperty('--ch-accent', COURSE_ACCENTS[i % COURSE_ACCENTS.length]);
+      sec.innerHTML = chapterHtml(ch);
+      body.appendChild(sec);
+    });
+
+    /* 右栏：数字考点速记 */
+    var q = $('courseQuick');
+    q.innerHTML = '<div class="doc-toc-title">数字考点速记</div>';
+    (c.quick || []).forEach(function (item) {
+      var d = el('div', 'quick-item');
+      d.innerHTML = '<span class="quick-n">' + item.n + '</span>' +
+                    '<span class="quick-body"><span class="quick-t">' + item.t + '</span>' +
+                    '<span class="quick-d">' + item.d + '</span></span>';
+      q.appendChild(d);
+    });
+
+    /* 底部：延伸资源 */
+    var refs = $('courseRefs');
+    refs.innerHTML = '<h3>延伸与核对来源</h3>';
+    var ul = el('ul', 'doc-ref-list');
+    (c.refs || []).forEach(function (r) {
+      var li = el('li');
+      li.innerHTML = '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>';
+      ul.appendChild(li);
+    });
+    refs.appendChild(ul);
+    refs.appendChild(el('p', 'doc-ref-note',
+      '本页按教材章节框架重新组织考点，未转载原文；与手头教材/讲义不一致时以教材为准。'));
+
+    var entry = (typeof COMMON_COURSES !== 'undefined' ? COMMON_COURSES : []).filter(function (x) {
+      return x.courseId === c.id;
+    })[0];
+    var src = $('courseSrc');
+    if (entry && entry.url) { src.href = entry.url; src.hidden = false; } else { src.hidden = true; }
+
+    /* 左栏高亮跟随滚动 */
+    setActiveChapter(c.chapters[0] ? c.chapters[0].id : null);
+    if (courseIO) courseIO.disconnect();
+    if (typeof IntersectionObserver === 'function') {
+      courseIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) setActiveChapter(en.target.id.replace(/^ch-/, ''));
+        });
+      }, { rootMargin: '-80px 0px -68% 0px', threshold: 0 });
+      c.chapters.forEach(function (ch) {
+        var node = document.getElementById('ch-' + ch.id);
+        if (node) courseIO.observe(node);
+      });
+    }
+  }
+
   /* ---------------- 文字说明：文档页 ---------------- */
   function renderDoc() {
     var found = currentLevel();
@@ -1342,6 +1514,10 @@
     }
     var mj = e.target.closest('[data-major]');
     if (mj) { e.preventDefault(); selectMajor(mj.getAttribute('data-major')); return; }
+    var cs = e.target.closest('[data-course]');
+    if (cs) { e.preventDefault(); openCourse(cs.getAttribute('data-course')); return; }
+    var chn = e.target.closest('[data-ch]');
+    if (chn) { e.preventDefault(); goChapter(chn.getAttribute('data-ch')); return; }
     var st = e.target.closest('[data-style]');
     if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
     var sw = e.target.closest('[data-switch-style]');
@@ -1418,6 +1594,7 @@
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
   $('docStartQuiz').addEventListener('click', startQuiz);
   $('docBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
+  $('courseBack').addEventListener('click', function (e) { e.preventDefault(); show('home'); });
   $('videoStartQuiz').addEventListener('click', startQuiz);
   $('videoBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('reselectBtn').addEventListener('click', reselect);

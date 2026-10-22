@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    引路 · 样式
    纯静态项目，无框架、无构建步骤
    ========================================================== */
@@ -1789,6 +1789,7 @@ html[data-theme="night"] .light-overlay { background: rgba(4,6,14,.72); }
 /* ---------- 响应式 ---------- */
 @media (max-width: 900px) {
   .pulse-grid { grid-template-columns: 1fr; }
+}
 
 /* ---- 本机旧记录提示（在线但未登录） ---- */
 .stale-hint {
@@ -1819,3 +1820,158 @@ html[data-theme="night"] .stale-hint b { color: #f2d79b; }
   font-weight: 600;
 }
 .level-top .level-explain:hover { text-decoration: none; filter: brightness(1.04); }
+
+/* ==========================================================
+   公共必修课：文字说明（分章 + 思维导图）
+   ----------------------------------------------------------
+   结构：左栏章节目录 / 中栏「核心句 + 思维导图 + 必背要点 + 考法」
+   / 右栏数字考点速记。每章用 --ch-accent 换主色，避免一页到底发灰。
+   ========================================================== */
+.common-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.common-card-in { border-color: color-mix(in srgb, var(--brand) 24%, var(--line)); }
+.common-card-in .common-go { font-weight: 700; }
+
+/* ---- 课程头部 ---- */
+.course-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 2px; }
+.cm-chip {
+  font-size: 12.5px; color: var(--text-2);
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 4px 11px;
+}
+
+/* ---- 每一章 ---- */
+.course-ch {
+  margin-top: 32px; padding-top: 24px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 80px;
+}
+.course-ch:first-of-type { margin-top: 22px; padding-top: 0; border-top: 0; }
+
+/* 开篇的总览图 */
+.course-map { margin: 10px 0 0; }
+.course-map + .course-ch { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+
+.ch-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ch-num {
+  flex: none; font-size: 11.5px; font-weight: 800; letter-spacing: .06em;
+  color: #fff; background: var(--ch-accent, var(--brand));
+  border-radius: 7px; padding: 3px 9px;
+}
+.doc-body .ch-head h2 { margin: 0; font-size: 19px; letter-spacing: -.2px; line-height: 1.5; }
+
+/* 一句话核心 */
+.doc-body .ch-core {
+  margin: 14px 0 16px; padding: 12px 16px;
+  border-left: 3px solid var(--ch-accent, var(--brand));
+  border-radius: 0 12px 12px 0;
+  background: var(--surface-2);
+  background: color-mix(in srgb, var(--ch-accent, #4f6ef7) 8%, var(--card));
+  font-size: 14.6px; line-height: 1.85; color: var(--text-2);
+}
+
+/* ---- 思维导图：根 → 分支（标签 + 叶子） ---- */
+.mm {
+  margin: 4px 0 20px; padding: 16px 18px 10px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface-2);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ch-accent, #4f6ef7) 5%, var(--card)), var(--card));
+}
+.mm-root {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 14px; font-weight: 800; color: #fff;
+  background: var(--ch-accent, var(--brand));
+  padding: 7px 15px; border-radius: 999px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--ch-accent, #4f6ef7) 30%, transparent);
+}
+.mm-root::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255, 255, 255, .85);
+}
+.mm-body {
+  position: relative;
+  margin: 6px 0 0 16px; padding-left: 18px;
+  border-left: 2px solid var(--line);
+}
+.mm-branch {
+  position: relative; display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 12px; align-items: start;
+  padding: 9px 0;
+}
+.mm-branch::before {
+  content: ''; position: absolute; left: -18px; top: 21px;
+  width: 14px; height: 2px; background: var(--line);
+}
+.mm-label {
+  font-size: 12.5px; font-weight: 800; text-align: center;
+  color: var(--ch-accent, var(--brand));
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--ch-accent, #4f6ef7) 28%, var(--line));
+  border-radius: 8px; padding: 5px 8px; line-height: 1.45;
+}
+.mm-leaves { display: flex; flex-wrap: wrap; gap: 7px; }
+.mm-leaf {
+  font-size: 12.8px; line-height: 1.5; color: var(--text-2);
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 8px; padding: 5px 10px;
+  transition: border-color .15s, color .15s, transform .15s;
+}
+.mm-leaf:hover {
+  border-color: var(--ch-accent, var(--brand));
+  color: var(--text); transform: translateY(-1px);
+}
+
+/* ---- 必背要点 ---- */
+.doc-body .ch-h3 {
+  margin: 22px 0 10px; font-size: 12.5px; font-weight: 800;
+  letter-spacing: .1em; color: var(--text-3);
+}
+.doc-body .kp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.doc-body .kp-list li {
+  position: relative; margin: 0; padding-left: 20px;
+  font-size: 14.4px; line-height: 1.85; color: var(--text-2);
+}
+.doc-body .kp-list li::before {
+  content: ''; position: absolute; left: 3px; top: .74em;
+  width: 7px; height: 7px; border-radius: 2px;
+  background: var(--ch-accent, var(--brand)); opacity: .8;
+  transform: rotate(45deg);
+}
+
+/* ---- 考法提示 ---- */
+.course-tip {
+  margin: 18px 0 2px; padding: 12px 15px; border-radius: 10px;
+  background: var(--tip-bg); border-left: 3px solid var(--gold);
+  font-size: 13.8px; line-height: 1.85; color: var(--tip-text);
+}
+.course-tip b { color: var(--tip-text); margin-right: 6px; }
+
+/* ---- 右栏：数字考点速记 ---- */
+.quick-item {
+  display: flex; gap: 9px; padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.quick-item:last-child { border-bottom: 0; }
+.quick-n {
+  flex: none; width: 26px; height: 26px; border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 12.5px; font-weight: 800;
+  color: var(--brand); background: var(--brand-soft);
+}
+.quick-body { min-width: 0; }
+.quick-t { display: block; font-size: 12.5px; font-weight: 700; color: var(--text); line-height: 1.45; }
+.quick-d { display: block; font-size: 11.5px; color: var(--text-3); line-height: 1.55; margin-top: 2px; }
+
+/* ---- 手机 / 窄屏 ---- */
+@media (max-width: 640px) {
+  .mm { padding: 14px 12px 8px; }
+  .mm-body { margin-left: 6px; padding-left: 12px; }
+  .mm-branch { grid-template-columns: 1fr; gap: 6px; padding: 8px 0; }
+  .mm-branch::before { display: none; }
+  .mm-label { justify-self: start; }
+  .doc-body .ch-head h2 { font-size: 17.5px; }
+  .doc-body .kp-list li { font-size: 14px; }
+}
+html[data-layout="mobile"] .mm-branch { grid-template-columns: 1fr; gap: 6px; }
+html[data-layout="mobile"] .mm-branch::before { display: none; }
+html[data-layout="mobile"] .mm-label { justify-self: start; }
