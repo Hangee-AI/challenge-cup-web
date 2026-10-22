@@ -174,7 +174,7 @@
     <div class="page-head">
       <a class="back" href="#" data-go="browse">← 换个专业</a>
       <h1>你更喜欢哪种讲解方式？</h1>
-      <p>每关开始前，会先按这种方式给你讲一遍要点，然后再做题。之后可以随时切换。</p>
+      <p>文字说明 = 左边目录 + 右边正文的文档式讲解，读完直接做题；视频讲解之后再开放。之后可以随时切换。</p>
     </div>
     <div class="style-grid" id="styleList"></div>
     <p class="muted style-note">选好之后进入你的学习路径。</p>
@@ -219,27 +219,55 @@
     <p class="muted map-note">🗺️ 地图视觉模板待替换（当前为结构版）。</p>
   </section>
 
-  <!-- ==================== 6. 关卡（讲解 + 答题） ==================== -->
+  <!-- ==================== 6. 文字说明：文档页（左侧目录 + 正文） ==================== -->
+  <section id="view-doc" class="view view-doc" hidden>
+    <div class="doc-wrap">
+
+      <aside class="doc-side">
+        <a class="back" href="#" id="docBack">← 返回路径</a>
+        <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+        <div class="doc-side-sub" id="docSideSub"></div>
+        <nav class="doc-nav" id="docNav"></nav>
+      </aside>
+
+      <article class="doc-main">
+        <div class="doc-crumb" id="docCrumb"></div>
+        <h1 class="doc-title" id="docTitle"></h1>
+        <p class="doc-lead" id="docLead"></p>
+        <div class="doc-body" id="docBody"></div>
+        <div class="doc-refs" id="docRefs"></div>
+        <div class="doc-foot">
+          <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+          <button class="btn btn-primary" id="docStartQuiz">读完，开始做题 →</button>
+        </div>
+      </article>
+
+      <aside class="doc-toc" id="docToc"></aside>
+    </div>
+  </section>
+
+  <!-- ==================== 7. 视频讲解：暂未开放 ==================== -->
+  <section id="view-video" class="view" hidden>
+    <div class="video-page">
+      <div class="video-coming">
+        <div class="video-coming-icon">🎬</div>
+        <h1>视频讲解还没上线</h1>
+        <p>你选的是「视频讲解」。这一版先把<strong>文字版</strong>做完整，视频会随后按关卡补上（每关 1–2 分钟）。</p>
+        <p class="muted" id="videoLevelName"></p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="videoToText">先用文字版学习 →</button>
+          <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 8. 关卡（答题） ==================== -->
   <section id="view-level" class="view" hidden>
     <div class="level-top">
       <a class="back" href="#" id="backToMap">← 返回地图</a>
       <div class="crumb" id="crumb"></div>
       <span class="muted" id="qCount"></span>
-    </div>
-
-    <div class="lesson" id="lessonBox">
-      <div class="lesson-head" id="lessonHead">
-        <span class="lesson-badge" id="lessonBadge">📄 文字说明</span>
-        <span class="muted">本关开始前，先花 1 分钟看这个</span>
-      </div>
-      <div class="lesson-video" id="lessonVideo" hidden>
-        <div class="video-mock"><span class="video-play">▶</span></div>
-        <div class="video-meta">
-          <b id="videoTitle">视频讲解 · 待录制</b>
-          <span class="muted">正式版这里会放 1–2 分钟的讲解视频（当前为占位）</span>
-        </div>
-      </div>
-      <div class="lesson-text" id="lessonText"></div>
     </div>
 
     <div class="card quiz-card" id="quizCard">
@@ -255,8 +283,8 @@
 
     <div class="card empty-card" id="levelEmpty" hidden>
       <div class="empty-icon">🚧</div>
-      <h2>这一关的内容还在建设中</h2>
-      <p>框架已经到位：每个模块都会有 3 个小关卡。这一关的题目由团队按培养方案补充。</p>
+      <h2>这一关的题目还在建设中</h2>
+      <p>讲解文档已经可以看了；题目会由团队按培养方案补充。</p>
       <a class="btn btn-primary btn-sm" href="#" id="backToMajor2">返回路径</a>
     </div>
   </section>
@@ -287,6 +315,7 @@
 </footer>
 
 <script src="js/data.js"></script>
+<script src="js/docs.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

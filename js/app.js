@@ -49,11 +49,13 @@
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'level', 'report'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report'];
 
   function show(name) {
     // 需要专业身份的页面，没选专业就先回选专业
     if (['style', 'major', 'map'].indexOf(name) > -1 && !state.majorId) name = 'browse';
+    if (name === 'doc' && (!state.majorId || !state.levelId)) name = 'map';
+    if (name === 'video' && !state.majorId) name = 'browse';
     if (name === 'level' && !state.levelId) name = 'map';
 
     VIEWS.forEach(function (v) {
@@ -71,6 +73,8 @@
     if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
     if (name === 'map') renderMap();
+    if (name === 'doc') renderDoc();
+    if (name === 'video') renderVideo();
     if (name === 'report') renderReport();
   }
 
@@ -221,12 +225,13 @@
     var box = $('styleList');
     box.innerHTML = '';
     STYLES.forEach(function (s) {
-      var a = el('a', 'style-card' + (state.style === s.id ? ' style-on' : ''));
+      var a = el('a', 'style-card' + (state.style === s.id ? ' style-on' : '') + (s.soon ? ' style-soon' : ''));
       a.href = '#';
       a.setAttribute('data-style', s.id);
       a.innerHTML =
         '<span class="style-emoji">' + s.emoji + '</span>' +
-        '<span class="style-name">' + s.name + '</span>' +
+        '<span class="style-name">' + s.name +
+        (s.soon ? '<span class="style-badge">即将开放</span>' : '') + '</span>' +
         '<span class="style-desc">' + s.desc + '</span>' +
         '<span class="style-tag">' + s.tag + '</span>' +
         (state.style === s.id ? '<span class="style-check">✓ 当前选择</span>' : '');
@@ -384,7 +389,7 @@
     });
   }
 
-  /* ---------------- 关卡 ---------------- */
+  /* ---------------- 打开关卡：先按学习方式分流 ---------------- */
   function openLevel(levelId, fromMap) {
     var path = getPath(state.majorId);
     var found = path && findLevel(path, levelId);
@@ -394,38 +399,125 @@
     state.qi = 0;
     state.levelCorrect = 0;
     state.fromMap = fromMap !== false;
+    state.levelMeta = found;
 
-    $('crumb').textContent = found.module.name + ' · ' + found.stage.title;
-    $('levelName').textContent = found.level.name;
-    renderLesson(found.level);
+    // 视频讲解暂未开放：先给一个说明页
+    if (state.style === 'video') { show('video'); return; }
 
-    if (!found.level.questions) {
-      $('quizCard').hidden = true;
-      $('levelEmpty').hidden = false;
-      show('level');
-      return;
-    }
-    $('quizCard').hidden = false;
-    $('levelEmpty').hidden = true;
-    show('level');
-    renderQuestion();
+    show('doc');
   }
 
-  function renderLesson(level) {
-    var isVideo = state.style === 'video';
-    $('lessonBadge').textContent = isVideo ? '🎬 视频讲解' : '📄 文字说明';
-    $('lessonVideo').hidden = !isVideo;
-    $('lessonText').hidden = isVideo;
-    if (isVideo) {
-      $('videoTitle').textContent = level.name + ' · 讲解视频（待录制）';
-    } else {
-      $('lessonText').innerHTML = '<b>本关要点</b>' + level.brief;
+  /* 视频页 */
+  function renderVideo() {
+    var found = currentLevel();
+    $('videoLevelName').textContent = found
+      ? found.level.name + ' · ' + found.module.name
+      : '';
+  }
+
+  /* ---------------- 文字说明：文档页 ---------------- */
+  function renderDoc() {
+    var found = currentLevel();
+    if (!found) { show('map'); return; }
+    var path = getPath(state.majorId);
+    var major = path.major;
+    var cat = getCategory(major.cat);
+    var level = found.level;
+    var doc = getDoc(level, { module: found.module, major: major, cat: cat });
+
+    $('docSideTitle').textContent = major.emoji + ' ' + major.name;
+    $('docSideSub').textContent = found.stage.title + ' · ' + found.module.name;
+
+    // 左侧：本模块的关卡目录
+    var nav = $('docNav');
+    nav.innerHTML = '';
+    var groupLabel = el('div', 'doc-nav-label', found.module.name);
+    nav.appendChild(groupLabel);
+    found.module.levels.forEach(function (lv) {
+      var rec = state.done[lv.id];
+      var a = el('a', 'doc-nav-item' + (lv.id === level.id ? ' is-on' : ''));
+      a.href = '#';
+      a.setAttribute('data-level', lv.id);
+      a.innerHTML =
+        '<span class="doc-nav-dot">' + (rec ? '✓' : '·') + '</span>' +
+        '<span class="doc-nav-txt">' + lv.name + '</span>' +
+        (lv.ready ? '' : '<span class="doc-nav-soon">建设中</span>');
+      nav.appendChild(a);
+    });
+
+    // 正文
+    $('docCrumb').textContent = found.stage.title + ' / ' + found.module.name;
+    $('docTitle').textContent = level.name;
+    $('docLead').textContent = doc.lead || '';
+    var body = $('docBody');
+    body.innerHTML = '';
+    doc.sections.forEach(function (sec, i) {
+      var wrap = el('section', 'doc-sec');
+      wrap.id = 'sec-' + sec.id;
+      wrap.innerHTML = '<h2>' + sec.title + '</h2>' + sec.html;
+      body.appendChild(wrap);
+    });
+
+    // 右侧：本页目录
+    var toc = $('docToc');
+    toc.innerHTML = '<div class="doc-toc-title">本页目录</div>';
+    doc.sections.forEach(function (sec) {
+      var a = el('a', 'doc-toc-link');
+      a.href = '#sec-' + sec.id;
+      a.textContent = sec.title;
+      toc.appendChild(a);
+    });
+
+    // 延伸资源
+    var refs = $('docRefs');
+    refs.innerHTML = '';
+    if (doc.refs && doc.refs.length) {
+      refs.innerHTML = '<h3>想更深入一点？</h3>';
+      var ul = el('ul', 'doc-ref-list');
+      doc.refs.forEach(function (r) {
+        var li = el('li');
+        li.innerHTML = '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>';
+        ul.appendChild(li);
+      });
+      refs.appendChild(ul);
+      var note = el('p', 'doc-ref-note', '延伸资源来自 <a href="https://csdiy.wiki/" target="_blank" rel="noopener">csdiy.wiki · CS 自学指南</a>，本站只做推荐，不转载其内容。');
+      refs.appendChild(note);
     }
+
+    // 底部按钮：有题目才能开始做题
+    var btn = $('docStartQuiz');
+    if (level.questions) {
+      btn.hidden = false;
+      btn.textContent = '读完，开始做题 →';
+    } else {
+      btn.hidden = true;
+    }
+    $('docBack').textContent = '← 返回' + (state.fromMap ? '地图' : '路径');
   }
 
   function currentLevel() {
     var path = getPath(state.majorId);
     return path ? findLevel(path, state.levelId) : null;
+  }
+
+  /* 从文档页进入答题 */
+  function startQuiz() {
+    var found = currentLevel();
+    if (!found) { show('map'); return; }
+    $('crumb').textContent = found.module.name + ' · ' + found.stage.title;
+    $('levelName').textContent = found.level.name;
+
+    if (!found.level.questions) {
+      $('quizCard').hidden = true;
+      $('levelEmpty').hidden = false;
+    } else {
+      $('quizCard').hidden = false;
+      $('levelEmpty').hidden = true;
+      state.qi = 0;
+      state.levelCorrect = 0;
+      renderQuestion();
+    }
+    show('level');
   }
 
   function renderQuestion() {
@@ -584,7 +676,13 @@
     var st = e.target.closest('[data-style]');
     if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
     var lv = e.target.closest('[data-level]');
-    if (lv) { e.preventDefault(); openLevel(lv.getAttribute('data-level'), true); return; }
+    if (lv) {
+      e.preventDefault();
+      // 文档页左侧目录切换关卡时，保持"从哪来"的返回目标不变
+      var keepFrom = lv.classList.contains('doc-nav-item') ? state.fromMap : true;
+      openLevel(lv.getAttribute('data-level'), keepFrom);
+      return;
+    }
     var opt = e.target.closest('.option');
     if (opt && !opt.disabled) { chooseOption(Number(opt.getAttribute('data-i'))); }
   });
@@ -592,6 +690,14 @@
   $('nextBtn').addEventListener('click', nextQuestion);
   $('backToMap').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
+  $('docStartQuiz').addEventListener('click', startQuiz);
+  $('docBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
+  $('videoToText').addEventListener('click', function () {
+    state.style = 'text';
+    save();
+    show('doc');
+    toast('已切换为文字说明');
+  });
   $('reselectBtn').addEventListener('click', reselect);
   $('reselectBtn2').addEventListener('click', reselect);
   $('changeStyle').addEventListener('click', function (e) { e.preventDefault(); show('style'); });
