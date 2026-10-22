@@ -25,7 +25,8 @@
     last: null,           // { majorId, levelId, mode, page, docY, ts } 上次学到哪
     theme: 'morning',     // 'morning' | 'night'
     caro: 0,
-    quote: 0
+    quote: 0,
+    lastQuote: -1         // 上次显示的鼓励语下标（用来避免刷新后重复）
   };
 
   function $(id) { return document.getElementById(id); }
@@ -49,6 +50,7 @@
       state.study = data.study || {};
       state.last = data.last || null;
       state.theme = data.theme === 'night' ? 'night' : 'morning';
+      state.lastQuote = (typeof data.lastQuote === 'number') ? data.lastQuote : -1;
     } catch (e) { /* 忽略损坏数据 */ }
   }
   function save() {
@@ -56,7 +58,7 @@
       localStorage.setItem(STORE_KEY, JSON.stringify({
         majorId: state.majorId, style: state.style, done: state.done,
         profile: state.profile, study: state.study, last: state.last,
-        theme: state.theme
+        theme: state.theme, lastQuote: state.lastQuote
       }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
@@ -1007,15 +1009,18 @@
   }
 
   /* ---------------- 首页：继续上次 + 鼓励语 + 公告轮播 ---------------- */
-  var lastQuote = -1;
-
-  // 随机取一句，尽量不和上一句重复
+  // 上一句的下标要存进 localStorage，否则刷新后“不重复”就失效（页面重载会忘记）
   function pickQuote() {
     var n = HOME_QUOTES.length;
     if (!n) return '';
+    var prev = (typeof state.lastQuote === 'number') ? state.lastQuote : -1;
     var i = Math.floor(Math.random() * n);
-    if (n > 1 && i === lastQuote) i = (i + 1) % n;
-    lastQuote = i;
+    if (n > 1 && i === prev) {
+      // 撞上上一句就往后跳一段随机距离，保证一定换一句
+      i = (prev + 1 + Math.floor(Math.random() * (n - 1))) % n;
+    }
+    state.lastQuote = i;
+    save();
     return HOME_QUOTES[i];
   }
 
