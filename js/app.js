@@ -51,6 +51,7 @@
 
   /* ---------------- 视图切换 ---------------- */
   var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report'];
+  var curView = 'home';
 
   function show(name) {
     // 需要专业身份的页面，没选专业就先回选专业
@@ -58,6 +59,7 @@
     if (name === 'doc' && (!state.majorId || !state.levelId)) name = 'map';
     if (name === 'video' && !state.majorId) name = 'browse';
     if (name === 'level' && !state.levelId) name = 'map';
+    curView = name;
 
     VIEWS.forEach(function (v) {
       var node = $('view-' + v);
@@ -67,6 +69,7 @@
       a.classList.toggle('active', a.getAttribute('data-go') === name);
     });
     updateNav();
+    markStyleSwitch();
     window.scrollTo(0, 0);
 
     if (name === 'home') renderHomeCta();
@@ -153,7 +156,7 @@
       $('myName').textContent = m.name;
       $('myMeta').textContent = (cat ? cat.name : '') + ' · ' + m.desc +
         ' · 已完成 ' + doneN + ' / ' + levels.length + ' 关';
-      $('myStyle').textContent = styleName(state.style);
+      markStyleSwitch();
       return;
     }
 
@@ -245,6 +248,32 @@
     save();
     toast('学习方式已设为「' + styleName(id).replace(/^[^\u4e00-\u9fa5A-Za-z]+/, '') + '」');
     show('major');
+  }
+
+  /* 学习方式切换（我的专业页的大按钮 / 路径页的小按钮，共用一个数据属性） */
+  function markStyleSwitch() {
+    var opts = document.querySelectorAll('[data-switch-style]');
+    for (var i = 0; i < opts.length; i++) {
+      var on = opts[i].getAttribute('data-switch-style') === state.style;
+      if (opts[i].classList.contains('learn-opt')) {
+        opts[i].className = 'learn-opt' + (on ? ' learn-opt-on' : '');
+      } else {
+        opts[i].classList.toggle('mode-btn-on', on);
+      }
+      opts[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  function switchStyle(id) {
+    if (!id || state.style === id) return;
+    state.style = id;
+    save();
+    markStyleSwitch();
+    // 正停在文档页/视频页时，直接换成另一种看同一关
+    if (curView === 'doc' || curView === 'video') {
+      show(id === 'video' ? 'video' : 'doc');
+    }
+    toast('已切换为「' + styleName(id).replace(/^[^\u4e00-\u9fa5A-Za-z]+/, '') + '」');
   }
 
   /* ---------------- 专业路径 ---------------- */
@@ -811,6 +840,8 @@
     if (mj) { e.preventDefault(); selectMajor(mj.getAttribute('data-major')); return; }
     var st = e.target.closest('[data-style]');
     if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
+    var sw = e.target.closest('[data-switch-style]');
+    if (sw) { e.preventDefault(); switchStyle(sw.getAttribute('data-switch-style')); return; }
     var lv = e.target.closest('[data-level]');
     if (lv) {
       e.preventDefault();
@@ -838,7 +869,6 @@
   $('videoBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('reselectBtn').addEventListener('click', reselect);
   $('reselectBtn2').addEventListener('click', reselect);
-  $('changeStyle').addEventListener('click', function (e) { e.preventDefault(); show('style'); });
   $('resetBtn').addEventListener('click', function () {
     if (!confirm('确定要清空所有学习进度吗？此操作不可撤销。')) return;
     state.done = {};
