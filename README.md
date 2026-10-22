@@ -75,6 +75,9 @@ challenge-cup-web/
 ├─ js/law-courses.js        法学：整专业重排为 12 门课 × 3 章（36 关，每学期 9 关）
 ├─ js/ip-courses.js         知识产权：12 门课 × 3 章（36 关，每学期 9 关）
 ├─ js/sociology-courses.js  社会学：12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/econ-courses.js       经济学：12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/finance-courses.js    金融学：12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/majors/          食品科学与工程 / 临床医学 / 口腔医学 / 护理学 / 药学：各 12 门课 × 3 章（36 关）
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
 ├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）
