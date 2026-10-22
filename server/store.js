@@ -230,42 +230,47 @@ const CS_INTRO_LEVELS = [
   }
 ];
 
+/* 南昌大学 · 计算机科学与技术专业（2024 版培养方案）
+   课程依据：https://smcs.ncu.edu.cn/docs/2026-06/f595e775495648438ad046b9d9033c64.pdf
+   阶段标题与工程门类模板一致，与 js/data.js 中的 CS_STAGE_OVERRIDE 保持同步。 */
 const CS_STAGE_OVERRIDE = {
   '大一 · 打地基': {
     modules: [
       { name: 'C 语言入门', levels: CS_INTRO_LEVELS },
+      { name: '计算机导论与伦理', levels: null },
       { name: '高等数学（上）', levels: null },
-      { name: '计算机科学导论', levels: null },
+      { name: '高等数学（下）', levels: null },
       { name: '线性代数', levels: null },
-      { name: '大学物理', levels: null }
+      { name: '面向对象程序设计（Java）', levels: null }
     ]
   },
   '大二 · 专业基础': {
     modules: [
       { name: '数据结构', levels: null },
       { name: '离散数学', levels: null },
+      { name: '数字逻辑', levels: null },
       { name: '计算机组织与结构', levels: null },
-      { name: '面向对象程序设计（Java）', levels: null },
-      { name: '汇编语言程序设计', levels: null },
-      { name: '概率论与数理统计', levels: null }
+      { name: '概率论与数理统计', levels: null },
+      { name: '数据库原理', levels: null },
+      { name: '数值计算', levels: null }
     ]
   },
   '大三 · 核心专业课': {
     modules: [
       { name: '操作系统', levels: null },
-      { name: '计算机网络', levels: null },
-      { name: '数据库原理', levels: null },
       { name: '编译原理', levels: null },
+      { name: '计算机网络', levels: null },
       { name: '软件工程', levels: null },
-      { name: '微机原理与接口技术', levels: null }
+      { name: '算法分析与设计', levels: null },
+      { name: '人工智能', levels: null }
     ]
   },
   '大四 · 出口': {
     modules: [
-      { name: '方向选修（Web / 图形学 / 人工智能）', levels: null },
-      { name: '课程设计与生产实习', levels: null },
+      { name: '毕业实习', levels: null },
       { name: '毕业设计', levels: null },
-      { name: '考研/求职准备', levels: null }
+      { name: '工程实践', levels: null },
+      { name: '计算机网络课程实践', levels: null }
     ]
   }
 };
@@ -276,11 +281,6 @@ const CS_MODULE_RESOURCES = {
   'C 语言入门': [
     { name: 'Harvard CS50: This is CS50x', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/', desc: '风靡全球的计算机入门课' },
     { name: 'Duke: Introductory C Programming Specialization', school: 'Duke / Coursera', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/Duke-Coursera-Intro-C/', desc: '体系化的 C 语言专项课程' }
-  ],
-  '计算机科学导论': [
-    { name: 'UCB CS61A: SICP (Python)', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS61A/', desc: 'SICP 的 Python 改编版，无数人的自学起点' },
-    { name: 'CS50P: Introduction to Programming with Python', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS50P/', desc: 'CS50 家族的 Python 入门课' },
-    { name: 'MIT Missing Semester', school: 'MIT', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/MIT-Missing-Semester/', desc: 'CSer 的效率工具集训' }
   ],
   '线性代数': [
     { name: 'MIT 18.06: Linear Algebra (Gilbert Strang)', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.06/', desc: 'Strang 老爷子的线代神课' }
@@ -317,14 +317,32 @@ const CS_MODULE_RESOURCES = {
   '软件工程': [
     { name: 'UCB CS169: Software Engineering', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/', desc: '敏捷开发与 SaaS 项目实战' }
   ],
-  '方向选修（Web / 图形学 / 人工智能）': [
-    { name: 'Stanford CS229: Machine Learning', school: 'Stanford', url: 'https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/CS229/', desc: '理论扎实的机器学习课' },
-    { name: 'Stanford CS231n: CNN for Visual Recognition', school: 'Stanford', url: 'https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS231n/', desc: '深度学习视觉方向名课' },
-    { name: 'GAMES101: 现代计算机图形学入门（闫令琪）', school: 'UCSB / 国内', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/GAMES101/', desc: '中文图形学入门首选' }
+  '计算机导论与伦理': [
+    { name: 'UCB CS61A: SICP (Python)', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS61A/', desc: 'SICP 的 Python 改编版，无数人的自学起点' },
+    { name: 'MIT Missing Semester', school: 'MIT', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/MIT-Missing-Semester/', desc: 'CSer 的效率工具集训' }
   ],
-  '课程设计与生产实习': [
-    { name: 'CMU 15-418 / Stanford CS149: Parallel Computing', school: 'CMU / Stanford', url: 'https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/CS149/', desc: '并行计算' },
-    { name: 'MIT 6.5840 (6.824): Distributed System', school: 'MIT', url: 'https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/MIT6.824/', desc: '分布式系统经典课' }
+  '高等数学（上）': [
+    { name: 'MIT 18.01: Single Variable Calculus', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.01/', desc: '单变量微积分，配合教材使用' }
+  ],
+  '高等数学（下）': [
+    { name: 'MIT 18.02: Multivariable Calculus', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.02/', desc: '多变量微积分' }
+  ],
+  '面向对象程序设计（Java）': [
+    { name: 'UCB CS61B: Data Structures and Algorithms', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS61B/', desc: 'Java 主讲的数据结构课，项目驱动' }
+  ],
+  '数字逻辑': [
+    { name: 'Nand2Tetris: From Nand to Tetris', school: 'Hebrew University', url: 'https://csdiy.wiki/%E7%A1%AC%E4%BB%B6%E4%B8%8E%E7%B3%BB%E7%BB%9F/Nand2Tetris/', desc: '从与非门搭出一台计算机，逻辑设计入门神课' }
+  ],
+  '数值计算': [
+    { name: 'MIT 18.06: Linear Algebra (Gilbert Strang)', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.06/', desc: '线代基础，数值计算的前置' }
+  ],
+  '算法分析与设计': [
+    { name: 'MIT 6.006: Introduction to Algorithms', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.006/', desc: '算法导论配套课程' },
+    { name: 'MIT 6.046J: Design and Analysis of Algorithms', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.046/', desc: '进阶算法设计与分析' }
+  ],
+  '人工智能': [
+    { name: 'Stanford CS229: Machine Learning', school: 'Stanford', url: 'https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/CS229/', desc: '理论扎实的机器学习课' },
+    { name: 'GAMES101: 现代计算机图形学入门（闫令琪）', school: 'UCSB / 国内', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/GAMES101/', desc: 'AI 与图形学交叉方向可参考' }
   ]
 };
 

@@ -1007,13 +1007,49 @@ int main(void) {
   }
 };
 
-/* 计算机专业的大一阶段，把「C 语言入门」换成有真题的模块 */
+/* ---------------- 5. 南昌大学 · 计算机科学与技术专业（2024 版培养方案） ----------------
+   课程名称与修读学期依据南昌大学数学与计算机学院官方《计算机科学与技术培养方案（2024版）》：
+   https://smcs.ncu.edu.cn/docs/2026-06/f595e775495648438ad046b9d9033c64.pdf
+   按「大一 → 大四」四个阶段组织，阶段标题与工程门类模板 PATH_TEMPLATE.engineering 一致。
+   只有 C 语言入门模块挂了真实关卡（CS_INTRO_LEVELS），其余模块先放 3 个占位关卡（ready:false）。 */
 const CS_STAGE_OVERRIDE = {
   '大一 · 打地基': {
     modules: [
       { name: 'C 语言入门', levels: CS_INTRO_LEVELS },
+      { name: '计算机导论与伦理', levels: null },
       { name: '高等数学（上）', levels: null },
-      { name: '大学计算机导论', levels: null }
+      { name: '高等数学（下）', levels: null },
+      { name: '线性代数', levels: null },
+      { name: '面向对象程序设计（Java）', levels: null }
+    ]
+  },
+  '大二 · 专业基础': {
+    modules: [
+      { name: '数据结构', levels: null },
+      { name: '离散数学', levels: null },
+      { name: '数字逻辑', levels: null },
+      { name: '计算机组织与结构', levels: null },
+      { name: '概率论与数理统计', levels: null },
+      { name: '数据库原理', levels: null },
+      { name: '数值计算', levels: null }
+    ]
+  },
+  '大三 · 核心专业课': {
+    modules: [
+      { name: '操作系统', levels: null },
+      { name: '编译原理', levels: null },
+      { name: '计算机网络', levels: null },
+      { name: '软件工程', levels: null },
+      { name: '算法分析与设计', levels: null },
+      { name: '人工智能', levels: null }
+    ]
+  },
+  '大四 · 出口': {
+    modules: [
+      { name: '毕业实习', levels: null },
+      { name: '毕业设计', levels: null },
+      { name: '工程实践', levels: null },
+      { name: '计算机网络课程实践', levels: null }
     ]
   }
 };
