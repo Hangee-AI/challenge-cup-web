@@ -155,10 +155,23 @@
             <p class="muted" id="myMeta"></p>
           </div>
         </div>
-        <div class="my-major-style">
-          <span class="muted">学习方式：</span>
-          <span class="style-pill" id="myStyle">文字说明</span>
-          <a href="#" class="link" id="changeStyle">换一种</a>
+        <div class="learn-switch">
+          <div class="learn-switch-head">
+            <strong>怎么学这一关</strong>
+            <span class="muted">点一下就切换，之后每关都按这个方式打开，随时能改</span>
+          </div>
+          <div class="learn-options" id="styleSwitch">
+            <button type="button" class="learn-opt" data-switch-style="video">
+              <span class="learn-emoji">🎬</span>
+              <span class="learn-text"><strong>视频讲解</strong><em>先看视频，再做题</em></span>
+              <span class="learn-check">✓</span>
+            </button>
+            <button type="button" class="learn-opt" data-switch-style="text">
+              <span class="learn-emoji">📄</span>
+              <span class="learn-text"><strong>文字说明</strong><em>先读文档，再做题</em></span>
+              <span class="learn-check">✓</span>
+            </button>
+          </div>
         </div>
         <div class="btn-row">
           <a class="btn btn-primary" href="#" data-go="major">查看学习路径</a>
@@ -200,6 +213,13 @@
       <a class="btn btn-ghost btn-sm" href="#" data-go="report">学习报告</a>
     </div>
 
+    <div class="mode-row">
+      <span class="mode-row-label">讲解方式</span>
+      <button type="button" class="mode-btn" data-switch-style="video">🎬 视频讲解</button>
+      <button type="button" class="mode-btn" data-switch-style="text">📄 文字说明</button>
+      <span class="mode-row-hint">点关卡后按这个方式打开，随时可改</span>
+    </div>
+
     <div id="stageList" class="stage-list"></div>
   </section>
 
@@ -238,6 +258,7 @@
         <div class="doc-refs" id="docRefs"></div>
         <div class="doc-foot">
           <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+          <button class="btn btn-ghost" type="button" data-switch-style="video">🎬 换成视频讲解</button>
           <button class="btn btn-primary" id="docStartQuiz">读完，开始做题 →</button>
         </div>
       </article>
@@ -278,6 +299,7 @@
 
         <div class="doc-foot">
           <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+          <button class="btn btn-ghost" type="button" data-switch-style="text">📄 换成文字说明</button>
           <button class="btn btn-primary" id="videoStartQuiz">看完，开始做题 →</button>
         </div>
       </main>
