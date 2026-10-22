@@ -1158,13 +1158,16 @@
   }
 
   function registerMember() {
-    var sid = ($('sidInput').value || '').trim();
-    if (!/^\d{6,20}$/.test(sid)) { toast('学号应该是 6–20 位数字'); $('sidInput').focus(); return; }
+    var raw = ($('sidInput').value || '').trim().toUpperCase();
+    // 允许直接粘贴带前缀的完整账号，统一去掉前缀只留学号数字
+    raw = raw.replace(/^N\.?C\.?U\.?[-\s]?/, '');
+    if (!/^\d{6,20}$/.test(raw)) { toast('学号应该是 6–20 位数字'); $('sidInput').focus(); return; }
     var nick = ($('nickInput').value || '').trim();
-    if (!nick) nick = '同学' + sid.slice(-4);
+    if (!nick) nick = '同学' + raw.slice(-4);
     state.profile = {
       mode: 'member',
-      sid: sid,
+      sid: 'NCU' + raw,
+      snum: raw,
       nickname: nick.slice(0, 16),
       avatar: avatarPick || AVATARS[0],
       since: dateKey(new Date())
@@ -1172,7 +1175,7 @@
     save();
     updateNav();
     renderProfile();
-    toast('注册成功，欢迎你，' + state.profile.nickname);
+    toast('注册成功，账号 NCU' + raw);
   }
 
   function logoutMember() {

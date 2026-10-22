@@ -377,7 +377,7 @@
     <div class="page-head">
       <a class="back" href="#" data-go="home">← 返回首页</a>
       <h1>个人中心</h1>
-      <p>游客模式只存在这台设备；用学号注册后，昵称、头像、学习时长都会长期保存。</p>
+      <p>游客模式只存在这台设备；用学号注册后，昵称、头像、学习时长都会长期保存。<b>账号信息只保存在这台电脑的浏览器里，不上传到任何服务器。</b></p>
     </div>
 
     <!-- 8a. 游客：注册入口 -->
@@ -392,8 +392,11 @@
         </div>
         <div class="guest-form">
           <label class="field">
-            <span class="field-label">学号</span>
-            <input id="sidInput" class="field-input" type="text" inputmode="numeric" maxlength="20" placeholder="例如 9110126060" />
+            <span class="field-label">学号（前面自动加学校简称 NCU）</span>
+            <span class="sid-input-wrap">
+              <span class="sid-prefix">NCU</span>
+              <input id="sidInput" class="field-input sid-input" type="text" inputmode="numeric" maxlength="20" placeholder="例如 9110126060" />
+            </span>
           </label>
           <label class="field">
             <span class="field-label">昵称（可留空）</span>
@@ -404,7 +407,7 @@
             <div class="avatar-pick" id="avatarPick"></div>
           </label>
           <button class="btn btn-primary btn-lg" id="registerBtn" type="button">用学号注册 · 开启常驻模式</button>
-          <p class="field-hint">不需要密码，学号只存在你自己的浏览器里，不会上传。</p>
+          <p class="field-hint">不需要密码。账号（NCU + 学号）只写进这台浏览器的本地存储，不上传服务器，所以换设备或清缓存后要重新注册。</p>
         </div>
       </div>
     </div>
