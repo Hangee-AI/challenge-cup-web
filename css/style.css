@@ -1097,4 +1097,12 @@ html[data-theme="night"] img { opacity: .94; }
   border: 0 !important; border-radius: 0 !important; background: transparent !important;
   padding-left: 12px;
 }
-.sid-input:focus { background: transparent !important; }
+.sid-input:focus { background: transparent !important; }/* 学号输入：可选学校简称 + 学号 */
+.sid-select {
+  appearance: none; -webkit-appearance: none;
+  border: 0; border-right: 1px solid var(--line);
+  background: var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238b93a8'/></svg>") no-repeat right 9px center;
+  color: var(--text); font: inherit; font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  padding: 0 24px 0 12px; cursor: pointer; outline: none;
+}
+.sid-select:focus { background-color: var(--surface-2); }

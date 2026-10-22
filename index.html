@@ -392,9 +392,20 @@
         </div>
         <div class="guest-form">
           <label class="field">
-            <span class="field-label">学号（前面自动加学校简称 NCU）</span>
+            <span class="field-label">学号（先选学校简称，再填学号）</span>
             <span class="sid-input-wrap">
-              <span class="sid-prefix">NCU</span>
+              <select id="sidPrefix" class="sid-select" aria-label="学校简称">
+                <option value="NCU">NCU</option>
+                <option value="NCHU">NCHU</option>
+                <option value="JXNU">JXNU</option>
+                <option value="ECJTU">ECJTU</option>
+                <option value="JUFE">JUFE</option>
+                <option value="JXUST">JXUST</option>
+                <option value="NIT">NIT</option>
+                <option value="JXUT">JXUT</option>
+                <option value="NCPU">NCPU</option>
+                <option value="NCZU">NCZU</option>
+              </select>
               <input id="sidInput" class="field-input sid-input" type="text" inputmode="numeric" maxlength="20" placeholder="例如 9110126060" />
             </span>
           </label>
@@ -407,7 +418,7 @@
             <div class="avatar-pick" id="avatarPick"></div>
           </label>
           <button class="btn btn-primary btn-lg" id="registerBtn" type="button">用学号注册 · 开启常驻模式</button>
-          <p class="field-hint">不需要密码。账号（NCU + 学号）只写进这台浏览器的本地存储，不上传服务器，所以换设备或清缓存后要重新注册。</p>
+          <p class="field-hint">不需要密码。账号（学校简称 + 学号）只写进这台浏览器的本地存储，不上传服务器，所以换设备或清缓存后要重新注册。</p>
         </div>
       </div>
     </div>

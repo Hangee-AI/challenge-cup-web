@@ -1148,7 +1148,12 @@
     var guest = !(p && p.mode === 'member');
     $('guestPanel').hidden = !guest;
     $('memberPanel').hidden = guest;
-    if (guest) { renderAvatarPick(); return; }
+    if (guest) {
+      renderAvatarPick();
+      // 记住上次选的学校简称，下次注册不用重选
+      if ($('sidPrefix') && p && p.prefix) $('sidPrefix').value = p.prefix;
+      return;
+    }
     $('pfAvatar').textContent = p.avatar || '🐱';
     $('pfName').textContent = p.nickname || '同学';
     $('pfSid').textContent = '学号 ' + (p.sid || '—');
@@ -1158,15 +1163,29 @@
   }
 
   function registerMember() {
+    var sel = $('sidPrefix');
+    var prefix = (sel && sel.value ? sel.value : 'NCU').toUpperCase();
     var raw = ($('sidInput').value || '').trim().toUpperCase();
-    // 允许直接粘贴带前缀的完整账号，统一去掉前缀只留学号数字
-    raw = raw.replace(/^N\.?C\.?U\.?[-\s]?/, '');
+    // 允许直接粘贴带前缀的完整账号：前缀以粘贴的为准（在选择列表里就同步选中）
+    var m = raw.match(/^([A-Z][A-Z.\-\s]*?)[\s-]?(\d{6,20})$/);
+    if (m) {
+      var given = m[1].replace(/[.\-\s]/g, '');
+      if (sel) {
+        var hit = false;
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === given) { hit = true; break; }
+        }
+        if (hit) { prefix = given; sel.value = given; }
+      }
+      raw = m[2];
+    }
     if (!/^\d{6,20}$/.test(raw)) { toast('学号应该是 6–20 位数字'); $('sidInput').focus(); return; }
     var nick = ($('nickInput').value || '').trim();
     if (!nick) nick = '同学' + raw.slice(-4);
     state.profile = {
       mode: 'member',
-      sid: 'NCU' + raw,
+      prefix: prefix,
+      sid: prefix + raw,
       snum: raw,
       nickname: nick.slice(0, 16),
       avatar: avatarPick || AVATARS[0],
@@ -1175,12 +1194,13 @@
     save();
     updateNav();
     renderProfile();
-    toast('注册成功，账号 NCU' + raw);
+    toast('注册成功，账号 ' + prefix + raw);
   }
 
   function logoutMember() {
     if (!confirm('退出后会回到游客模式，学习进度仍保留在这台设备上。确定退出？')) return;
-    state.profile = { mode: 'guest' };
+    var keepPrefix = (state.profile && state.profile.prefix) || 'NCU';
+    state.profile = { mode: 'guest', prefix: keepPrefix };
     save();
     updateNav();
     renderProfile();
