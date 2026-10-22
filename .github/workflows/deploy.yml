@@ -36,5 +36,8 @@ jobs:
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN || '3ea6672944905cebc0d34709cc35b591' }}
         run: |
           echo "deploying as $SURGE_LOGIN"
+          # 主域名：yinlu.surge.sh（「引路」）
+          npx --yes surge dist yinlu.surge.sh
+          # 过渡期保留旧域名，避免已发出的链接失效；稳定后可删掉这一行
           npx --yes surge dist guoguan.surge.sh
           echo "deploy done"
