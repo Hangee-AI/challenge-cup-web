@@ -552,14 +552,13 @@ const STATIC_TYPES: Record<string, string> = {
   webm: 'video/webm',
 };
 
+type Asset = { raw: Uint8Array; gz: Uint8Array | null; br: Uint8Array | null };
 type Bundle = {
-  js: Uint8Array;
-  jsGz: Uint8Array;
-  jsBr: Uint8Array | null;
-  html: Uint8Array;
-  htmlGz: Uint8Array;
-  htmlBr: Uint8Array | null;
+  core: Asset;      // 首屏必需：界面代码 + 专业目录 + 路径模板
+  content: Asset;   // 课程/教材正文，首屏之后后台加载
+  html: Asset;
   count: number;
+  contentCount: number;
 };
 let bundleCache: Bundle | null = null;
 let bundlePromise: Promise<Bundle | null> | null = null;
@@ -614,6 +613,16 @@ async function readRepoFile(name: string): Promise<Uint8Array | null> {
   }
 }
 
+/* 哪些文件属于「内容层」：课程/教材/章节数据，只有进专业页、关卡页才需要 */
+function isContentFile(rel: string): boolean {
+  return /(courses|textbooks|chapters|majors\/|philosophy\.js|logic\.js|law\.js|economics\.js|education\.js)/.test(rel);
+}
+
+function pack(srcs: string[], code: string): Promise<Asset> {
+  const raw = new TextEncoder().encode(code);
+  return (async () => ({ raw, gz: await gzip(raw), br: await brotli(raw) }))();
+}
+
 function buildBundleOnce(): Promise<Bundle | null> {
   if (bundleCache) return Promise.resolve(bundleCache);
   if (bundlePromise) return bundlePromise;
@@ -628,39 +637,53 @@ function buildBundleOnce(): Promise<Bundle | null> {
     while ((m = tagRe.exec(htmlText)) !== null) srcs.push(m[1]);
     if (!srcs.length) return null;
 
-    const parts: string[] = [];
+    const coreParts: string[] = [];
+    const contentParts: string[] = [];
     for (const raw of srcs) {
       const rel = raw.replace(/\?.*$/, '').replace(/^\.?\//, '');
       const bytes = await readRepoFile(rel);
       if (!bytes) return null;
-      parts.push('/* ==== ' + rel + ' ==== */\n' + lightMinify(new TextDecoder().decode(bytes)));
+      const piece = '/* ==== ' + rel + ' ==== */\n' + lightMinify(new TextDecoder().decode(bytes));
+      if (isContentFile(rel)) contentParts.push(piece); else coreParts.push(piece);
     }
 
-    const jsText = parts.join('\n;\n');
-    const js = new TextEncoder().encode(jsText);
+    // 内容层加载完成后派发事件，页面据此重绘当前视图
+    contentParts.push(
+      'window.__CONTENT_LOADED = true;\n' +
+      'try { window.dispatchEvent(new Event("content-ready")); } catch (e) {}',
+    );
+
+    const coreCode = coreParts.join('\n;\n');
+    const contentCode = contentParts.join('\n;\n');
 
     const firstIdx = htmlText.search(tagRe);
     tagRe.lastIndex = 0;
     let lastEnd = -1;
     while ((m = tagRe.exec(htmlText)) !== null) lastEnd = tagRe.lastIndex;
-    const html = new TextEncoder().encode(
-      htmlText.slice(0, firstIdx) + '<script src="js/bundle.js?v=deno"></script>\n' + htmlText.slice(lastEnd),
-    );
+
+    const inject =
+      '<script src="js/bundle-core.js?v=deno"></script>\n' +
+      '<script>\n' +
+      '(function(){function load(){var s=document.createElement("script");' +
+      's.src="js/bundle-content.js?v=deno";s.async=true;document.body.appendChild(s);}\n' +
+      'if(document.readyState==="complete")setTimeout(load,60);else window.addEventListener("load",function(){setTimeout(load,60);});})();\n' +
+      '</script>\n';
+
+    const html = new TextEncoder().encode(htmlText.slice(0, firstIdx) + inject + htmlText.slice(lastEnd));
 
     const bundle: Bundle = {
-      js,
-      jsGz: await gzip(js),
-      jsBr: await brotli(js),
-      html,
-      htmlGz: await gzip(html),
-      htmlBr: await brotli(html),
-      count: srcs.length,
+      core: await pack(srcs, coreCode),
+      content: await pack(srcs, contentCode),
+      html: await pack(srcs, new TextDecoder().decode(html)),
+      count: coreParts.length,
+      contentCount: contentParts.length - 1,
     };
     bundleCache = bundle;
     console.log(
-      'bundle ready: ' + bundle.count + ' scripts, ' +
-      (js.length / 1048576).toFixed(2) + ' MB raw, br ' +
-      (bundle.jsBr ? (bundle.jsBr.length / 1024).toFixed(0) : 'n/a') + ' KB',
+      'bundle ready: core ' + bundle.count + ' files / ' + (bundle.core.raw.length / 1024).toFixed(0) + 'KB (br ' +
+      (bundle.core.br ? (bundle.core.br.length / 1024).toFixed(0) : 'n/a') + 'KB), content ' + bundle.contentCount +
+      ' files / ' + (bundle.content.raw.length / 1024).toFixed(0) + 'KB (br ' +
+      (bundle.content.br ? (bundle.content.br.length / 1024).toFixed(0) : 'n/a') + 'KB)',
     );
     return bundle;
   })();
@@ -671,21 +694,19 @@ function accepts(req: Request, enc: string): boolean {
   return (req.headers.get('accept-encoding') || '').toLowerCase().includes(enc);
 }
 
-function staticResponse(
+function sendAsset(
   req: Request,
-  data: Uint8Array,
-  gz: Uint8Array | null,
-  br: Uint8Array | null,
+  asset: Asset,
   type: string,
   cacheControl: string,
 ): Response {
-  let body = data;
+  let body = asset.raw;
   let enc = '';
-  if (br && accepts(req, 'br')) {
-    body = br;
+  if (asset.br && accepts(req, 'br')) {
+    body = asset.br;
     enc = 'br';
-  } else if (gz && accepts(req, 'gzip')) {
-    body = gz;
+  } else if (asset.gz && accepts(req, 'gzip')) {
+    body = asset.gz;
     enc = 'gzip';
   }
   const headers: Record<string, string> = {
@@ -702,27 +723,29 @@ async function serveStatic(path: string, req: Request): Promise<Response> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return new Response('Method Not Allowed', { status: 405 });
   }
-  let rel = path === '/' ? 'index.html' : path.replace(/^\/+/, '');
-  // 防目录穿越
+  const rel = path === '/' ? 'index.html' : path.replace(/^\/+/, '');
   if (rel.includes('..')) return new Response('Not Found', { status: 404 });
 
-  // 合并后的脚本（一个请求代替九十几个）
-  if (rel === 'js/bundle.js') {
-    const b = await buildBundleOnce();
-    if (b) return staticResponse(req, b.js, b.jsGz, b.jsBr, 'text/javascript; charset=utf-8', 'public, max-age=600');
-  }
+  const JS = 'text/javascript; charset=utf-8';
 
-  // 首页 / 未知路径 → 用合并后的 index.html
+  if (rel === 'js/bundle-core.js' || rel === 'js/bundle.js') {
+    const b = await buildBundleOnce();
+    if (b) return sendAsset(req, b.core, JS, 'public, max-age=600');
+  }
+  if (rel === 'js/bundle-content.js') {
+    const b = await buildBundleOnce();
+    if (b) return sendAsset(req, b.content, JS, 'public, max-age=600');
+  }
   if (rel === 'index.html' || rel === '') {
     const b = await buildBundleOnce();
-    if (b) return staticResponse(req, b.html, b.htmlGz, b.htmlBr, 'text/html; charset=utf-8', 'no-cache');
+    if (b) return sendAsset(req, b.html, 'text/html; charset=utf-8', 'no-cache');
   }
 
   let data = await readRepoFile(rel);
   let name = rel;
   if (!data) {
     const b = await buildBundleOnce();
-    if (b) return staticResponse(req, b.html, b.htmlGz, b.htmlBr, 'text/html; charset=utf-8', 'no-cache');
+    if (b) return sendAsset(req, b.html, 'text/html; charset=utf-8', 'no-cache');
     data = await readRepoFile('index.html');
     name = 'index.html';
   }
@@ -732,9 +755,12 @@ async function serveStatic(path: string, req: Request): Promise<Response> {
   const type = STATIC_TYPES[ext] || 'application/octet-stream';
   const isHtml = ext === 'html';
   const compressible = isHtml || ext === 'css' || ext === 'js' || ext === 'json' || ext === 'svg';
-  const gz = compressible ? await gzip(data) : null;
-  const br = compressible ? await brotli(data) : null;
-  return staticResponse(req, data, gz, br, type, isHtml ? 'no-cache' : 'public, max-age=600');
+  const asset: Asset = {
+    raw: data,
+    gz: compressible ? await gzip(data) : null,
+    br: compressible ? await brotli(data) : null,
+  };
+  return sendAsset(req, asset, type, isHtml ? 'no-cache' : 'public, max-age=600');
 }
 
 Deno.serve({ port: Number(Deno.env.get('PORT') || 8000) }, (req) => {
