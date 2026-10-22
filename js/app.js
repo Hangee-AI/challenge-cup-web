@@ -581,7 +581,7 @@
       node.setAttribute('aria-label', lv.name + (rec ? '，已通关' : (unlocked ? '，可挑战' : '，未解锁')));
       node.innerHTML =
         '<span class="jnode-badge">' + (rec ? '✓' : order) + '</span>' +
-        '<span class="jnode-title">' + esc(lv.name.replace(/^第 \d+ 关 · /, '')) + '</span>' +
+        '<span class="jnode-title">' + esc(lv.name.replace(/^第\s*\d+\s*[关章]\s*·\s*/, '')) + '</span>' +
         '<span class="jnode-sub">' + (rec ? starsText(rec.stars) : (unlocked ? '选择题 + 代码' : '未解锁')) + '</span>';
       track.appendChild(node);
     });

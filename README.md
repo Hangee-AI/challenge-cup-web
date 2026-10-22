@@ -63,7 +63,8 @@ challenge-cup-web/
 ├─ js/data.js          数据层：学科门类、专业、路径模板、讲解方式、示例关卡、公告 ANNOUNCEMENTS、鼓励语 HOME_QUOTES、头像 AVATARS
 ├─ js/docs.js          内容层：每关的文档正文（DOCS）+ 通用模板 + csdiy 延伸资源
 ├─ js/course-common.js 公共必修课「文字说明」：分章重点 + 思维导图数据（COMMON_COURSES_DATA）
-├─ js/philosophy.js    哲学专业：一模块一关的路径覆盖 + 12 篇文字说明 + 36 道题
+├─ js/philosophy.js    哲学专业：12 门课程（模块）+ 每门课第 1 章（课程导学）+ 36 题
+├─ js/philosophy-chapters.js 哲学专业：给 12 门课补第 2–4 章，共 35 章 / 105 题
 ├─ js/logic.js         逻辑学专业：同上（依赖 philosophy.js 的 registerMajorPath）
 ├─ js/law.js           法学 / 知识产权 / 社会学：一阶段一关（每关 3 门课串讲）
 ├─ js/economics.js     经济学 / 金融学 / 国际经济与贸易 / 财政学：同上
@@ -108,6 +109,7 @@ npm start          # 默认 http://localhost:3000，被占用就换端口：PORT
 | **改某关的文档正文** | `js/docs.js` 的 `DOCS` | key 用关卡 id（如 `engineering-计算机科学与技术-m0-l0`），值是 `{lead, sections:[{id,title,html}], refs}` |
 | **加某个专业的文档** | `js/docs.js` 顶部新增 key（或改 `makeGenericDoc()` 里的通用模板） | 没有专门文档的关卡会自动用通用模板，不会白屏 |
 | **给某个专业做整套关卡** | 新建 `js/xxx.js`，写 `registerMajorPath('门类-专业', stageTitlesOf('门类'), [ ... ], [4 个阶段目标])`，并加进 `index.html` | 每个模块一条 `{name, level, brief, q:[3 题], doc:{lead, sections, refs}}`；**一模块一关**时模块会自动按每阶段 3 个分配（见 `js/philosophy.js`），**一阶段一关**时给模块加 `stage: 0~3`（见 `js/law.js`）；id 自动生成为 `专业-m<序号>-l0` |
+| **给某门课加章节**（课程 → 章节） | 在 `js/philosophy-chapters.js` 这类文件里，给 `mod.levels` 追加 `{name, brief, questions, doc}`，并把 doc 写进 `DOCS['专业-m<课序号>-l<章序号>']` | 第 1 章是课程导学，后续章节按 `-l1`、`-l2`…顺序编号，必须与 `buildLevels()` 生成的顺序一致 |
 | **换视频课程** | `js/videos.js` 顶部 `BV_ID / BV_TITLE / BV_TOTAL` + `BV_CHAPTERS` | 换 B 站课程时重新生成章节数组；播放器地址由 `bvPlayerUrl()` 拼 |
 | **改某关对应哪几集** | `js/videos.js` 的 `VIDEO_MAP` | `main` 是本关必看、`extra` 是可选；都是 `[起始集, 结束集]`，没配的关卡用 `VIDEO_DEFAULT` |
 | **加公共必修课**（首页卡片 + 站内文字说明页） | `js/data.js` 的 `COMMON_COURSES` + `js/course-common.js` 的 `COMMON_COURSES_DATA` | 卡片一条 `{code, tag, name, desc, courseId, url}`；内容里 `chapters[].map` 是思维导图（根 → 分支 → 叶子），`pts` 是必背要点，`exam` 是考法提示。没有 `courseId` 的卡片仍然直接外链 |
