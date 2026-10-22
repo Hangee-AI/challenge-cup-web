@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>引路 · 大学新生专业学习导航</title>
-  <meta name="description" content="选一个专业，给你一条从大一到大四、能一关一关走完的学习路线。" />
+  <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -16,12 +16,17 @@
     <span class="brand-name">引路</span>
     <span class="brand-sub">大学新生学习导航</span>
   </a>
-  <nav class="nav-links">
+  <nav class="nav-links" id="navLinks">
     <a href="#" data-go="home">首页</a>
-    <a href="#" data-go="browse">专业库</a>
-    <a href="#" data-go="report">我的进度</a>
+    <a href="#" data-go="major" id="navPath" hidden>我的路径</a>
+    <a href="#" data-go="map" id="navMap" hidden>闯关地图</a>
+    <a href="#" data-go="report">学习报告</a>
   </nav>
-  <a class="btn btn-primary btn-sm" href="#" data-go="browse">开始选专业</a>
+  <div class="nav-right">
+    <span class="nav-major" id="navMajor" hidden></span>
+    <a class="btn btn-primary btn-sm" href="#" data-go="browse" id="navPick">选专业</a>
+    <button class="btn btn-ghost btn-sm" id="reselectBtn" hidden>重新选择</button>
+  </div>
 </header>
 
 <main id="main">
@@ -33,17 +38,17 @@
         <p class="eyebrow">写给刚上大学的你</p>
         <h1>大学四年，<br />先看清该往哪走。</h1>
         <p class="lead">
-          选一个专业，我们把它拆成四个阶段、几个模块、一关一关的小任务。<br />
+          选一个专业、选一种讲法，我们把它拆成四个阶段、几个模块、一关一关的小任务。<br />
           你不用再问"我这学期到底该干什么"。
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="#" data-go="browse">选我的专业 →</a>
+          <a class="btn btn-primary btn-lg" href="#" data-go="pickFirst" id="homeCta">选我的专业 →</a>
           <a class="btn btn-ghost btn-lg" href="#how">看看它怎么用</a>
         </div>
         <ul class="hero-points">
           <li>覆盖 13 个学科门类、近 50 个常见专业</li>
-          <li>每个专业拆成 4 个阶段、12 个模块</li>
-          <li>每个模块 3 个小关卡，答错立刻讲清楚</li>
+          <li>选完之后，只显示你这个专业的内容</li>
+          <li>每关先看讲解（视频 / 文字），再动手做题</li>
         </ul>
       </div>
       <div class="hero-card">
@@ -53,27 +58,19 @@
         </div>
         <div class="preview-stage">
           <span class="preview-tag">大一</span>
-          <div class="preview-lines">
-            <div class="preview-line"><b>打地基</b><em>高数 · 大学物理 · 工程导论</em></div>
-          </div>
+          <div class="preview-lines"><div class="preview-line"><b>打地基</b><em>高数 · 大学物理 · 工程导论</em></div></div>
         </div>
         <div class="preview-stage">
           <span class="preview-tag">大二</span>
-          <div class="preview-lines">
-            <div class="preview-line"><b>专业基础</b><em>专业基础课 · 上机实验</em></div>
-          </div>
+          <div class="preview-lines"><div class="preview-line"><b>专业基础</b><em>专业基础课 · 上机实验</em></div></div>
         </div>
         <div class="preview-stage">
           <span class="preview-tag">大三</span>
-          <div class="preview-lines">
-            <div class="preview-line"><b>核心专业课</b><em>核心课 · 课程设计</em></div>
-          </div>
+          <div class="preview-lines"><div class="preview-line"><b>核心专业课</b><em>核心课 · 课程设计</em></div></div>
         </div>
         <div class="preview-stage">
           <span class="preview-tag">大四</span>
-          <div class="preview-lines">
-            <div class="preview-line"><b>实践与出口</b><em>实习 · 毕设 · 考研/求职</em></div>
-          </div>
+          <div class="preview-lines"><div class="preview-line"><b>实践与出口</b><em>实习 · 毕设 · 考研/求职</em></div></div>
         </div>
         <div class="preview-foot">↓ 每个模块下面，还有 3 个小关卡</div>
       </div>
@@ -108,42 +105,85 @@
     </div>
 
     <div class="section">
-      <h2 class="section-title">三步走完第一轮</h2>
+      <h2 class="section-title">四步走完第一轮</h2>
       <div class="steps">
         <div class="step"><span class="step-num">1</span><h3>选专业</h3><p>从 13 个门类里找到你的专业，或者相近的专业。</p></div>
-        <div class="step"><span class="step-num">2</span><h3>拿到路径</h3><p>系统按这个专业给出四阶段、十二模块的框架。</p></div>
-        <div class="step"><span class="step-num">3</span><h3>一关一关过</h3><p>从大一第一个模块开始，做关卡、看讲解、记进度。</p></div>
+        <div class="step"><span class="step-num">2</span><h3>选讲法</h3><p>视频讲解还是文字说明，选你更能看进去的那种。</p></div>
+        <div class="step"><span class="step-num">3</span><h3>拿到路径</h3><p>系统按这个专业给出四阶段、十二模块的框架。</p></div>
+        <div class="step"><span class="step-num">4</span><h3>闯关地图</h3><p>在地图上一关一关往前走，关卡按顺序解锁。</p></div>
       </div>
     </div>
 
     <div class="cta-band">
       <div>
         <h3>不知道自己的专业以后干什么？</h3>
-        <p>先看路径，再看每门课在整条路线里的位置——比听别人讲十遍有用。</p>
+        <p>先看路径，再看每个模块在整条路线里的位置——比听别人讲十遍有用。</p>
       </div>
-      <a class="btn btn-primary btn-lg" href="#" data-go="browse">现在开始 →</a>
+      <a class="btn btn-primary btn-lg" href="#" data-go="pickFirst">现在开始 →</a>
     </div>
   </section>
 
-  <!-- ==================== 2. 专业库 ==================== -->
+  <!-- ==================== 2. 选专业 ==================== -->
   <section id="view-browse" class="view" hidden>
-    <div class="page-head">
-      <a class="back" href="#" data-go="home">← 返回首页</a>
-      <h1>专业库</h1>
-      <p>先选学科门类，再选专业。没找到你的专业？选一个相近的，路径逻辑是一样的。</p>
+    <!-- 2a. 还没选专业：全部门类 + 专业 -->
+    <div id="pickMode">
+      <div class="page-head">
+        <a class="back" href="#" data-go="home">← 返回首页</a>
+        <h1>你想从哪个专业开始？</h1>
+        <p>先选学科门类，再选专业。选完之后，页面只会显示你这个专业的内容；想换随时可以重新选。</p>
+      </div>
+      <div class="cat-chips" id="catChips"></div>
+      <div class="major-head">
+        <h2 id="browseCatName">全部专业</h2>
+        <span id="browseCatDesc" class="muted"></span>
+      </div>
+      <div class="major-grid" id="majorList"></div>
     </div>
-    <div class="cat-chips" id="catChips"></div>
-    <div class="major-head">
-      <h2 id="browseCatName">全部专业</h2>
-      <span id="browseCatDesc" class="muted"></span>
+
+    <!-- 2b. 已选专业：只显示我的专业 -->
+    <div id="myMajorMode" hidden>
+      <div class="page-head">
+        <a class="back" href="#" data-go="home">← 返回首页</a>
+        <h1>我的专业</h1>
+        <p>接下来你看到的所有内容，都是为这个专业准备的。</p>
+      </div>
+      <div class="card my-major-card">
+        <div class="my-major-head">
+          <span class="my-major-emoji" id="myEmoji">💻</span>
+          <div>
+            <h2 id="myName">计算机科学与技术</h2>
+            <p class="muted" id="myMeta"></p>
+          </div>
+        </div>
+        <div class="my-major-style">
+          <span class="muted">学习方式：</span>
+          <span class="style-pill" id="myStyle">文字说明</span>
+          <a href="#" class="link" id="changeStyle">换一种</a>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#" data-go="major">查看学习路径</a>
+          <a class="btn btn-ghost" href="#" data-go="map">进入闯关地图</a>
+          <button class="btn btn-ghost" id="reselectBtn2">重新选择专业</button>
+        </div>
+      </div>
     </div>
-    <div class="major-grid" id="majorList"></div>
   </section>
 
-  <!-- ==================== 3. 专业路径 ==================== -->
-  <section id="view-major" class="view" hidden>
+  <!-- ==================== 3. 选学习方式 ==================== -->
+  <section id="view-style" class="view" hidden>
     <div class="page-head">
       <a class="back" href="#" data-go="browse">← 换个专业</a>
+      <h1>你更喜欢哪种讲解方式？</h1>
+      <p>每关开始前，会先按这种方式给你讲一遍要点，然后再做题。之后可以随时切换。</p>
+    </div>
+    <div class="style-grid" id="styleList"></div>
+    <p class="muted style-note">选好之后进入你的学习路径。</p>
+  </section>
+
+  <!-- ==================== 4. 专业路径 ==================== -->
+  <section id="view-major" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="browse">← 我的专业</a>
       <div class="major-title">
         <span class="major-emoji" id="mjEmoji">💻</span>
         <div>
@@ -156,23 +196,54 @@
     <div class="progress-row">
       <div class="progress-bar"><div class="progress-fill" id="mjProgressFill"></div></div>
       <span id="mjProgressText" class="muted">0 / 36 关</span>
+      <a class="btn btn-primary btn-sm" href="#" data-go="map">闯关地图 →</a>
       <a class="btn btn-ghost btn-sm" href="#" data-go="report">学习报告</a>
     </div>
 
     <div id="stageList" class="stage-list"></div>
   </section>
 
-  <!-- ==================== 4. 关卡（答题） ==================== -->
+  <!-- ==================== 5. 闯关地图 ==================== -->
+  <section id="view-map" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="major">← 返回路径</a>
+      <h1>闯关地图</h1>
+      <p id="mapSub">按顺序通关，完成前一关才会解锁下一关。</p>
+    </div>
+    <div class="map-legend">
+      <span><i class="lg lg-done"></i>已通关</span>
+      <span><i class="lg lg-open"></i>可挑战</span>
+      <span><i class="lg lg-lock"></i>未解锁</span>
+    </div>
+    <div id="mapList" class="map-list"></div>
+    <p class="muted map-note">🗺️ 地图视觉模板待替换（当前为结构版）。</p>
+  </section>
+
+  <!-- ==================== 6. 关卡（讲解 + 答题） ==================== -->
   <section id="view-level" class="view" hidden>
     <div class="level-top">
-      <a class="back" href="#" id="backToMajor">← 返回路径</a>
+      <a class="back" href="#" id="backToMap">← 返回地图</a>
       <div class="crumb" id="crumb"></div>
       <span class="muted" id="qCount"></span>
     </div>
 
+    <div class="lesson" id="lessonBox">
+      <div class="lesson-head" id="lessonHead">
+        <span class="lesson-badge" id="lessonBadge">📄 文字说明</span>
+        <span class="muted">本关开始前，先花 1 分钟看这个</span>
+      </div>
+      <div class="lesson-video" id="lessonVideo" hidden>
+        <div class="video-mock"><span class="video-play">▶</span></div>
+        <div class="video-meta">
+          <b id="videoTitle">视频讲解 · 待录制</b>
+          <span class="muted">正式版这里会放 1–2 分钟的讲解视频（当前为占位）</span>
+        </div>
+      </div>
+      <div class="lesson-text" id="lessonText"></div>
+    </div>
+
     <div class="card quiz-card" id="quizCard">
       <h2 class="level-name" id="levelName"></h2>
-      <div class="brief" id="briefBox"></div>
       <p class="stem" id="qStem"></p>
       <div class="options" id="optionList"></div>
       <div class="feedback" id="feedback" hidden>
@@ -190,10 +261,10 @@
     </div>
   </section>
 
-  <!-- ==================== 5. 学习报告 ==================== -->
+  <!-- ==================== 7. 学习报告 ==================== -->
   <section id="view-report" class="view" hidden>
     <div class="page-head">
-      <a class="back" href="#" data-go="browse">← 返回专业库</a>
+      <a class="back" href="#" data-go="browse">← 我的专业</a>
       <h1>学习报告</h1>
       <p id="reportSub">还没有开始任何关卡</p>
     </div>
@@ -203,7 +274,7 @@
       <div id="levelRecords" class="record-list"></div>
     </div>
     <div class="btn-row">
-      <a class="btn btn-ghost" href="#" data-go="browse">回专业库</a>
+      <a class="btn btn-ghost" href="#" data-go="map">回闯关地图</a>
       <button class="btn btn-danger" id="resetBtn">重置全部进度</button>
     </div>
   </section>

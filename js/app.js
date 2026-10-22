@@ -1,6 +1,7 @@
 /* ==========================================================
    引路 · 页面逻辑
-   视图：home（首页）/ browse（专业库）/ major（路径）/ level（关卡）/ report（报告）
+   流程：首页 → 选专业 → 选学习方式 → 我的路径 → 闯关地图 → 关卡 → 报告
+   视图：home / browse / style / major / map / level / report
    进度保存在 localStorage，key = yinlu_v1
    ========================================================== */
 (function () {
@@ -10,10 +11,12 @@
 
   var state = {
     majorId: null,
+    style: null,          // 'video' | 'text'
     levelId: null,
     qi: 0,
     levelCorrect: 0,
     answered: false,
+    fromMap: true,
     done: {}              // levelId -> { ok, total, stars, name, majorId, ts }
   };
 
@@ -32,18 +35,26 @@
       if (!raw) return;
       var data = JSON.parse(raw);
       state.majorId = data.majorId || null;
+      state.style = data.style || null;
       state.done = data.done || {};
     } catch (e) { /* 忽略损坏数据 */ }
   }
   function save() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ majorId: state.majorId, done: state.done }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        majorId: state.majorId, style: state.style, done: state.done
+      }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'major', 'level', 'report'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'level', 'report'];
+
   function show(name) {
+    // 需要专业身份的页面，没选专业就先回选专业
+    if (['style', 'major', 'map'].indexOf(name) > -1 && !state.majorId) name = 'browse';
+    if (name === 'level' && !state.levelId) name = 'map';
+
     VIEWS.forEach(function (v) {
       var node = $('view-' + v);
       if (node) node.hidden = (v !== name);
@@ -51,15 +62,39 @@
     document.querySelectorAll('.nav-links a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-go') === name);
     });
+    updateNav();
     window.scrollTo(0, 0);
+
+    if (name === 'home') renderHomeCta();
     if (name === 'browse') renderBrowse();
+    if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
+    if (name === 'map') renderMap();
     if (name === 'report') renderReport();
+  }
+
+  function updateNav() {
+    var has = !!state.majorId;
+    var major = has ? getMajor(state.majorId) : null;
+    $('navPath').hidden = !has;
+    $('navMap').hidden = !has;
+    $('reselectBtn').hidden = !has;
+    $('navPick').hidden = has;
+    $('navMajor').hidden = !has;
+    if (major) $('navMajor').textContent = major.emoji + ' ' + major.name;
+    var cta = $('homeCta');
+    if (cta) cta.textContent = has ? '继续我的路径 →' : '选我的专业 →';
   }
 
   /* ---------------- 小工具 ---------------- */
   function starSum() {
     return Object.keys(state.done).reduce(function (s, k) { return s + (state.done[k].stars || 0); }, 0);
+  }
+  function starsText(n) {
+    n = n || 0;
+    var s = '';
+    for (var i = 0; i < 3; i++) s += i < n ? '★' : '☆';
+    return s;
   }
   function toast(msg) {
     var t = $('toast');
@@ -75,6 +110,8 @@
   }
 
   /* ---------------- 首页 ---------------- */
+  function renderHomeCta() { updateNav(); }
+
   function renderHomeCats() {
     var box = $('homeCats');
     if (!box || box.childElementCount) return;
@@ -92,10 +129,28 @@
     });
   }
 
-  /* ---------------- 专业库 ---------------- */
+  /* ---------------- 选专业 ---------------- */
   var curCat = null;
 
   function renderBrowse() {
+    var has = !!state.majorId;
+    $('pickMode').hidden = has;
+    $('myMajorMode').hidden = !has;
+
+    if (has) {
+      var m = getMajor(state.majorId);
+      var cat = getCategory(m.cat);
+      var path = getPath(m.id);
+      var levels = path ? allLevelsOf(path) : [];
+      var doneN = levels.filter(function (lv) { return !!state.done[lv.id]; }).length;
+      $('myEmoji').textContent = m.emoji;
+      $('myName').textContent = m.name;
+      $('myMeta').textContent = (cat ? cat.name : '') + ' · ' + m.desc +
+        ' · 已完成 ' + doneN + ' / ' + levels.length + ' 关';
+      $('myStyle').textContent = styleName(state.style);
+      return;
+    }
+
     var chips = $('catChips');
     chips.innerHTML = '';
     var all = el('button', 'chip' + (curCat === null ? ' chip-on' : ''), '全部专业');
@@ -121,14 +176,9 @@
       var a = el('a', 'major-card');
       a.href = '#';
       a.setAttribute('data-major', m.id);
-      var doneN = 0, totalN = 0;
       var path = getPath(m.id);
-      if (path) {
-        allLevelsOf(path).forEach(function (lv) {
-          totalN++;
-          if (state.done[lv.id]) doneN++;
-        });
-      }
+      var totalN = path ? allLevelsOf(path).length : 0;
+      var doneN = path ? allLevelsOf(path).filter(function (lv) { return !!state.done[lv.id]; }).length : 0;
       var badge = m.ready
         ? '<span class="badge badge-on">示例关卡已就绪</span>'
         : '<span class="badge">路径框架</span>';
@@ -145,13 +195,52 @@
     });
   }
 
-  /* ---------------- 专业路径 ---------------- */
-  function openMajor(id) {
+  function selectMajor(id) {
     state.majorId = id;
     save();
+    if (!state.style) { show('style'); return; }
     show('major');
   }
 
+  function reselect() {
+    state.majorId = null;
+    curCat = null;
+    save();
+    toast('已清除专业选择，可以重新选');
+    show('browse');
+  }
+
+  /* ---------------- 选学习方式 ---------------- */
+  function styleName(id) {
+    for (var i = 0; i < STYLES.length; i++) if (STYLES[i].id === id) return STYLES[i].emoji + ' ' + STYLES[i].name;
+    return '未选择';
+  }
+
+  function renderStyle() {
+    var box = $('styleList');
+    box.innerHTML = '';
+    STYLES.forEach(function (s) {
+      var a = el('a', 'style-card' + (state.style === s.id ? ' style-on' : ''));
+      a.href = '#';
+      a.setAttribute('data-style', s.id);
+      a.innerHTML =
+        '<span class="style-emoji">' + s.emoji + '</span>' +
+        '<span class="style-name">' + s.name + '</span>' +
+        '<span class="style-desc">' + s.desc + '</span>' +
+        '<span class="style-tag">' + s.tag + '</span>' +
+        (state.style === s.id ? '<span class="style-check">✓ 当前选择</span>' : '');
+      box.appendChild(a);
+    });
+  }
+
+  function selectStyle(id) {
+    state.style = id;
+    save();
+    toast('学习方式已设为「' + styleName(id).replace(/^[^\u4e00-\u9fa5A-Za-z]+/, '') + '」');
+    show('major');
+  }
+
+  /* ---------------- 专业路径 ---------------- */
   function renderMajor() {
     if (!state.majorId) { show('browse'); return; }
     var path = getPath(state.majorId);
@@ -161,6 +250,7 @@
     $('mjEmoji').textContent = m.emoji;
     $('mjName').textContent = m.name;
     $('mjMeta').textContent = (cat ? cat.name : '') + ' · ' + m.desc +
+      ' · ' + styleName(state.style) +
       (m.ready ? ' · 已有 C 语言示例关卡' : ' · 路径框架（关卡内容建设中）');
 
     var levels = allLevelsOf(path);
@@ -223,26 +313,90 @@
     });
   }
 
-  function starsText(n) {
-    n = n || 0;
-    var s = '';
-    for (var i = 0; i < 3; i++) s += i < n ? '★' : '☆';
-    return s;
+  /* ---------------- 闯关地图 ---------------- */
+  function readyLevels(path) {
+    var out = [];
+    path.stages.forEach(function (stage) {
+      stage.modules.forEach(function (mod) {
+        mod.levels.forEach(function (lv) {
+          if (lv.ready) out.push({ level: lv, module: mod, stage: stage });
+        });
+      });
+    });
+    return out;
+  }
+
+  function renderMap() {
+    if (!state.majorId) { show('browse'); return; }
+    var path = getPath(state.majorId);
+    if (!path) { show('browse'); return; }
+    var list = readyLevels(path);
+    var doneN = list.filter(function (x) { return !!state.done[x.level.id]; }).length;
+    $('mapSub').textContent = list.length
+      ? '共 ' + list.length + ' 个可闯关卡，已完成 ' + doneN + ' 个。按顺序通关，完成前一关才会解锁下一关。'
+      : '这个专业的题目还在建设中，先去看看它的学习路径。';
+
+    var box = $('mapList');
+    box.innerHTML = '';
+
+    if (!list.length) {
+      var empty = el('div', 'card empty-card');
+      empty.innerHTML =
+        '<div class="empty-icon">🗺️</div>' +
+        '<h2>地图还没修好</h2>' +
+        '<p>这个专业的关卡内容正在补充，地图会在题目就绪后自动出现。你可以先看学习路径。</p>' +
+        '<a class="btn btn-primary btn-sm" href="#" data-go="major">查看学习路径</a>';
+      box.appendChild(empty);
+      return;
+    }
+
+    // 按阶段分组画地图：每行一个阶段，节点按顺序排列
+    var cursor = 0;
+    var order = 0;
+    path.stages.forEach(function (stage) {
+      var nodes = list.filter(function (x) { return x.stage === stage; });
+      if (!nodes.length) return;
+      var group = el('div', 'map-group');
+      var gh = el('div', 'map-group-head');
+      gh.innerHTML = '<span class="stage-badge">' + (path.stages.indexOf(stage) + 1) + '</span>' +
+        '<b>' + stage.title + '</b><span class="muted">' + stage.goal + '</span>';
+      group.appendChild(gh);
+
+      var track = el('div', 'map-track');
+      nodes.forEach(function (item) {
+        var lv = item.level;
+        var rec = state.done[lv.id];
+        var idxInList = list.indexOf(item);
+        var unlocked = idxInList === 0 || !!state.done[list[idxInList - 1].level.id];
+        var node = el('a', 'map-node' + (rec ? ' is-done' : (unlocked ? ' is-open' : ' is-lock')));
+        node.href = '#';
+        if (unlocked) node.setAttribute('data-level', lv.id);
+        node.innerHTML =
+          '<span class="map-node-dot">' + (rec ? '✓' : (unlocked ? '▶' : '🔒')) + '</span>' +
+          '<span class="map-node-name">' + lv.name.replace(/^第 \d+ 关 · /, '') + '</span>' +
+          '<span class="map-node-meta">' + (rec ? starsText(rec.stars) : (unlocked ? '可挑战' : '未解锁')) + '</span>';
+        track.appendChild(node);
+        order++;
+      });
+      group.appendChild(track);
+      box.appendChild(group);
+    });
   }
 
   /* ---------------- 关卡 ---------------- */
-  function openLevel(levelId) {
+  function openLevel(levelId, fromMap) {
     var path = getPath(state.majorId);
     var found = path && findLevel(path, levelId);
-    if (!found) { show('major'); return; }
+    if (!found) { show('map'); return; }
 
     state.levelId = levelId;
     state.qi = 0;
     state.levelCorrect = 0;
+    state.fromMap = fromMap !== false;
 
     $('crumb').textContent = found.module.name + ' · ' + found.stage.title;
     $('levelName').textContent = found.level.name;
-    $('briefBox').innerHTML = '<b>本关要点：</b>' + found.level.brief;
+    renderLesson(found.level);
 
     if (!found.level.questions) {
       $('quizCard').hidden = true;
@@ -254,6 +408,18 @@
     $('levelEmpty').hidden = true;
     show('level');
     renderQuestion();
+  }
+
+  function renderLesson(level) {
+    var isVideo = state.style === 'video';
+    $('lessonBadge').textContent = isVideo ? '🎬 视频讲解' : '📄 文字说明';
+    $('lessonVideo').hidden = !isVideo;
+    $('lessonText').hidden = isVideo;
+    if (isVideo) {
+      $('videoTitle').textContent = level.name + ' · 讲解视频（待录制）';
+    } else {
+      $('lessonText').innerHTML = '<b>本关要点</b>' + level.brief;
+    }
   }
 
   function currentLevel() {
@@ -331,7 +497,7 @@
       save();
     }
     toast('本关完成：' + state.levelCorrect + '/' + total + ' 题正确 ' + starsText(stars));
-    show('major');
+    show(state.fromMap ? 'map' : 'major');
   }
 
   /* ---------------- 报告 ---------------- */
@@ -383,10 +549,12 @@
 
   /* ---------------- 事件绑定 ---------------- */
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-go]');
-    if (t) {
+    var go = e.target.closest('[data-go]');
+    if (go) {
       e.preventDefault();
-      show(t.getAttribute('data-go'));
+      var target = go.getAttribute('data-go');
+      if (target === 'pickFirst') target = state.majorId ? 'major' : 'browse';
+      show(target);
       return;
     }
     var cat = e.target.closest('[data-cat]');
@@ -397,26 +565,21 @@
       return;
     }
     var mj = e.target.closest('[data-major]');
-    if (mj) {
-      e.preventDefault();
-      openMajor(mj.getAttribute('data-major'));
-      return;
-    }
+    if (mj) { e.preventDefault(); selectMajor(mj.getAttribute('data-major')); return; }
+    var st = e.target.closest('[data-style]');
+    if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
     var lv = e.target.closest('[data-level]');
-    if (lv) {
-      e.preventDefault();
-      openLevel(lv.getAttribute('data-level'));
-      return;
-    }
+    if (lv) { e.preventDefault(); openLevel(lv.getAttribute('data-level'), true); return; }
     var opt = e.target.closest('.option');
-    if (opt && !opt.disabled) {
-      chooseOption(Number(opt.getAttribute('data-i')));
-    }
+    if (opt && !opt.disabled) { chooseOption(Number(opt.getAttribute('data-i'))); }
   });
 
   $('nextBtn').addEventListener('click', nextQuestion);
-  $('backToMajor').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
+  $('backToMap').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
+  $('reselectBtn').addEventListener('click', reselect);
+  $('reselectBtn2').addEventListener('click', reselect);
+  $('changeStyle').addEventListener('click', function (e) { e.preventDefault(); show('style'); });
   $('resetBtn').addEventListener('click', function () {
     if (!confirm('确定要清空所有学习进度吗？此操作不可撤销。')) return;
     state.done = {};
@@ -427,6 +590,8 @@
 
   /* ---------------- 启动 ---------------- */
   load();
+  // 注意：这里不要给 state.style 兜底默认值，
+  // 否则 selectMajor 里的 "还没选学习方式 → 先跳选方式页" 永远不会触发。
   renderHomeCats();
   show('home');
 })();

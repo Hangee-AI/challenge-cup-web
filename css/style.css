@@ -385,6 +385,137 @@ button { font: inherit; cursor: pointer; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ================= v3：专业隔离 / 学习方式 / 闯关地图 / 讲解区 ================= */
+
+/* hidden 属性必须压过 .lesson-video 之类的 display 规则 */
+[hidden] { display: none !important; }
+
+/* ---- 导航右侧：当前专业 + 重新选择 ---- */
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: 14px; }
+.nav-major {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  background: #fff; border: 1px solid var(--line);
+  padding: 6px 12px; border-radius: 999px;
+  box-shadow: var(--shadow-sm); white-space: nowrap;
+  max-width: 210px; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---- 我的专业卡 ---- */
+.my-major-card { max-width: 720px; }
+.my-major-head { display: flex; align-items: center; gap: 16px; }
+.my-major-emoji {
+  flex: 0 0 58px; height: 58px; border-radius: 17px;
+  display: grid; place-items: center; font-size: 28px;
+  background: var(--brand-soft);
+}
+.my-major-head h2 { font-size: 23px; letter-spacing: -.2px; }
+.my-major-style {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line);
+}
+.style-pill {
+  font-size: 13px; font-weight: 600; color: var(--brand);
+  background: var(--brand-soft); padding: 5px 12px; border-radius: 999px;
+}
+.link { color: var(--brand); font-size: 13px; font-weight: 600; }
+.link:hover { text-decoration: underline; }
+
+/* ---- 选学习方式 ---- */
+.style-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  margin-top: 26px; max-width: 860px;
+}
+.style-card {
+  position: relative; display: flex; flex-direction: column; gap: 6px;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 18px;
+  padding: 28px 24px; box-shadow: var(--shadow-sm);
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.style-card:hover { transform: translateY(-3px); border-color: #cfd8ff; box-shadow: var(--shadow); }
+.style-card.style-on { border-color: var(--brand); box-shadow: 0 12px 30px rgba(79, 110, 247, .18); }
+.style-emoji { font-size: 34px; }
+.style-name { font-size: 19px; font-weight: 700; }
+.style-desc { font-size: 14px; color: var(--text-2); }
+.style-tag { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+.style-check {
+  position: absolute; top: 16px; right: 18px;
+  font-size: 12px; font-weight: 700; color: var(--brand);
+  background: var(--brand-soft); padding: 4px 10px; border-radius: 999px;
+}
+.style-note { margin-top: 18px; }
+
+/* ---- 闯关地图 ---- */
+.map-legend {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  font-size: 13px; color: var(--text-2); margin: 4px 0 22px;
+}
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.lg-done { background: var(--ok); }
+.lg-open { background: var(--brand); }
+.lg-lock { background: #d7dbe7; }
+
+.map-list { display: flex; flex-direction: column; gap: 20px; }
+.map-group {
+  background: #fff; border: 1px solid var(--line); border-radius: 18px;
+  padding: 18px 20px; box-shadow: var(--shadow-sm);
+}
+.map-group-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding-bottom: 14px; border-bottom: 1px dashed var(--line);
+}
+.map-group-head b { font-size: 16px; }
+.map-track {
+  display: flex; align-items: stretch; gap: 12px;
+  padding-top: 16px; overflow-x: auto; padding-bottom: 4px;
+}
+.map-node {
+  flex: 0 0 178px; display: flex; flex-direction: column; gap: 4px;
+  padding: 14px; border: 1.5px solid var(--line); border-radius: 14px;
+  background: #fbfcff; transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.map-node-dot {
+  width: 30px; height: 30px; border-radius: 50%; margin-bottom: 4px;
+  display: grid; place-items: center; font-size: 13px;
+  background: #eef1f9; color: var(--text-3);
+}
+.map-node-name { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-node-meta { font-size: 12px; color: var(--text-3); }
+.map-node.is-open { border-color: #c3cdf8; background: #fff; }
+.map-node.is-open:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(79, 110, 247, .16); }
+.map-node.is-open .map-node-dot { background: var(--brand-soft); color: var(--brand); }
+.map-node.is-done { border-color: #b9e4c9; background: #f8fdfa; }
+.map-node.is-done .map-node-dot { background: var(--ok-soft); color: var(--ok); }
+.map-node.is-lock { opacity: .58; cursor: not-allowed; }
+.map-note { margin-top: 18px; }
+
+/* ---- 关卡讲解区（视频 / 文字） ---- */
+.lesson {
+  max-width: 760px; background: #fff; border: 1px solid var(--line);
+  border-radius: 16px; padding: 18px 20px; margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.lesson-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lesson-badge {
+  font-size: 12.5px; font-weight: 700; color: var(--brand);
+  background: var(--brand-soft); padding: 5px 11px; border-radius: 999px;
+}
+.lesson-text { margin-top: 12px; font-size: 14.5px; line-height: 1.78; color: var(--text-2); }
+.lesson-text b { display: block; color: var(--text); font-size: 13.5px; margin-bottom: 4px; }
+.lesson-video { display: flex; gap: 16px; align-items: center; margin-top: 14px; }
+.video-mock {
+  flex: 0 0 168px; aspect-ratio: 16 / 9; border-radius: 12px;
+  background: linear-gradient(135deg, #4f6ef7, #7a5bf7);
+  display: grid; place-items: center;
+  box-shadow: 0 8px 20px rgba(79, 110, 247, .3);
+}
+.video-play { color: #fff; font-size: 22px; }
+.video-meta { display: flex; flex-direction: column; gap: 4px; }
+.video-meta b { font-size: 14.5px; }
+
+/* 首页四步 */
+.steps { grid-template-columns: repeat(4, 1fr); }
+
 /* ---------------- 响应式 ---------------- */
 @media (max-width: 980px) {
   .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 30px; }
