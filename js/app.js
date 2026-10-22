@@ -1294,7 +1294,7 @@
     state.answered = true;
 
     if (ONLINE) {
-      fetch('/api/levels/' + found.level.id + '/check', {
+      fetch(apiUrl('/api/levels/' + found.level.id + '/check'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ questionIndex: state.qi, choice: i })
@@ -1388,7 +1388,7 @@
     attempt = attempt || 0;
     st.className = 'runner-status';
     st.textContent = '检测运行环境…';
-    fetch('/api/health', { cache: 'no-store' })
+    fetch(apiUrl('/api/health'), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (res) {
         var c = res && res.compiler;
@@ -1408,8 +1408,14 @@
           return;
         }
         st.className = 'runner-status is-off';
-        st.textContent = '后端未启动 · 请用 npm start 打开';
+        st.textContent = '后端未连接 · 代码运行暂不可用';
       });
+  }
+
+  // 静态站（Surge）与后端不同源：所有接口请求都要拼 API 基地址
+  function apiUrl(p) {
+    var b = (window.Cloud && window.Cloud.apiBase) ? window.Cloud.apiBase() : '';
+    return b ? String(b).replace(/\/+$/, '') + p : p;
   }
 
   function postCode(url, payload) {
@@ -1449,8 +1455,8 @@
     setCodeBusy(true);
 
     var req = judge
-      ? postCode('/api/judge', { source: src, tests: task.tests })
-      : postCode('/api/run', { source: src, stdin: (task.tests[0] && task.tests[0].stdin) || '' });
+      ? postCode(apiUrl('/api/judge'), { source: src, tests: task.tests })
+      : postCode(apiUrl('/api/run'), { source: src, stdin: (task.tests[0] && task.tests[0].stdin) || '' });
 
     req.then(function (res) {
       if (res.compileError) {
@@ -1489,8 +1495,8 @@
       }
     }).catch(function (err) {
       out.className = 'code-output is-bad';
-      out.textContent = '运行失败：' + (err && err.message ? err.message : '无法连接本地服务') +
-        '\n请确认已在项目目录执行 npm install 和 npm start，然后通过 http://localhost:3000 打开页面。';
+      out.textContent = '运行失败：' + (err && err.message ? err.message : '连不上后端') +
+        '\n代码运行需要后台服务在线（编译在服务器上做）。选择题和讲解不受影响，可以先把题做了、稍后再试运行。';
     }).finally(function () {
       setCodeBusy(false);
     });
@@ -2186,7 +2192,7 @@
 
   // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题（首次可能被网络抖动打断，自动重试）
   function detectBackend(attempt) {
-    fetch('/api/health', { cache: 'no-store' }).then(function (r) {
+    fetch(apiUrl('/api/health'), { cache: 'no-store' }).then(function (r) {
       if (r.ok) { ONLINE = true; return; }
       if (attempt < 2) window.setTimeout(function () { detectBackend(attempt + 1); }, 1200);
     }).catch(function () {
