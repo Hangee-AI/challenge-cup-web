@@ -2414,3 +2414,98 @@ html[data-layout="mobile"] .pet { right: 14px; bottom: 14px; }
 html[data-layout="mobile"] .pet-body { width: 54px; height: 54px; font-size: 26px; }
 html[data-layout="mobile"] .pet-panel { width: calc(100vw - 28px); }
 html[data-layout="mobile"] .pet-log { max-height: 44vh; }
+
+/* ==========================================================
+   同步教材卡片（关卡页顶部：教材 / 章节 / 知识点 / 难度）
+   ========================================================== */
+.tb-sync {
+  margin: 14px 0 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--brand-soft);
+  box-shadow: var(--shadow-sm);
+  line-height: 1.65;
+}
+.tb-sync[hidden] { display: none; }
+.tb-sync-wide { margin-bottom: 4px; }
+
+.tb-sync-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.tb-sync-kicker {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--brand-deep);
+}
+.tb-sync-chapter {
+  font-size: 13px;
+  color: var(--text-2, #5b6480);
+  background: var(--card, #fff);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.tb-sync-diff {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+  color: #fff;
+}
+.tb-sync-diff.is-入门 { background: var(--ok); }
+.tb-sync-diff.is-进阶 { background: var(--brand); }
+.tb-sync-diff.is-综合 { background: var(--gold); }
+
+.tb-sync-book { display: flex; flex-direction: column; gap: 2px; }
+.tb-sync-book b { font-size: 15px; color: var(--text); }
+.tb-sync-meta { font-size: 12.5px; color: var(--text-2, #6b748f); }
+.tb-sync-chapline {
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brand-deep);
+}
+
+.tb-sync-points {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.tb-points-label {
+  font-size: 12px;
+  color: var(--text-2, #6b748f);
+  margin-right: 2px;
+}
+.tb-point {
+  font-size: 12.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--card, #fff);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.tb-sync-foot {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--text-2, #6b748f);
+}
+
+/* 专业路径页：模块名下面挂一行教材名 */
+.module-book {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-2, #6b748f);
+}

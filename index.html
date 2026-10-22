@@ -344,6 +344,7 @@
         <div class="doc-crumb" id="docCrumb"></div>
         <h1 class="doc-title" id="docTitle"></h1>
         <p class="doc-lead" id="docLead"></p>
+        <div class="tb-sync" id="docSync" hidden></div>
         <div class="doc-readbar">
           <span class="doc-readtag">📄 图文讲义</span>
           <span class="doc-readmeta" id="docReadMeta"></span>
@@ -371,6 +372,7 @@
       </div>
       <h1 class="course-title" id="vTitle"></h1>
       <p class="course-meta"><span id="vCrumb"></span><span class="course-dot">·</span><span id="vLead"></span></p>
+      <div class="tb-sync tb-sync-wide" id="videoSync" hidden></div>
     </header>
 
     <div class="course-stage">
@@ -720,6 +722,17 @@
 <script src="js/majors/nursing-courses.js"></script>
 <script src="js/majors/pharmacy-courses.js"></script>
 <script src="js/majors/stomatology-courses-more.js"></script>
+<!-- 同步教材数据层（必须在 data.js 之后、app.js 之前） -->
+<script src="js/textbooks.js"></script>
+<script src="js/textbooks-books-a.js"></script>
+<script src="js/textbooks-books-b.js"></script>
+<script src="js/textbooks-books-c.js"></script>
+<script src="js/textbooks-books-d.js"></script>
+<script src="js/textbooks-books-e.js"></script>
+<script src="js/textbooks-books-f.js"></script>
+<script src="js/textbooks-books-g.js"></script>
+<script src="js/textbooks-books-h.js"></script>
+<script src="js/textbooks-books-i.js"></script>
 <script src="js/videos.js"></script>
 <script src="js/code-offline.js"></script>
 <script src="js/config.js"></script>

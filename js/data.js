@@ -300,32 +300,42 @@ const LEVEL_TEMPLATE = [
 var MAJOR_STAGE_OVERRIDES = {};
 
 /* ---------------- 6. 组装：把专业 + 模板 → 完整路径 ---------------- */
-function buildLevels(majorId, moduleIndex, realLevels) {
+
+/* 给关卡挂上"同步教材"信息（教材 / 章序号 / 章标题 / 知识点 / 难度）
+   数据来自 js/textbooks.js；未加载该文件时静默跳过，不影响原有功能 */
+function attachTextbookSync(level, majorId, moduleName, index) {
+  if (typeof levelSyncOf !== 'function') return level;
+  level.moduleName = moduleName;
+  level.sync = levelSyncOf(majorId, moduleName, level.name, index);
+  return level;
+}
+
+function buildLevels(majorId, moduleIndex, realLevels, moduleName) {
   var list = [];
   // 有真题的模块：真实关卡有几关就放几关
   if (realLevels) {
     for (var r = 0; r < realLevels.length; r++) {
-      list.push({
+      list.push(attachTextbookSync({
         id: majorId + '-m' + moduleIndex + '-l' + r,
         name: realLevels[r].name,
         brief: realLevels[r].brief,
         questions: realLevels[r].questions,
         code: realLevels[r].code != null ? realLevels[r].code : (typeof CS_CODE_TASKS !== 'undefined' && CS_CODE_TASKS[realLevels[r].id]) || null,
         ready: true
-      });
+      }, majorId, moduleName, r));
     }
     return list;
   }
   // 没有真题的模块：按模板生成 3 个占位关卡
   for (var i = 0; i < LEVEL_TEMPLATE.length; i++) {
     var t = LEVEL_TEMPLATE[i];
-    list.push({
+    list.push(attachTextbookSync({
       id: majorId + '-m' + moduleIndex + '-l' + i,
       name: t.name,
       brief: t.tip,
       questions: null,
       ready: false
-    });
+    }, majorId, moduleName, i));
   }
   return list;
 }
@@ -347,7 +357,7 @@ function getPath(majorId) {
       stage.modules.push({
         id: major.id + '-m' + moduleIndex,
         name: m.name,
-        levels: buildLevels(major.id, moduleIndex, m.levels)
+        levels: buildLevels(major.id, moduleIndex, m.levels, m.name)
       });
       moduleIndex++;
     }

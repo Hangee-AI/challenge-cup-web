@@ -369,8 +369,10 @@
     var cat = getCategory(m.cat);
     $('mjEmoji').textContent = m.emoji;
     $('mjName').textContent = m.name;
+    var sch = (typeof schemeOf === 'function') ? schemeOf(m.id) : null;
     $('mjMeta').textContent = (cat ? cat.name : '') + ' · ' + m.desc +
       ' · ' + styleName(state.style) +
+      (sch ? ' · ' + (sch.college.indexOf('—') === 0 ? sch.scheme : sch.college) : '') +
       (m.ready ? ' · 已有讲解与练习' : ' · 路径框架（关卡内容建设中）');
 
     var levels = allLevelsOf(path);
@@ -433,8 +435,12 @@
         mh.type = 'button';
         mh.setAttribute('data-fold', '');
         mh.setAttribute('aria-expanded', modOpen ? 'true' : 'false');
+        var modBook = (typeof textbookOf === 'function' && mod.levels[0] && mod.levels[0].sync)
+          ? mod.levels[0].sync.book : null;
         mh.innerHTML =
-          '<span class="module-name">' + mod.name + '</span>' +
+          '<span class="module-name">' + mod.name +
+            (modBook ? '<span class="module-book">📘 ' + esc(modBook.title) + '</span>' : '') +
+          '</span>' +
           '<span class="module-count">' + modDone + '/' + mod.levels.length + '</span>' +
           '<span class="fold-arrow" aria-hidden="true">▾</span>';
         card.appendChild(mh);
@@ -839,6 +845,7 @@
 
     $('vCrumb').textContent = found.stage.title + ' / ' + found.module.name;
     $('vTitle').textContent = level.name;
+    renderSyncBox($('videoSync'), level);
     $('videoStartQuiz').hidden = !(level.questions && level.questions.length);
 
     // 没有按关卡细分集的专业：用本专业的零基础课程兜底（VIDEO_COURSES）
@@ -1088,6 +1095,51 @@
     }
   }
 
+  /* ---------------- 同步教材：关卡页「这本教材 · 第几章」卡片 ----------------
+     数据来自 js/textbooks.js，经 data.js 的 attachTextbookSync() 挂到关卡上 */
+  function renderSyncBox(node, level) {
+    if (!node) return;
+    var s = level && level.sync;
+    if (!s) { node.hidden = true; node.innerHTML = ''; return; }
+
+    var b = s.book;
+    var h = '<div class="tb-sync-head">' +
+      '<span class="tb-sync-kicker">📚 同步教材</span>' +
+      (s.chapterTotal
+        ? '<span class="tb-sync-chapter">第 ' + s.chapterNo + ' 章 / 共 ' + s.chapterTotal + ' 章</span>'
+        : '<span class="tb-sync-chapter">第 ' + s.chapterNo + ' 章</span>') +
+      '<span class="tb-sync-diff is-' + s.difficulty + '">' + s.difficulty + '</span>' +
+      '</div>';
+
+    if (b) {
+      h += '<div class="tb-sync-book"><b>' + esc(b.title) + '</b>' +
+        '<span class="tb-sync-meta">' + esc(b.author) + ' · ' + esc(b.pub) + ' · ' + esc(b.edition) + '</span></div>';
+      if (s.chapterTitle) {
+        h += '<div class="tb-sync-chapline">本章：第 ' + s.chapterNo + ' 章 · ' + esc(s.chapterTitle) + '</div>';
+      }
+    } else {
+      h += '<div class="tb-sync-book"><b>教材待教务公布</b>' +
+        '<span class="tb-sync-meta">这一关按培养方案中的课程位置编排</span></div>';
+    }
+
+    if (s.points && s.points.length) {
+      h += '<div class="tb-sync-points"><span class="tb-points-label">本章知识点</span>' +
+        s.points.map(function (p) { return '<span class="tb-point">' + esc(p) + '</span>'; }).join('') +
+        '</div>';
+    }
+
+    var foot = [];
+    if (s.scheme) {
+      foot.push('培养方案：' + esc(s.scheme) +
+        (s.college && s.college.indexOf('—') !== 0 ? '（' + esc(s.college) + '）' : ''));
+    }
+    if (s.note) foot.push(esc(s.note));
+    if (foot.length) h += '<div class="tb-sync-foot">' + foot.join('<br>') + '</div>';
+
+    node.hidden = false;
+    node.innerHTML = h;
+  }
+
   /* ---------------- 文字说明：文档页 ---------------- */
   function renderDoc() {
     var found = currentLevel();
@@ -1160,6 +1212,7 @@
     $('docCrumb').textContent = found.stage.title + ' / ' + found.module.name;
     $('docTitle').textContent = level.name;
     $('docLead').textContent = doc.lead || '';
+    renderSyncBox($('docSync'), level);
 
     // 阅读信息 + 进度条
     var plain = (doc.lead || '') + doc.sections.map(function (s) {
