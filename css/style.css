@@ -544,6 +544,9 @@ button { font: inherit; cursor: pointer; }
   border-top: 1px solid var(--line); color: var(--text-3); font-size: 13px;
 }
 .footer-sub { margin-top: 4px; font-size: 12px; color: #a6abbf; }
+.footer-contact { margin-top: 10px; font-size: 12.5px; color: var(--text-3); }
+.footer-contact a { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
+.footer-contact a:hover { color: var(--text-1); }
 
 .toast {
   position: fixed; left: 50%; bottom: 36px; transform: translate(-50%, 14px);
