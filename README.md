@@ -123,6 +123,7 @@ challenge-cup-web/
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
 ├─ js/code-offline.js  代码任务的离线判定答案表（填空 accept + 输出预测基准，15 关）
 ├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）
+├─ deno/main.ts         云端后端（Deno Deploy + Deno KV）：账号 / 打卡 / 看板 / 点亮 / 学习搭子
 ├─ server/             后端（Express）：index.js 入口、auth.js 密码与令牌、db.js JSON 存储、routes/ 接口
 ├─ docs/screens/       各页面截图（申报书、PPT 用；v12-*.png 为最新）
 ├─ docs/协作指南.md     队友怎么配 Git / SSH，怎么提交

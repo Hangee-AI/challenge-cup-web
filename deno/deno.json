@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "start": "deno run --unstable-kv --allow-net --allow-env --allow-read --allow-write main.ts"
+  },
+  "fmt": { "lineWidth": 110 }
+}
