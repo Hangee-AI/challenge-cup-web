@@ -66,9 +66,11 @@ challenge-cup-web/
 ├─ js/philosophy.js    哲学专业：12 门课程（模块）+ 每门课第 1 章（课程导学）+ 36 题
 ├─ js/philosophy-chapters.js 哲学专业：给 12 门课补第 2–4 章，共 35 章 / 105 题
 ├─ js/logic.js         逻辑学专业：同上（依赖 philosophy.js 的 registerMajorPath）
-├─ js/law.js           法学 / 知识产权 / 社会学：一阶段一关（每关 3 门课串讲）
+├─ js/law.js           法学 / 知识产权 / 社会学：4 门课（每阶段一门）
 ├─ js/economics.js     经济学 / 金融学 / 国际经济与贸易 / 财政学：同上
 ├─ js/education.js     教育学 / 学前教育 / 教育技术学：同上
+├─ js/major-chapters.js     法学 + 经济学 7 个专业：每门课补第 2 章（重点 + 3 题）
+├─ js/education-chapters.js 教育学门类 3 个专业：每门课补第 2 章
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
 ├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）

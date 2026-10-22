@@ -56,6 +56,36 @@ function stageTitlesOf(cat) {
   return PATH_TEMPLATE[cat].stages.map(function (s) { return s.title; });
 }
 
+/* 给已注册专业的每门课追加章节（课程 → 章节）
+   plan[课序号] = { name: 可选，改课程名, chapters: [{title, brief, q, doc}] }
+   - 第 1 章沿用原来的课程导学，只把「第 N 关」改写成「第 1 章」
+   - 追加的第 k 章会写成 DOCS['专业-m<课序号>-l<章序号>']，与 buildLevels 顺序一致 */
+function addChapters(majorId, plan) {
+  var override = MAJOR_STAGE_OVERRIDES[majorId];
+  if (!override) return;
+  var mi = 0;
+  Object.keys(override).forEach(function (stageTitle) {
+    override[stageTitle].modules.forEach(function (mod) {
+      var i = mi++;
+      var cfg = plan[i];
+      if (!cfg) return;
+      if (cfg.name) mod.name = cfg.name;
+      var first = mod.levels[0];
+      if (first) first.name = '第 1 章 · ' + first.name.replace(/^第\s*\d+\s*[关章]\s*·\s*/, '');
+      (cfg.chapters || []).forEach(function (ch, k) {
+        var n = k + 2;                        // 第 2 章、第 3 章……
+        DOCS[majorId + '-m' + i + '-l' + (n - 1)] = ch.doc;
+        mod.levels.push({
+          name: '第 ' + n + ' 章 · ' + ch.title,
+          brief: ch.brief,
+          questions: ch.q,
+          ready: true
+        });
+      });
+    });
+  });
+}
+
 /* ---------------- 「哲学」专业：12 个模块 ---------------- */
 registerMajorPath('philosophy-哲学', PHILO_STAGE_TITLES, [
 
