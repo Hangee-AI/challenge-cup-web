@@ -256,3 +256,15 @@ function bvDuration(page) {
   var s = ch[1] % 60;
   return m + ':' + (s < 10 ? '0' + s : s);
 }
+
+/* 把任意 B 站链接转成官方播放器 iframe 地址（给 VIDEO_COURSES 里那些单门课程用） */
+function bvEmbedFromUrl(url) {
+  if (!url) return '';
+  var m = url.match(/\/video\/(BV[0-9A-Za-z]+)/);
+  if (m) return 'https://player.bilibili.com/player.html?bvid=' + m[1] + '&page=1&high_quality=1&danmaku=0';
+  m = url.match(/\/video\/av(\d+)/);
+  if (m) return 'https://player.bilibili.com/player.html?aid=' + m[1] + '&page=1&high_quality=1&danmaku=0';
+  m = url.match(/\/bangumi\/play\/ep(\d+)/);
+  if (m) return 'https://player.bilibili.com/player.html?ep_id=' + m[1] + '&page=1&high_quality=1&danmaku=0';
+  return '';
+}

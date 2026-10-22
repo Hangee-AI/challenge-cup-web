@@ -465,7 +465,40 @@
   function renderVideo() {
     var found = currentLevel();
     if (!found) { show('map'); return; }
+    var path = getPath(state.majorId);
+    var major = path.major;
     var level = found.level;
+
+    $('vCrumb').textContent = found.stage.title + ' / ' + found.module.name;
+    $('vTitle').textContent = level.name;
+    $('videoStartQuiz').hidden = !(level.questions && level.questions.length);
+
+    // 没有按关卡细分集的专业：用本专业的零基础课程兜底（VIDEO_COURSES）
+    if (!VIDEO_MAP[level.id] && major.video) {
+      $('vSideTitle').textContent = '🎬 ' + major.name + ' · 零基础课';
+      $('vSideSub').textContent = '本专业推荐课程（暂未按关卡细分）';
+      $('vLead').textContent = '这个专业暂时只配了一门零基础课程，没有拆到每一关。先看课程导论或第一章，再回来做题；完整课程可以在 B 站继续看。';
+
+      var nav0 = $('videoNav');
+      nav0.innerHTML = '';
+      nav0.appendChild(el('div', 'video-sec', '<span class="video-sec-name">本专业推荐课程</span>'));
+      var item = el('a', 'video-ep is-on');
+      item.href = major.video.url;
+      item.target = '_blank';
+      item.rel = 'noopener';
+      item.innerHTML =
+        '<span class="video-ep-no">B站</span>' +
+        '<span class="video-ep-title">' + esc(major.video.title) + '</span>' +
+        '<span class="video-ep-dur">↗</span>';
+      nav0.appendChild(item);
+
+      $('vPlayer').src = bvEmbedFromUrl(major.video.url);
+      $('vNow').textContent = '正在播放：' + major.video.title;
+      $('vOpen').href = major.video.url;
+      $('vEpList').innerHTML = '';
+      return;
+    }
+
     var v = getVideo(level.id);
     var pages = videoPagesOf(level.id);
     var page = state.videoPage || firstVideoPage(level.id);
@@ -475,8 +508,6 @@
     $('vSideSub').textContent = '共 ' + BV_TOTAL + ' 集 · 约 26.5 小时';
     renderVideoNav(level.id, page);
 
-    $('vCrumb').textContent = found.stage.title + ' / ' + found.module.name;
-    $('vTitle').textContent = level.name;
     $('vLead').textContent = v.note || '';
 
     $('vPlayer').src = bvPlayerUrl(page);
