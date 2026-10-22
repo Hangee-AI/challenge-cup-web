@@ -1272,6 +1272,37 @@ html[data-layout="mobile"] #caroNext { min-width: 44px; min-height: 44px; }
   cursor: pointer;
   transition: background .18s ease, color .18s ease;
 }
+
+/* ==========================================================
+   触控手感修复（手机端审计后补）
+   ========================================================== */
+/* 1. iOS 点按灰闪换成品牌色淡闪；禁双击缩放（保留捏合缩放与平滑滚动） */
+button, a, [role="button"] { -webkit-tap-highlight-color: rgba(79, 110, 247, .12); }
+body { touch-action: manipulation; }
+
+/* 2. 全局按压反馈：手机没有 hover，按下要"陷下去"才有手感 */
+.theme-btn:active, .quote-next:active, .caro-arrow:active, .nav-me:active,
+.cat-card:active, .major-card:active, .common-card:active,
+.level-item:active, .option:active:not(:disabled) {
+  transform: scale(.97);
+}
+.theme-btn, .quote-next, .caro-arrow, .nav-me,
+.cat-card, .major-card, .common-card, .level-item, .option {
+  transition: transform .12s ease, box-shadow .16s, border-color .16s, background .16s, color .15s;
+}
+
+/* 3. 轮播圆点视觉 7px 不变，点击热区扩到 ~25px（WCAG 最低 24px） */
+.caro-dot { position: relative; }
+.caro-dot::after { content: ''; position: absolute; inset: -9px; border-radius: 999px; }
+
+/* 4. 竖屏下导航小按钮加高到 38px，更好点 */
+@media (max-width: 640px) {
+  .theme-btn, .nav-me { min-height: 38px; }
+  .theme-btn { padding: 8px 14px; }
+}
+html[data-layout="mobile"] .theme-btn,
+html[data-layout="mobile"] .nav-me { min-height: 38px; }
+html[data-layout="mobile"] .theme-btn { padding: 8px 14px; }
 .auth-tab:hover { color: var(--brand); }
 .auth-tab.is-on {
   background: var(--card);
