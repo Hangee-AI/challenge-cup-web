@@ -29,6 +29,25 @@
 - **学习报告页**：完成关卡数、累计答题、正确率、星星、逐关记录。
 - 进度存在浏览器 localStorage（key = `yinlu_v1`），关掉网页再打开还在。
 
+## v12 新增：服务器账号 · 每日打卡 · 照明看板
+
+> 这一版加了真正的后端（`server/`，Express + JSON 文件存储）。**有后端就用账号体系，没后端自动退回本地模式**，双击 `index.html` 照样能演示，不会报错。
+
+- **账号体系（服务器）**
+  - 注册：学校简称 + 学号 + **密码**（6–32 位）；密码用 `scrypt` 加盐哈希存，不存明文。
+  - 登录 / 退出：登录后拿到 30 天有效的 token（存在浏览器），个人中心显示「云端账号」。
+  - **忘记密码**：只输入「注册时的学校简称 + 学号」即可直接重设密码，**不需要邮箱和手机验证**（按需求方指定的方案）。
+  - **修改密码**：输入原密码 + 新密码（两次），校验原密码通过才更新。
+  - 接口：`POST /api/auth/register|login|reset|change|logout`、`GET /api/auth/me`，都有简单限流（注册 10 次/分、登录 20 次/分）。
+- **每日打卡**
+  - 登录后点「今日打卡」，同一天只算一次（幂等），返回今日打卡人数与个人连续天数。
+  - 接口：`POST /api/checkin`（需登录）。
+- **照明 / 点亮效果**
+  - 每个新访客（浏览器指纹）第一次进入时，会全屏播放一次「💡 已为你点亮一盏灯 · 你是第 N 个被照亮的人」的光晕动画（每台设备只播一次）。
+  - 首页看板展示：**今日打卡人数**、**已为多少人照明引路**、**我的连续打卡**；数字来自 `GET /api/stats`，点亮来自 `POST /api/light`。
+  - 注册成功也算一次点亮（账号即一盏灯）。
+- **前端接线**：新增 `js/cloud.js`——先用 1.8 秒超时探测 `/api/ping`，在线才显示云端入口（注册/登录/忘记密码三个 tab、打卡按钮、修改密码），离线则自动隐藏这些入口，页面其余部分完全不受影响。
+
 > 框架优先：路径与地图结构是完整的，但具体内容目前只有「计算机科学与技术 → 大一 → C 语言入门」有 7 个真实关卡 + 7 篇完整文档 + 7 组对应分集（覆盖 runoob C 教程 7 大主题），其余模块显示"建设中"，由团队后续按培养方案补充。
 >
 > 📚 文档正文是**自己写的**，csdiy.wiki 只作为「延伸资源」推荐，页脚已注明「本站只做推荐，不转载其内容」；视频用 B 站官方播放器嵌入，版权归原作者，本站仅做课程推荐。
@@ -45,7 +64,9 @@ challenge-cup-web/
 ├─ js/docs.js          内容层：每关的文档正文（DOCS）+ 通用模板 + csdiy 延伸资源
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
-├─ docs/screens/       各页面截图（申报书、PPT 用；v9-*.png 为最新）
+├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）
+├─ server/             后端（Express）：index.js 入口、auth.js 密码与令牌、db.js JSON 存储、routes/ 接口
+├─ docs/screens/       各页面截图（申报书、PPT 用；v12-*.png 为最新）
 ├─ docs/协作指南.md     队友怎么配 Git / SSH，怎么提交
 ├─ docs/部署说明.md     线上地址与重新发布方法
 ├─ assets/             图片、音效等素材（待补充）
@@ -54,9 +75,20 @@ challenge-cup-web/
 
 ## 本地运行
 
-纯静态页面，无构建、无依赖：直接双击 `index.html`，或者用本地文件地址打开即可。
+**方式一（纯静态，推荐用来快速看页面）**：直接双击 `index.html`。此时没有后端，账号 / 打卡 / 照明看板会自动隐藏。
 
-> 注意：数据放在 `js/data.js` 里而不是 `.json` + fetch，因为 `file://` 协议下浏览器会拦截 fetch（CORS）。所以**不要**把数据改成外部 JSON 文件。
+**方式二（带后端，完整功能）**：
+
+```bash
+npm install
+npm start          # 默认 http://localhost:3000，被占用就换端口：PORT=3210 npm start
+```
+
+打开 <http://localhost:3000>，个人中心就会出现「注册 / 登录 / 忘记密码」和服务器的打卡、照明人数。
+
+> 注意：数据放在 `js/data.js` 里而不是 `.json` + fetch，因为 `file://` 协议下浏览器会拦截 fetch（CORS）。所以**不要**把静态内容改成外部 JSON 文件。
+>
+> 账号数据存在 `server/data/db.json`（已在 `.gitignore` 里，不会提交），删掉这个文件就等于清空所有账号。
 
 ## 修改指引（给队友）
 
@@ -79,6 +111,9 @@ challenge-cup-web/
 | **改主题配色** | `css/style.css` 的 `html[data-theme="night"]` | 只在夜间块里覆盖同名的 `:root` 变量，别改上面默认值 |
 | **改学习时长统计** | `js/app.js` 的 `startStudyTimer()` | 现在是「可见时每 15 秒 +15 秒」，改间隔/步长都在这里 |
 | **改续学记忆** | `js/app.js` 的 `remember()` / `resumeLast()` | 记的是 `{majorId, levelId, mode, page, docY, ts}`，字段加在这里 |
+| **改打卡 / 照明逻辑** | `server/routes/engage.js` | 打卡 `POST /api/checkin`、统计 `GET /api/stats`、点亮 `POST /api/light` |
+| **改账号接口** | `server/routes/auth.js` | 注册/登录/重置/改密；密码哈希在 `server/auth.js`（scrypt，可换 bcrypt/argon2） |
+| **改打卡/照明文案与样式** | `index.html` 的 `#pulse` + `css/style.css` 的 `.pulse-*` / `.light-*` | 数字由 `js/cloud.js` 的 `paintStats()` 填 |
 | 改样式 | `css/style.css` | 颜色统一用顶部 `:root` 变量 |
 | 改页面结构 | `index.html` + `js/app.js` | 视图 id 必须保留 `view-*` 命名 |
 

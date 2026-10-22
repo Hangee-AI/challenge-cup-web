@@ -966,7 +966,9 @@
     for (var i = 0; i < 400; i++) {
       if ((state.study[dateKey(d)] || 0) > 0) { n++; d.setDate(d.getDate() - 1); } else break;
     }
-    return n;
+    // 云端账号的打卡连续天数（来自服务器）与本机学习天数取大的一个
+    var cloudStreak = (state.profile && state.profile.streak) || 0;
+    return Math.max(n, cloudStreak);
   }
   function startStudyTimer() {
     window.setInterval(function () {
@@ -1178,8 +1180,10 @@
     $('pfAvatar').textContent = p.avatar || '🐱';
     $('pfName').textContent = p.nickname || '同学';
     $('pfSid').textContent = '学号 ' + (p.sid || '—');
-    $('pfMode').textContent = '常驻模式';
-    $('pfSince').textContent = '加入于 ' + (p.since || '—');
+    $('pfMode').textContent = p.cloud ? '云端账号' : '常驻模式';
+    var sinceText = p.since || '—';
+    if (typeof sinceText === 'string' && sinceText.indexOf('T') > 0) sinceText = sinceText.slice(0, 10);
+    $('pfSince').textContent = '加入于 ' + sinceText;
     renderProfileStats();
   }
 
@@ -1257,11 +1261,33 @@
   $('caroNext').addEventListener('click', function () { caroGo(1); });
   $('carousel').addEventListener('mouseenter', function () { caroPaused = true; });
   $('carousel').addEventListener('mouseleave', function () { caroPaused = false; });
-  $('registerBtn').addEventListener('click', registerMember);
-  $('sidInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') registerMember(); });
-  $('nickInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') registerMember(); });
-  $('logoutBtn').addEventListener('click', logoutMember);
+  function onAuthClick() {
+    if (window.Cloud && window.Cloud.isOnline()) { window.Cloud.submitAuth(); return; }
+    registerMember();
+  }
+
+  $('registerBtn').addEventListener('click', onAuthClick);
+  $('sidInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
+  $('nickInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
+  $('pwdInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
+  $('pwdInput2').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
+  $('logoutBtn').addEventListener('click', function () {
+    if (window.Cloud && window.Cloud.hasSession()) { window.Cloud.logout(); return; }
+    logoutMember();
+  });
   $('editAvatarBtn').addEventListener('click', changeAvatar);
+
+  // 给 js/cloud.js 用的钩子（在线/离线共用同一套渲染）
+  window.__YL = {
+    state: state,
+    save: save,
+    toast: toast,
+    show: show,
+    renderProfile: renderProfile,
+    updateNav: updateNav,
+    renderProfileStats: renderProfileStats,
+    isOnline: function () { return ONLINE; }
+  };
 
   var docScrollTimer = null;
   window.addEventListener('scroll', function () {

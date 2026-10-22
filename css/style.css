@@ -1110,3 +1110,156 @@ html[data-theme="night"] .map-node.is-done { background: #12301f; border-color: 
   padding: 0 24px 0 12px; cursor: pointer; outline: none;
 }
 .sid-select:focus { background-color: var(--surface-2); }
+/* ============================================================
+ * 打卡 / 照明看板 · 云端账号 · 点亮动画
+ * ============================================================ */
+.cloud-only[hidden] { display: none !important; }
+
+/* ---------- 首页看板 ---------- */
+.pulse-section { margin-top: 6px; }
+
+.pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.pulse-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.pulse-top { display: flex; align-items: center; justify-content: space-between; }
+.pulse-label { font-size: 13px; color: var(--text-3); letter-spacing: .4px; }
+.pulse-ico { font-size: 18px; line-height: 1; }
+.pulse-value { display: flex; align-items: baseline; gap: 6px; color: var(--text-2); font-size: 15px; }
+.pulse-value b {
+  font-size: 42px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+.pulse-hint { margin: 0; font-size: 12.5px; color: var(--text-3); }
+.pulse-btn { align-self: flex-start; margin-top: 2px; }
+
+.pulse-card-glow {
+  background: linear-gradient(160deg, #fff8e9 0%, var(--card) 62%);
+  border-color: #f4e0b4;
+}
+.pulse-card-glow .pulse-value b { color: #b26a00; }
+.pulse-card-glow .pulse-ico { animation: bulbGlow 3.2s ease-in-out infinite; }
+@keyframes bulbGlow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,181,0,0)); }
+  50% { transform: scale(1.12); filter: drop-shadow(0 0 8px rgba(255,181,0,.55)); }
+}
+
+.pulse-bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 4px; }
+.pulse-bar i {
+  display: block; height: 100%; width: 10%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #ffd166, #ff9f1c);
+  transition: width .8s cubic-bezier(.2,.8,.2,1);
+}
+
+.pulse-flash .pulse-card-glow { animation: pulseFlash .9s ease; }
+@keyframes pulseFlash {
+  0% { box-shadow: 0 0 0 0 rgba(255,159,28,.5); }
+  100% { box-shadow: 0 0 0 20px rgba(255,159,28,0); }
+}
+
+/* ---------- 账号切换 tab ---------- */
+.auth-tabs {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 5px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+.auth-tab {
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease;
+}
+.auth-tab:hover { color: var(--brand); }
+.auth-tab.is-on {
+  background: var(--card);
+  color: var(--brand);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(16,24,48,.1);
+}
+
+.pwd-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  max-width: 420px;
+}
+
+/* ---------- 点亮（照明）动画 ---------- */
+.light-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 20, .55);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity .55s ease;
+}
+.light-overlay.is-on { opacity: 1; }
+.light-halo {
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe9a8 0%, rgba(255,214,102,.6) 36%, rgba(255,196,0,0) 70%);
+  opacity: 0;
+}
+.light-overlay.is-on .light-halo { animation: halo 1.9s ease forwards; }
+@keyframes halo {
+  0% { transform: scale(.25); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: scale(5.5); opacity: 0; }
+}
+.light-text { position: relative; text-align: center; color: #fff; }
+.light-emoji { margin: 0 0 8px; font-size: 42px; line-height: 1; }
+.light-title { margin: 0 0 8px; font-size: 24px; font-weight: 700; letter-spacing: .5px; }
+.light-sub { margin: 0; font-size: 14px; color: rgba(255,255,255,.82); }
+.light-sub b { color: #ffd166; font-size: 17px; }
+
+/* ---------- 夜猫模式 ---------- */
+html[data-theme="night"] .pulse-card-glow {
+  background: linear-gradient(160deg, #2b2214 0%, var(--card) 62%);
+  border-color: #4a3a12;
+}
+html[data-theme="night"] .pulse-card-glow .pulse-value b { color: #ffcf6b; }
+html[data-theme="night"] .auth-tab.is-on {
+  background: rgba(125,149,255,.16);
+  box-shadow: none;
+}
+html[data-theme="night"] .light-overlay { background: rgba(4,6,14,.72); }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 900px) {
+  .pulse-grid { grid-template-columns: 1fr; }
+}

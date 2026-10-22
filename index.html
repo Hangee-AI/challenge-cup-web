@@ -73,6 +73,41 @@
       </div>
     </div>
 
+    <!-- 打卡 / 照明看板 -->
+    <div class="section pulse-section" id="pulse">
+      <div class="pulse-grid">
+        <div class="pulse-card">
+          <div class="pulse-top">
+            <span class="pulse-label">今日打卡</span>
+            <span class="pulse-ico">📍</span>
+          </div>
+          <div class="pulse-value"><b id="pToday">—</b><span>人</span></div>
+          <p class="pulse-hint" id="pCheckinHint">登录后每天点一下，记录你的坚持</p>
+          <button class="btn btn-primary btn-sm pulse-btn" type="button" id="pulseCheckinBtn">今日打卡</button>
+        </div>
+
+        <div class="pulse-card pulse-card-glow">
+          <div class="pulse-top">
+            <span class="pulse-label">已为多少人照明引路</span>
+            <span class="pulse-ico" id="pLightsIco">💡</span>
+          </div>
+          <div class="pulse-value"><b id="pLights">—</b><span>人</span></div>
+          <p class="pulse-hint">每一位新朋友进来，就会替你点亮一盏灯</p>
+          <div class="pulse-bar"><i id="pLightsBar"></i></div>
+        </div>
+
+        <div class="pulse-card">
+          <div class="pulse-top">
+            <span class="pulse-label">我的连续打卡</span>
+            <span class="pulse-ico">🔥</span>
+          </div>
+          <div class="pulse-value"><b id="pStreakTop">—</b><span>天</span></div>
+          <p class="pulse-hint" id="pStreakHint">登录后开始记录</p>
+          <button class="btn btn-ghost btn-sm pulse-btn" type="button" id="pulseProfileBtn">看我的记录</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 公告轮播 -->
     <div class="section caro-section">
       <div class="section-row">
@@ -377,7 +412,7 @@
     <div class="page-head">
       <a class="back" href="#" data-go="home">← 返回首页</a>
       <h1>个人中心</h1>
-      <p>游客模式只存在这台设备；用学号注册后，昵称、头像、学习时长都会长期保存。<b>账号信息只保存在这台电脑的浏览器里，不上传到任何服务器。</b></p>
+      <p id="profileIntro">游客模式只存在这台设备；用学号注册后，昵称、头像、学习时长都会长期保存。<b>账号信息只保存在这台电脑的浏览器里，不上传到任何服务器。</b></p>
     </div>
 
     <!-- 8a. 游客：注册入口 -->
@@ -389,6 +424,11 @@
             <h3>你现在是游客模式</h3>
             <p class="muted">可以正常选专业、闯关、记时长，只是换台设备或清了浏览器就没了。</p>
           </div>
+        </div>
+        <div class="auth-tabs cloud-only" id="authTabs" hidden>
+          <button type="button" class="auth-tab is-on" data-auth="register">注册</button>
+          <button type="button" class="auth-tab" data-auth="login">登录</button>
+          <button type="button" class="auth-tab" data-auth="forgot">忘记密码</button>
         </div>
         <div class="guest-form">
           <label class="field">
@@ -409,16 +449,25 @@
               <input id="sidInput" class="field-input sid-input" type="text" inputmode="numeric" maxlength="20" placeholder="例如 9110126060" />
             </span>
           </label>
-          <label class="field">
+          <label class="field" id="nickField">
             <span class="field-label">昵称（可留空）</span>
             <input id="nickInput" class="field-input" type="text" maxlength="16" placeholder="不填就用「同学 + 学号后四位」" />
           </label>
-          <label class="field">
+          <label class="field" id="avatarField">
             <span class="field-label">挑个头像</span>
             <div class="avatar-pick" id="avatarPick"></div>
           </label>
+          <label class="field cloud-only" id="pwdField" hidden>
+            <span class="field-label" id="pwdLabel">设置密码（6–32 位）</span>
+            <input id="pwdInput" class="field-input" type="password" maxlength="32" autocomplete="new-password" placeholder="登录、改密码、找回密码都要用它" />
+          </label>
+          <label class="field cloud-only" id="pwd2Field" hidden>
+            <span class="field-label" id="pwd2Label">再输一次密码</span>
+            <input id="pwdInput2" class="field-input" type="password" maxlength="32" autocomplete="new-password" />
+          </label>
           <button class="btn btn-primary btn-lg" id="registerBtn" type="button">用学号注册 · 开启常驻模式</button>
-          <p class="field-hint">不需要密码。账号（学校简称 + 学号）只写进这台浏览器的本地存储，不上传服务器，所以换设备或清缓存后要重新注册。</p>
+          <p class="field-hint" id="authHint">不需要密码。账号（学校简称 + 学号）只写进这台浏览器的本地存储，不上传服务器，所以换设备或清缓存后要重新注册。</p>
+          <p class="field-hint cloud-only" id="cloudHint" hidden>账号保存在服务器上，换设备、换浏览器都能登录。忘记密码只要输入「学校简称 + 学号」就能重置，不需要邮箱和手机。</p>
         </div>
       </div>
     </div>
@@ -445,6 +494,30 @@
         <h3 class="card-title">坚持记录</h3>
         <div class="study-bars" id="studyBars"></div>
         <p class="muted small" id="studyHint">每天的学习时长会自动统计，离开页面就暂停。</p>
+      </div>
+
+      <div class="card cloud-only" id="memberCloudCard" hidden>
+        <h3 class="card-title">打卡 · 账号</h3>
+        <div class="setting-row">
+          <div>
+            <b>每日打卡</b>
+            <p class="muted small" id="memberCheckinHint">今天还没打卡</p>
+          </div>
+          <button class="btn btn-primary btn-sm" id="memberCheckinBtn" type="button">打卡</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <b>修改密码</b>
+            <p class="muted small">输入原密码，再输两次新密码。</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="togglePwdBtn" type="button">修改</button>
+        </div>
+        <div class="pwd-form" id="pwdForm" hidden>
+          <input id="oldPwdInput" class="field-input" type="password" maxlength="32" placeholder="原密码" autocomplete="current-password" />
+          <input id="newPwdInput" class="field-input" type="password" maxlength="32" placeholder="新密码（6–32 位）" autocomplete="new-password" />
+          <input id="newPwdInput2" class="field-input" type="password" maxlength="32" placeholder="再输一次新密码" autocomplete="new-password" />
+          <button class="btn btn-primary btn-sm" id="savePwdBtn" type="button">保存新密码</button>
+        </div>
       </div>
 
       <div class="card">
@@ -474,9 +547,19 @@
   <div class="footer-sub">第二十届"挑战杯"南昌大学大学生课外学术科技作品竞赛 · 院赛作品原型</div>
 </footer>
 
+<div class="light-overlay" id="lightOverlay" hidden>
+  <div class="light-halo"></div>
+  <div class="light-text">
+    <p class="light-emoji">💡</p>
+    <p class="light-title" id="lightTitle">已为你点亮</p>
+    <p class="light-sub" id="lightSub">你是第 <b>—</b> 个被照亮的人</p>
+  </div>
+</div>
+
 <script src="js/data.js"></script>
 <script src="js/docs.js"></script>
 <script src="js/videos.js"></script>
 <script src="js/app.js"></script>
+<script src="js/cloud.js"></script>
 </body>
 </html>
