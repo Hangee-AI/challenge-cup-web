@@ -84,7 +84,7 @@
     markStyleSwitch();
     window.scrollTo(0, 0);
 
-    if (name === 'home') { renderHomeCta(); renderHomeExtras(); }
+    if (name === 'home') { renderHomeCta(); renderHomeExtras(); renderHomeCommon(); }
     if (name === 'browse') renderBrowse();
     if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
@@ -160,6 +160,25 @@
         '<span class="cat-name">' + c.name + '</span>' +
         '<span class="cat-desc">' + c.desc + '</span>' +
         '<span class="cat-count">' + n + ' 个专业 →</span>';
+      box.appendChild(a);
+    });
+  }
+
+  /* 公共必修课：数据来自 data.js 的 COMMON_COURSES，加课只改数组 */
+  function renderHomeCommon() {
+    var box = $('homeCommon');
+    if (!box || box.childElementCount) return;
+    if (typeof COMMON_COURSES === 'undefined') return;
+    COMMON_COURSES.forEach(function (c) {
+      var a = el('a', 'common-card');
+      a.href = c.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML =
+        '<span class="common-tag">' + (c.tag || '公共课') + (c.code ? ' · ' + c.code : '') + '</span>' +
+        '<span class="common-name">《' + c.name + '》</span>' +
+        '<span class="common-desc">' + (c.desc || '') + '</span>' +
+        '<span class="common-go">打开资料 ↗</span>';
       box.appendChild(a);
     });
   }
@@ -1180,6 +1199,7 @@
   load();
   applyTheme();
   renderHomeCats();
+  renderHomeCommon();
   renderCarousel();
   renderHomeExtras();
   startStudyTimer();

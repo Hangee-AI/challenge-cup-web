@@ -19,6 +19,14 @@ const CS_REFS = {
   missing: { name: '命令行艺术 & Shell 脚本', url: CSDIY + '%E5%BF%85%E5%AD%A6%E5%B7%A5%E5%85%B7/workflow/' }
 };
 
+/* C 语言权威参考来源（cup.md 要求覆盖 4 个站点） */
+const C_SOURCES = [
+  { name: 'runoob C 语言教程（中文入门，本项目主要参考）',      url: 'https://www.runoob.com/cprogramming/c-tutorial.html' },
+  { name: 'C 语言中文网（编程中文网，25 万字实践派，章节最全）',  url: 'https://c.biancheng.net/c/' },
+  { name: 'GeeksforGeeks C Programming Language（英文，题目/代码丰富）', url: 'https://www.geeksforgeeks.org/c-programming-language/' },
+  { name: 'cppreference C 语言（中文，权威标准手册，查语法/库函数首选）', url: 'https://zh.cppreference.com/w/c/language' }
+];
+
 const DOCS = {
 
   /* ---------------- C 语言入门 · 第 1 关 ---------------- */
@@ -122,7 +130,7 @@ scanf("%s", name);         // 数组名本身就是地址，不用 &amp;</code><
 <p>优先级记不住没关系——<strong>不确定就加括号</strong>，代码更清晰。</p>`
       }
     ],
-    refs: [CS_REFS.entry, CS_REFS.tools]
+    refs: [CS_REFS.entry, CS_REFS.tools].concat(C_SOURCES)
   },
 
   /* ---------------- C 语言入门 · 第 2 关 ---------------- */
@@ -218,7 +226,7 @@ switch (grade) {
 <div class="doc-tip">💡 什么时候用 switch？当条件是「等于某个常量」的多路分支时优先 switch；需要范围判断（如 <code>x &gt; 60</code>）还是得用 if。</div>`
       }
     ],
-    refs: [CS_REFS.entry, CS_REFS.plan]
+    refs: [CS_REFS.entry, CS_REFS.plan].concat(C_SOURCES)
   },
 
   /* ---------------- C 语言入门 · 第 3 关 ---------------- */
@@ -290,7 +298,7 @@ for (int i = 1; i &lt; 5; i++)
 <p>这三套是所有循环题的骨架，后面无论题目怎么变，基本都是它们的组合。</p>`
       }
     ],
-    refs: [CS_REFS.entry, CS_REFS.missing]
+    refs: [CS_REFS.entry, CS_REFS.missing].concat(C_SOURCES)
   },
 
   /* ---------------- C 语言入门 · 第 4 关 ---------------- */
@@ -380,7 +388,7 @@ for (int i = 0; i &lt; 3; i++) {
 }</code></pre>`
       }
     ],
-    refs: [CS_REFS.entry, CS_REFS.algo]
+    refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
   },
 
   /* ---------------- C 语言入门 · 第 5 关（新）· 函数 ---------------- */
@@ -453,7 +461,7 @@ int fact(int n) {
 <div class="doc-tip">⚠️ 递归虽短但慢——每多一层调用就多占一块栈空间。数据大时可能比循环慢甚至爆栈。写递归前先想：「能不能用循环改写？」</div>`
       }
     ],
-    refs: [CS_REFS.entry, CS_REFS.algo]
+    refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
   },
 
   /* ---------------- C 语言入门 · 第 6 关（新）· 指针 ---------------- */
@@ -518,7 +526,7 @@ int main() {
 <div class="doc-tip">⚠️ 空指针（NULL）不能解引用。<code>int *p = NULL; *p = 1;</code> 会直接崩溃。使用指针前先判空：<code>if (p) ...</code></div>`
       }
     ],
-    refs: [CS_REFS.entry, CS_REFS.csapp]
+    refs: [CS_REFS.entry, CS_REFS.csapp].concat(C_SOURCES)
   },
 
   /* ---------------- C 语言入门 · 第 7 关（新）· 结构体 / 共用体 / 文件读写 ---------------- */
@@ -612,7 +620,7 @@ fclose(fp);</code></pre>
 <div class="doc-tip">⚠️ Windows 下写文件最好用 <code>"w"</code>（文本模式，会把 \\n 转成 \\r\\n）。用 <code>"wb"</code> 二进制模式时不会做转换。读完文件一定要 <code>fclose</code>——操作系统对可同时打开的文件数有限制。</div>`
       }
     ],
-    refs: [CS_REFS.csapp, CS_REFS.plan]
+    refs: [CS_REFS.csapp, CS_REFS.plan].concat(C_SOURCES)
   }
 };
 

@@ -23,6 +23,16 @@ jobs:
           cp index.html dist/
           cp -r css js assets dist/
 
+      - name: Check Surge credentials
+        env:
+          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        run: |
+          if [ -z "$SURGE_LOGIN" ] || [ -z "$SURGE_TOKEN" ]; then
+            echo "::error::缺少 SURGE_LOGIN / SURGE_TOKEN，请在仓库 Settings → Secrets and variables → Actions 中配置"
+            exit 1
+          fi
+
       - name: Deploy to Surge
         env:
           SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
