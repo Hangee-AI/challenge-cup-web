@@ -1,20 +1,24 @@
 /* ==========================================================
-   tools/bundle.js · 把 index.html 里几十个 <script src> 合并成一个
+   tools/bundle.js · 把 index.html 里几十个 <script src> 拆成两个包
    ----------------------------------------------------------
    为什么需要：
    - 页面依赖 90 多个经典 <script>，每个文件都要单独发一次请求。
      Surge 的 CDN 在国内访问每个请求要 2–9 秒，九十几个就是几分钟，
      浏览器标签会一直转圈。
-   - 合并成一个文件后只发一次请求（CDN 会再 gzip），首屏从分钟级降到几秒。
+   - 三个课程/教材目录加起来 3.4 MB，首屏根本用不到，一起加载就是几分钟空白。
+
+   产出两个包：
+   - js/bundle-core.js     首屏必需（界面 + 专业目录 + 路径模板），约 290 KB
+   - js/bundle-content.js  课程/教材正文，约 3.4 MB，首屏出来之后再后台加载
 
    用法（CI 里用）：
-     node tools/bundle.js dist 20261022a
-     第 2 个参数 = 输出目录，第 3 个参数 = 版本标记（拼在 bundle.js?v= 后面）
+     node tools/bundle.js dist 20261023a
+     第 2 个参数 = 输出目录，第 3 个参数 = 版本标记（拼在 ?v= 后面）
 
    注意：
    - 只处理「带 src 的经典 script」，且要求它们连成一段（本项目的实际情况）。
    - 顺序 = index.html 里的顺序，用一个 `;` 隔开，作用域与逐个加载一致。
-   - 合并完会把输出目录里的零散 js 文件删掉，只留 bundle.js（不想删就不传 --keep）。
+   - 合并完会把输出目录里的零散 js 文件删掉，只留两个包（不想删就传 --keep）。
    ========================================================== */
 'use strict';
 
@@ -47,14 +51,20 @@ if (!srcs.length) {
 }
 
 const between = html.slice(firstIdx, lastEnd);
-// 只处理“所有 script 连成一段”的情况：这一段里除 script 标签外，只允许 HTML 注释
 const onlyScripts = between.replace(tagRe, '').replace(/<!--[\s\S]*?-->/g, '').trim();
 if (onlyScripts.length > 0) {
   console.warn('提示：script 标签之间还有其它内容（' + onlyScripts.length + ' 字节），已一并移除，请确认没删掉有用标记');
 }
 
-const parts = [];
-let totalBytes = 0;
+/* 哪些文件属于「内容层」：课程 / 教材 / 章节数据，只有进专业页、关卡页才需要 */
+function isContentFile(rel) {
+  return /(courses|textbooks|chapters|majors\/|philosophy\.js|logic\.js|law\.js|economics\.js|education\.js)/.test(rel);
+}
+
+const coreParts = [];
+const contentParts = [];
+let coreBytes = 0;
+let contentBytes = 0;
 
 for (const raw of srcs) {
   const rel = raw.replace(/\?.*$/, '').replace(/^\.?\//, '');
@@ -64,26 +74,47 @@ for (const raw of srcs) {
     process.exit(1);
   }
   const code = fs.readFileSync(abs, 'utf8');
-  totalBytes += Buffer.byteLength(code, 'utf8');
-  parts.push('/* ==== ' + rel + ' ==== */\n' + code);
+  const piece = '/* ==== ' + rel + ' ==== */\n' + code;
+  if (isContentFile(rel)) {
+    contentBytes += Buffer.byteLength(code, 'utf8');
+    contentParts.push(piece);
+  } else {
+    coreBytes += Buffer.byteLength(code, 'utf8');
+    coreParts.push(piece);
+  }
 }
 
-const bundle = parts.join('\n;\n');
-fs.mkdirSync(path.join(outDir, 'js'), { recursive: true });
-fs.writeFileSync(path.join(outDir, 'js', 'bundle.js'), bundle, 'utf8');
+// 内容层加载完成后派发事件，页面据此重绘当前视图
+contentParts.push(
+  'window.__CONTENT_LOADED = true;\n' +
+  'try { window.dispatchEvent(new Event("content-ready")); } catch (e) {}'
+);
 
-const newTag = '<script src="js/bundle.js?v=' + marker + '"></script>\n';
-const newHtml = html.slice(0, firstIdx) + newTag + html.slice(lastEnd);
+const jsDir = path.join(outDir, 'js');
+fs.mkdirSync(jsDir, { recursive: true });
+fs.writeFileSync(path.join(jsDir, 'bundle-core.js'), coreParts.join('\n;\n'), 'utf8');
+fs.writeFileSync(path.join(jsDir, 'bundle-content.js'), contentParts.join('\n;\n'), 'utf8');
+
+const inject =
+  '<script src="js/bundle-core.js?v=' + marker + '"></script>\n' +
+  '<script>\n' +
+  '(function(){function load(){var s=document.createElement("script");' +
+  's.src="js/bundle-content.js?v=' + marker + '";s.async=true;document.body.appendChild(s);}\n' +
+  'if(document.readyState==="complete")setTimeout(load,60);else window.addEventListener("load",function(){setTimeout(load,60);});})();\n' +
+  '</script>\n';
+
+const newHtml = html.slice(0, firstIdx) + inject + html.slice(lastEnd);
 fs.writeFileSync(path.join(outDir, 'index.html'), newHtml, 'utf8');
 
 console.log(
-  '合并完成：' + srcs.length + ' 个脚本 → js/bundle.js（' +
-  (totalBytes / 1024 / 1024).toFixed(2) + ' MB 原始体积）'
+  '拆分完成：首屏包 ' + coreParts.length + ' 个脚本 / ' +
+  (coreBytes / 1024).toFixed(0) + ' KB；内容包 ' + contentParts.length + ' 个脚本 / ' +
+  (contentBytes / 1024 / 1024).toFixed(2) + ' MB（首屏后加载）'
 );
 
 // 清掉输出目录里已经不需要的零散 js，减小上传体积
 if (!keepOriginals) {
-  const jsDir = path.join(outDir, 'js');
+  const keep = [path.join(jsDir, 'bundle-core.js'), path.join(jsDir, 'bundle-content.js')];
   let removed = 0;
   (function walk(dir) {
     for (const name of fs.readdirSync(dir)) {
@@ -92,7 +123,7 @@ if (!keepOriginals) {
       if (st.isDirectory()) {
         walk(p);
         if (fs.readdirSync(p).length === 0) fs.rmdirSync(p);
-      } else if (p !== path.join(jsDir, 'bundle.js')) {
+      } else if (keep.indexOf(p) < 0) {
         fs.unlinkSync(p);
         removed++;
       }
