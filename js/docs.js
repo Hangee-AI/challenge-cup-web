@@ -9,16 +9,6 @@
 
 const CSDIY = 'https://csdiy.wiki/';
 
-/* 公共必修课资料：与专业无关，所有专业的「文字说明」页都会展示 */
-const COMMON_REFS = [
-  {
-    name: '《习近平新时代中国特色社会主义思想概论》（15040）重点汇总',
-    url: 'https://zhuanlan.zhihu.com/p/1903463551391240879',
-    note: '自考重点梳理 · 知乎专栏「纪年的文章」'
-  }
-];
-
-
 /* 计算机专业各阶段的延伸资源（csdiy.wiki 对应页面） */
 const CS_REFS = {
   entry: { name: 'CS50：哈佛大学计算机科学导论（C 语言入门）', url: CSDIY + '%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/' },

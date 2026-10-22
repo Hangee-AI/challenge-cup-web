@@ -138,6 +138,25 @@
     });
   }
 
+  /* 公共必修课：数据来自 data.js 的 COMMON_COURSES，加课只改数组 */
+  function renderHomeCommon() {
+    var box = $('homeCommon');
+    if (!box || box.childElementCount) return;
+    if (typeof COMMON_COURSES === 'undefined') return;
+    COMMON_COURSES.forEach(function (c) {
+      var a = el('a', 'common-card');
+      a.href = c.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML =
+        '<span class="common-tag">' + (c.tag || '公共课') + (c.code ? ' · ' + c.code : '') + '</span>' +
+        '<span class="common-name">《' + c.name + '》</span>' +
+        '<span class="common-desc">' + (c.desc || '') + '</span>' +
+        '<span class="common-go">打开资料 ↗</span>';
+      box.appendChild(a);
+    });
+  }
+
   /* ---------------- 选专业 ---------------- */
   var curCat = null;
 
@@ -636,36 +655,17 @@
     // 延伸资源
     var refs = $('docRefs');
     refs.innerHTML = '';
-
-    // 公共必修课资料（与专业无关，所有专业的文字说明页都展示）
-    if (typeof COMMON_REFS !== 'undefined' && COMMON_REFS.length) {
-      var common = el('div', 'doc-common');
-      common.innerHTML = '<h3>公共必修课资料</h3>';
-      var commonUl = el('ul', 'doc-ref-list');
-      COMMON_REFS.forEach(function (r) {
-        var li = el('li');
-        li.innerHTML = '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>' +
-          (r.note ? '<span class="doc-ref-src"> · ' + r.note + '</span>' : '');
-        commonUl.appendChild(li);
-      });
-      common.appendChild(commonUl);
-      common.appendChild(el('p', 'doc-ref-note', '外部链接，本站只做推荐，不转载其内容。'));
-      refs.appendChild(common);
-    }
-
     if (doc.refs && doc.refs.length) {
-      var more = el('div', 'doc-common');
-      more.innerHTML = '<h3>想更深入一点？</h3>';
+      refs.innerHTML = '<h3>想更深入一点？</h3>';
       var ul = el('ul', 'doc-ref-list');
       doc.refs.forEach(function (r) {
         var li = el('li');
         li.innerHTML = '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>';
         ul.appendChild(li);
       });
-      more.appendChild(ul);
+      refs.appendChild(ul);
       var note = el('p', 'doc-ref-note', '延伸资源来自 <a href="https://csdiy.wiki/" target="_blank" rel="noopener">csdiy.wiki · CS 自学指南</a>，本站只做推荐，不转载其内容。');
-      more.appendChild(note);
-      refs.appendChild(more);
+      refs.appendChild(note);
     }
 
     // 底部按钮：有题目才能开始做题
@@ -899,6 +899,7 @@
   /* ---------------- 启动 ---------------- */
   load();
   renderHomeCats();
+  renderHomeCommon();
   // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题
   fetch('/api/health', { cache: 'no-store' }).then(function (r) {
     if (r.ok) ONLINE = true;

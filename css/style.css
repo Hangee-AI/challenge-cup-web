@@ -182,6 +182,27 @@ button { font: inherit; cursor: pointer; }
 .cat-desc { font-size: 12.5px; color: var(--text-3); }
 .cat-count { font-size: 12.5px; color: var(--brand); font-weight: 600; margin-top: 8px; }
 
+/* 公共必修课（首页） */
+.common-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px; margin-top: 24px;
+}
+.common-card {
+  display: flex; flex-direction: column; gap: 4px;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px 20px; box-shadow: var(--shadow-sm); text-decoration: none;
+  transition: transform .16s, box-shadow .16s, border-color .16s;
+}
+.common-card:hover { transform: translateY(-3px); border-color: #cfd8ff; box-shadow: var(--shadow); }
+.common-tag {
+  align-self: flex-start; font-size: 11.5px; font-weight: 700;
+  color: var(--brand); background: var(--brand-soft);
+  border-radius: 999px; padding: 3px 9px;
+}
+.common-name { font-size: 15.5px; font-weight: 700; color: var(--text); line-height: 1.5; margin-top: 6px; }
+.common-desc { font-size: 12.5px; color: var(--text-3); }
+.common-go { font-size: 12.5px; color: var(--brand); font-weight: 600; margin-top: 10px; }
+
 /* 三步流程 */
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
 .step {
@@ -639,8 +660,6 @@ button { font: inherit; cursor: pointer; }
 
 .doc-refs { margin-top: 30px; padding-top: 18px; border-top: 1px dashed var(--line); }
 .doc-refs h3 { font-size: 14px; color: var(--text-3); font-weight: 700; }
-.doc-common + .doc-common { margin-top: 16px; }
-.doc-ref-src { color: var(--text-3); }
 .doc-ref-list { margin: 10px 0 8px; padding-left: 20px; }
 .doc-ref-list li { font-size: 14px; line-height: 1.9; }
 .doc-ref-list a { color: var(--brand); text-decoration: none; }
