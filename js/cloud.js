@@ -29,6 +29,9 @@
 
   function apiBase() {
     try {
+      if (window.YL_API_BASE) return String(window.YL_API_BASE).replace(/\/$/, '');
+    } catch (e) { /* 忽略 */ }
+    try {
       var forced = localStorage.getItem(K_API);
       if (forced) return forced.replace(/\/$/, '');
     } catch (e) { /* 忽略 */ }
