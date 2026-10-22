@@ -326,7 +326,7 @@ registerCsCourse(0, '高等数学（上）', [
     doc: {
       lead: '这一章讲收敛的定义与常用极限。',
       sections: [
-        { id: 'def', title: 'ε-N 定义', html: `<p>对任意 ε>0，存在 N，使 n>N 时 |a_n − a| < ε。</p>` },
+        { id: 'def', title: 'ε-N 定义', html: `<p>对任意 ε&gt;0，存在 N，使 n&gt;N 时 |a_n − a| &lt; ε。</p>` },
         { id: 'theorems', title: '常用结论', html: `<p>夹逼定理、单调有界必有极限、两个重要极限。</p>` }
       ],
       refs: []
@@ -482,7 +482,7 @@ registerCsCourse(0, '高等数学（上）', [
       lead: '这一章讲用导数研究函数。',
       sections: [
         { id: 'mono', title: '单调与极值', html: `<p>求导 → 找驻点与不可导点 → 判号 → 定单调与极值。</p>` },
-        { id: 'concave', title: '凹凸', html: `<p>f″>0 凹（下凸），f″<0 凸；变号点为拐点。</p>` }
+        { id: 'concave', title: '凹凸', html: `<p>f″&gt;0 凹（下凸），f″&lt;0 凸；变号点为拐点。</p>` }
       ],
       refs: []
     }
