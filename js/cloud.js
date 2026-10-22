@@ -115,7 +115,7 @@
 
   function probe() {
     if (location.protocol === 'file:') return Promise.resolve(false);
-    return request('/api/ping', { token: null, timeout: 1800 })
+    return request('/api/ping', { token: null, timeout: 6000 })
       .then(function (r) { return !!(r && r.ok); })
       .catch(function () { return false; });
   }
@@ -186,7 +186,8 @@
 
     var st = state();
     var streak = 0;
-    if (data.me && typeof data.me.streak === 'number') streak = data.me.streak;
+    var myStreak = data.me ? (typeof data.me.streak === 'number' ? data.me.streak : data.me.myStreak) : null;
+    if (typeof myStreak === 'number') streak = myStreak;
     else if (st && st.profile && st.profile.cloud && st.profile.streak) streak = st.profile.streak;
 
     if ($('pStreakTop')) $('pStreakTop').textContent = streak || 0;
@@ -200,12 +201,12 @@
     }
     if (data.me && $('memberCheckinHint')) {
       $('memberCheckinHint').textContent = data.me.checkedToday
-        ? '今天已打卡，连续 ' + (data.me.streak || 0) + ' 天'
+        ? '今天已打卡，连续 ' + (streak || 0) + ' 天'
         : '今天还没打卡';
     }
     var st2 = state();
     if (st2 && st2.profile && data.me) {
-      st2.profile.streak = data.me.streak || 0;
+      st2.profile.streak = streak || 0;
       st2.profile.checkedToday = !!data.me.checkedToday;
     }
   }
@@ -240,10 +241,17 @@
     box.hidden = false;
     box.classList.add('is-on');
     if (window.__YL_LIGHT_HOLD) return; // 仅调试/截图时保持不消失
-    setTimeout(function () {
+    if (!box.__ylClickBound) {
+      box.__ylClickBound = true;
+      box.addEventListener('click', function () { hideLight(); });
+    }
+    clearTimeout(box.__ylTimer);
+    box.__ylTimer = setTimeout(hideLight, 2200);
+    function hideLight() {
+      clearTimeout(box.__ylTimer);
       box.classList.remove('is-on');
-      setTimeout(function () { box.hidden = true; }, 700);
-    }, 2200);
+      box.__ylHideTimer = setTimeout(function () { box.hidden = true; }, 700);
+    }
   }
 
   function checkin() {
@@ -471,9 +479,17 @@
     booted = true;
     loadSessionCache();
     bindUI();
+    tryOnline(0);
+  }
 
+  /* 首次探测可能被隧道/网络抖动打断，失败后再试两次 */
+  function tryOnline(attempt) {
     probe().then(function (ok) {
       online = ok;
+      if (!ok && attempt < 2) {
+        setTimeout(function () { tryOnline(attempt + 1); }, 1200 + attempt * 800);
+        return;
+      }
       pingDone = true;
       if (!ok) {
         // 离线（双击打开 / 静态托管）：看板没有真实数字，直接藏起来，避免误导

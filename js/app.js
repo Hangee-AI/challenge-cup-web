@@ -20,14 +20,19 @@
     fromMap: true,
     videoPage: null,      // 视频页当前播放第几集
     done: {},             // levelId -> { ok, total, stars, name, majorId, ts }
+    code: {},             // levelId -> true（代码任务已通过）
+    drafts: {},           // levelId -> 用户写过的代码
+    quizDone: false,      // 本关选择题是否已全部答完
     profile: null,        // { mode:'guest'|'member', sid, nickname, avatar, since }
     study: {},            // 'YYYY-MM-DD' -> 秒
+    checkins: {},         // 'YYYY-MM-DD' -> true（每日打卡）
+    justLit: null,        // 刚通关、需要在地图上做点亮动画的关卡 id
     last: null,           // { majorId, levelId, mode, page, docY, ts } 上次学到哪
     theme: 'morning',     // 'morning' | 'night'
     layout: 'auto',       // 'auto' | 'mobile' | 'desktop' 版式切换
+    pendingAvatar: '',    // 云端注册时待提交的头像
     caro: 0,
-    quote: 0,
-    lastQuote: -1         // 上次显示的鼓励语下标（用来避免刷新后重复）
+    quote: 0
   };
 
   function $(id) { return document.getElementById(id); }
@@ -47,20 +52,23 @@
       state.majorId = data.majorId || null;
       state.style = data.style || null;
       state.done = data.done || {};
+      state.code = data.code || {};
+      state.drafts = data.drafts || {};
       state.profile = data.profile || null;
       state.study = data.study || {};
+      state.checkins = data.checkins || {};
       state.last = data.last || null;
       state.theme = data.theme === 'night' ? 'night' : 'morning';
       state.layout = (data.layout === 'mobile' || data.layout === 'desktop') ? data.layout : 'auto';
-      state.lastQuote = (typeof data.lastQuote === 'number') ? data.lastQuote : -1;
     } catch (e) { /* 忽略损坏数据 */ }
   }
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
         majorId: state.majorId, style: state.style, done: state.done,
-        profile: state.profile, study: state.study, last: state.last,
-        theme: state.theme, lastQuote: state.lastQuote, layout: state.layout
+        code: state.code, drafts: state.drafts,
+        profile: state.profile, study: state.study, checkins: state.checkins,
+        last: state.last, theme: state.theme, layout: state.layout
       }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
@@ -88,7 +96,7 @@
     markStyleSwitch();
     window.scrollTo(0, 0);
 
-    if (name === 'home') { renderHomeCta(); renderHomeExtras(); renderHomeCommon(); }
+    if (name === 'home') { renderHomeCta(); renderHomeExtras(); renderHomeCommon(); renderCheckin(); }
     if (name === 'browse') renderBrowse();
     if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
@@ -96,7 +104,7 @@
     if (name === 'doc') renderDoc();
     if (name === 'video') renderVideo();
     if (name === 'report') renderReport();
-    if (name === 'profile') renderProfile();
+    if (name === 'profile') { renderProfile(); renderCheckin(); }
   }
 
   function updateNav() {
@@ -113,7 +121,7 @@
     var me = $('navMe');
     if (me) {
       var p = state.profile;
-      if (p && p.mode === 'member') {
+      if (isMember()) {
         $('navMeAvatar').textContent = p.avatar || '🐱';
         $('navMeName').textContent = p.nickname || '同学';
         me.classList.add('nav-me-on');
@@ -123,6 +131,22 @@
         me.classList.remove('nav-me-on');
       }
     }
+  }
+
+  /* 连不上后端时（纯静态/断网）才允许把本机记录当账号；
+     一旦在线，必须有云端会话（profile.cloud）才算登录，
+     否则旧版本留在本机的 profile 会让人"没注册却显示已登录"。 */
+  function cloudOnline() {
+    return !!(window.Cloud && window.Cloud.isOnline && window.Cloud.isOnline());
+  }
+  function isMember() {
+    var p = state.profile;
+    if (!p || p.mode !== 'member') return false;
+    return cloudOnline() ? !!p.cloud : true;
+  }
+  function hasStaleProfile() {
+    var p = state.profile;
+    return cloudOnline() && !!p && p.mode === 'member' && !p.cloud;
   }
 
   /* ---------------- 小工具 ---------------- */
@@ -418,7 +442,7 @@
     var list = readyLevels(path);
     var doneN = list.filter(function (x) { return !!state.done[x.level.id]; }).length;
     $('mapSub').textContent = list.length
-      ? '共 ' + list.length + ' 个可闯关卡，已完成 ' + doneN + ' 个。按顺序通关，完成前一关才会解锁下一关。'
+      ? '共 ' + list.length + ' 个可闯关卡，已点亮 ' + doneN + ' 个。拖动或滚动查看整条路线，点圆点进入关卡；选择题和代码任务都完成才算通关。'
       : '这个专业的题目还在建设中，先去看看它的学习路径。';
 
     var box = $('mapList');
@@ -435,36 +459,229 @@
       return;
     }
 
-    // 按阶段分组画地图：每行一个阶段，节点按顺序排列
-    var cursor = 0;
-    var order = 0;
+    // 每个阶段是一条横向旅程，节点按顺序排开
+    var chapterNo = 0;
     path.stages.forEach(function (stage) {
       var nodes = list.filter(function (x) { return x.stage === stage; });
       if (!nodes.length) return;
-      var group = el('div', 'map-group');
-      var gh = el('div', 'map-group-head');
-      gh.innerHTML = '<span class="stage-badge">' + (path.stages.indexOf(stage) + 1) + '</span>' +
-        '<b>' + stage.title + '</b><span class="muted">' + stage.goal + '</span>';
-      group.appendChild(gh);
+      chapterNo++;
+      box.appendChild(buildJourney(stage, nodes, list, chapterNo));
+    });
+  }
 
-      var track = el('div', 'map-track');
-      nodes.forEach(function (item) {
-        var lv = item.level;
-        var rec = state.done[lv.id];
-        var idxInList = list.indexOf(item);
-        var unlocked = idxInList === 0 || !!state.done[list[idxInList - 1].level.id];
-        var node = el('a', 'map-node' + (rec ? ' is-done' : (unlocked ? ' is-open' : ' is-lock')));
-        node.href = '#';
-        if (unlocked) node.setAttribute('data-level', lv.id);
-        node.innerHTML =
-          '<span class="map-node-dot">' + (rec ? '✓' : (unlocked ? '▶' : '🔒')) + '</span>' +
-          '<span class="map-node-name">' + lv.name.replace(/^第 \d+ 关 · /, '') + '</span>' +
-          '<span class="map-node-meta">' + (rec ? starsText(rec.stars) : (unlocked ? '可挑战' : '未解锁')) + '</span>';
-        track.appendChild(node);
-        order++;
+  var CN_NUM = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+
+  function buildJourney(stage, nodes, allList, chapterNo) {
+    var GAP = 178, PAD = 104, H = 320, BASE = 152, WAVE = 34;
+    var width = PAD * 2 + (nodes.length - 1) * GAP;
+
+    var points = nodes.map(function (_, i) {
+      return {
+        x: PAD + i * GAP,
+        y: BASE + Math.round(Math.sin(i * 0.95) * WAVE)
+      };
+    });
+
+    var wrap = el('section', 'journey');
+    var litN = nodes.filter(function (it) { return !!state.done[it.level.id]; }).length;
+    wrap.innerHTML =
+      '<div class="journey-head">' +
+        '<div class="journey-heading">' +
+          '<div class="journey-kicker">第 ' + (CN_NUM[chapterNo] || chapterNo) + ' 章</div>' +
+          '<h2 class="journey-title">' + esc(stage.title) + '</h2>' +
+          '<p class="journey-desc">' + esc(stage.goal || '') + '。单线前进，完成前一关才会解锁下一关。</p>' +
+        '</div>' +
+        '<div class="journey-side">' +
+          '<div class="journey-lit"><span class="journey-lit-dot"></span>已点亮 <b>' + litN + '</b> / ' + nodes.length + '</div>' +
+          '<div class="journey-total"><strong>' + nodes.length + '</strong><span>个关卡 · 单线前进</span></div>' +
+          '<div class="journey-compass" aria-hidden="true">' +
+            '<svg viewBox="0 0 48 48">' +
+              '<circle cx="24" cy="24" r="20.5" stroke="currentColor" stroke-opacity=".42" fill="none"/>' +
+              '<path d="M24 2.5v4M24 41.5v4M2.5 24h4M41.5 24h4" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4"/>' +
+              '<path d="M24 9 L29.5 24 L24 39 L18.5 24 Z" fill="currentColor" fill-opacity=".22"/>' +
+              '<path d="M24 9 L29.5 24 L24 24 Z" fill="#b4703f"/>' +
+              '<path d="M24 39 L18.5 24 L24 24 Z" fill="#4a7a5f"/>' +
+              '<text x="24" y="7.5" text-anchor="middle" font-size="6.5" fill="currentColor" font-family="sans-serif">N</text>' +
+            '</svg>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="journey-stage">' +
+        '<button type="button" class="journey-arrow journey-arrow-l" data-jdir="-1" aria-label="向左浏览">‹</button>' +
+        '<div class="journey-viewport" tabindex="0">' +
+          '<div class="journey-track" style="width:' + width + 'px;height:' + H + 'px">' +
+            landSvg(width, H) +
+            pathSvg(points) +
+            decoSvg(points, width) +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="journey-arrow journey-arrow-r" data-jdir="1" aria-label="向右浏览">›</button>' +
+      '</div>' +
+      '<div class="journey-foot"><span>按住拖动 · 滚轮横向浏览</span><span>点击圆点进入关卡</span></div>';
+
+    var track = wrap.querySelector('.journey-track');
+    var firstOpen = -1;
+
+    nodes.forEach(function (item, i) {
+      var lv = item.level;
+      var rec = state.done[lv.id];
+      var idxInList = allList.indexOf(item);
+      var unlocked = idxInList === 0 || !!state.done[allList[idxInList - 1].level.id];
+      var current = unlocked && !rec && firstOpen === -1;
+      if (current) firstOpen = i;
+
+      var order = String(idxInList + 1);
+      if (order.length < 2) order = '0' + order;
+
+      var fresh = state.justLit === lv.id;
+      var node = el('button', 'jnode' + (rec ? ' is-done' : (unlocked ? ' is-open' : ' is-lock')) + (current ? ' is-current' : '') + (fresh ? ' just-lit' : ''));
+      node.type = 'button';
+      node.style.left = points[i].x + 'px';
+      node.style.top = points[i].y + 'px';
+      if (unlocked) node.setAttribute('data-level', lv.id); else node.disabled = true;
+      node.setAttribute('aria-label', lv.name + (rec ? '，已通关' : (unlocked ? '，可挑战' : '，未解锁')));
+      node.innerHTML =
+        '<span class="jnode-badge">' + (rec ? '✓' : order) + '</span>' +
+        '<span class="jnode-title">' + esc(lv.name.replace(/^第 \d+ 关 · /, '')) + '</span>' +
+        '<span class="jnode-sub">' + (rec ? starsText(rec.stars) : (unlocked ? '选择题 + 代码' : '未解锁')) + '</span>';
+      track.appendChild(node);
+    });
+
+    setupJourney(wrap);
+    state.justLit = null;
+
+    if (firstOpen > -1) {
+      window.setTimeout(function () {
+        var vp = wrap.querySelector('.journey-viewport');
+        var target = wrap.querySelectorAll('.jnode')[firstOpen];
+        if (vp && target) vp.scrollLeft = target.offsetLeft - vp.clientWidth / 2 + 80;
+      }, 40);
+    }
+
+    return wrap;
+  }
+
+  /* 地图底部的浅绿陆地：上下都是波浪边 */
+  function landSvg(w, h) {
+    var top = 64, bot = 248, d = 'M0,' + top;
+    for (var x = 0; x < w; x += 90) {
+      d += ' Q' + (x + 45) + ',' + (top - 16) + ' ' + (x + 90) + ',' + top;
+    }
+    d += ' L' + w + ',' + bot;
+    for (var x2 = w; x2 > 0; x2 -= 90) {
+      d += ' Q' + (x2 - 45) + ',' + (bot + 16) + ' ' + (x2 - 90) + ',' + bot;
+    }
+    d += ' Z';
+    return '<svg class="journey-land" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">' +
+      '<path d="' + d + '" fill="#cfe6b8" stroke="#d7c49a" stroke-width="10" stroke-linejoin="round"/>' +
+      '<path d="' + d + '" fill="none" stroke="#eef6e4" stroke-width="3" stroke-linejoin="round"/>' +
+      '</svg>';
+  }
+
+  /* 穿过所有节点的虚线小路 */
+  function pathSvg(pts) {
+    var d = 'M' + pts[0].x + ',' + pts[0].y;
+    for (var i = 1; i < pts.length; i++) {
+      var prev = pts[i - 1], cur = pts[i];
+      var mid = Math.round((prev.x + cur.x) / 2);
+      d += ' C' + mid + ',' + prev.y + ' ' + mid + ',' + cur.y + ' ' + cur.x + ',' + cur.y;
+    }
+    return '<svg class="journey-path" width="100%" height="320" aria-hidden="true">' +
+      '<path d="' + d + '" fill="none" stroke="#fff9e8" stroke-width="13" stroke-linecap="round"/>' +
+      '<path d="' + d + '" fill="none" stroke="#c9a54d" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+
+  /* 树、房子、山：让地图不再是一条光秃秃的线 */
+  function decoSvg(pts, width) {
+    var TREES = [
+      '<rect x="13" y="30" width="5" height="12" rx="1" fill="#8a6b45"/>' +
+      '<polygon points="15.5,0 2,22 29,22" fill="#4f8b52"/>' +
+      '<polygon points="15.5,10 3,32 28,32" fill="#5f9f62"/>',
+      '<rect x="13" y="30" width="5" height="12" rx="1" fill="#8a6b45"/>' +
+      '<polygon points="15.5,2 3,20 28,20" fill="#3f7a4b"/>' +
+      '<polygon points="15.5,12 4,30 27,30" fill="#4f8b52"/>'
+    ];
+    var HOUSE =
+      '<rect x="8" y="15" width="28" height="21" fill="#f5ead0"/>' +
+      '<polygon points="22,0 2,17 42,17" fill="#d98e5f"/>' +
+      '<rect x="18" y="24" width="8" height="12" fill="#a8794f"/>' +
+      '<rect x="10" y="20" width="5" height="5" fill="#fff8ea"/>';
+    var MOUNT =
+      '<polygon points="30,0 2,46 58,46" fill="#a3bcae"/>' +
+      '<polygon points="30,0 17,25 43,25" fill="#ffffff"/>';
+
+    var kinds = [TREES[0], HOUSE, MOUNT, TREES[1], HOUSE, TREES[0], MOUNT, TREES[1]];
+    var out = '';
+    var count = Math.max(3, Math.floor(width / 230));
+
+    for (var i = 0; i < count; i++) {
+      var x = 46 + i * Math.floor((width - 92) / count) + (i % 2 ? 12 : 0);
+      var kind = kinds[i % kinds.length];
+      var size = kind === MOUNT ? 48 : 32;
+      out += '<svg class="jdeco" aria-hidden="true" viewBox="0 0 ' + (kind === MOUNT ? 60 : 44) + ' ' + (kind === MOUNT ? 46 : 42) + '" ' +
+        'style="left:' + x + 'px;top:' + (66 + (i % 3) * 5) + 'px;width:' + size + 'px;opacity:.92">' + kind + '</svg>';
+    }
+    return out;
+  }
+
+  /* 拖动 / 滚轮 / 箭头：横向浏览地图 */
+  function setupJourney(wrap) {
+    var vp = wrap.querySelector('.journey-viewport');
+    if (!vp) return;
+    var down = false, startX = 0, startLeft = 0, moved = 0;
+
+    // 注意：这里不能用 setPointerCapture——一旦捕获，后续 click 的 target 会变成 viewport，
+    // 圆点按钮就永远收不到 click（表现为「点图标没反应」）。
+    vp.addEventListener('pointerdown', function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      down = true; moved = 0;
+      startX = e.clientX; startLeft = vp.scrollLeft;
+    });
+    vp.addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var dx = e.clientX - startX;
+      moved = Math.max(moved, Math.abs(dx));
+      if (moved > 6) {
+        vp.classList.add('is-dragging');
+        vp.scrollLeft = startLeft - dx;
+      }
+    });
+    function endDrag() {
+      down = false;
+      vp.classList.remove('is-dragging');
+    }
+    vp.addEventListener('pointerup', endDrag);
+    vp.addEventListener('pointercancel', endDrag);
+    vp.addEventListener('pointerleave', function () { if (!down) vp.classList.remove('is-dragging'); });
+
+    // 拖动后不要误触发关卡
+    vp.addEventListener('click', function (e) {
+      if (moved > 6) { e.preventDefault(); e.stopPropagation(); moved = 0; return; }
+      var node = e.target.closest ? e.target.closest('.jnode') : null;
+      if (node && !node.getAttribute('data-level')) {
+        e.preventDefault(); e.stopPropagation();
+        toast('这关还没解锁，先把前面一关点亮');
+      }
+    }, true);
+
+    vp.addEventListener('wheel', function (e) {
+      var delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (!delta) return;
+      vp.scrollLeft += delta;
+      e.preventDefault();
+    }, { passive: false });
+
+    wrap.querySelectorAll('[data-jdir]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var dir = Number(btn.getAttribute('data-jdir'));
+        vp.scrollBy({ left: dir * Math.max(360, vp.clientWidth * 0.8), behavior: 'smooth' });
       });
-      group.appendChild(track);
-      box.appendChild(group);
+    });
+
+    vp.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { vp.scrollBy({ left: 240, behavior: 'smooth' }); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { vp.scrollBy({ left: -240, behavior: 'smooth' }); e.preventDefault(); }
     });
   }
 
@@ -516,28 +733,43 @@
     var mine = {};
     videoPagesOf(levelId).forEach(function (x) { mine[x.page] = x.kind; });
 
-    bvSections().forEach(function (sec) {
-      var head = el('div', 'video-sec' + (mine[sec.from] || (curPage >= sec.from && curPage <= sec.to) ? ' is-open' : ''));
-      head.innerHTML =
-        '<span class="video-sec-name">' + esc(sec.name) + '</span>' +
-        '<span class="video-sec-range">P' + sec.from + '–P' + sec.to + '</span>';
-      nav.appendChild(head);
+    bvSections().forEach(function (sec, idx) {
+      var hasMine = false;
+      for (var p = sec.from; p <= sec.to; p++) { if (mine[p]) { hasMine = true; break; } }
+      var open = hasMine || (curPage >= sec.from && curPage <= sec.to);
 
-      for (var p = sec.from; p <= sec.to; p++) {
-        var kind = mine[p];
+      var group = el('div', 'course-chapter' + (open ? ' is-open' : '') + (hasMine ? ' is-mine' : ''));
+      var head = el('button', 'course-chapter-head');
+      head.type = 'button';
+      head.innerHTML =
+        '<span class="course-chapter-idx">' + (idx + 1 < 10 ? '0' : '') + (idx + 1) + '</span>' +
+        '<span class="course-chapter-text">' +
+          '<span class="course-chapter-name">' + esc(sec.name) + '</span>' +
+          '<span class="course-chapter-range">P' + sec.from + '–P' + sec.to + '</span>' +
+        '</span>' +
+        '<span class="course-chapter-arrow">▾</span>';
+      head.addEventListener('click', function () { group.classList.toggle('is-open'); });
+
+      var body = el('div', 'course-chapter-body');
+      for (var q = sec.from; q <= sec.to; q++) {
+        var kind = mine[q];
         var a = el('a',
           'video-ep' +
-          (p === curPage ? ' is-on' : '') +
+          (q === curPage ? ' is-on' : '') +
           (kind === 'main' ? ' is-mine' : '') +
           (kind === 'extra' ? ' is-extra' : ''));
         a.href = '#';
-        a.setAttribute('data-page', p);
+        a.setAttribute('data-page', q);
         a.innerHTML =
-          '<span class="video-ep-no">P' + p + '</span>' +
-          '<span class="video-ep-title">' + esc(bvTitle(p).replace(/^[^-]+-\d+-/, '')) + '</span>' +
-          '<span class="video-ep-dur">' + bvDuration(p) + '</span>';
-        nav.appendChild(a);
+          '<span class="video-ep-no">P' + q + '</span>' +
+          '<span class="video-ep-title">' + esc(bvTitle(q).replace(/^[^-]+-\d+-/, '')) + '</span>' +
+          '<span class="video-ep-dur">' + bvDuration(q) + '</span>';
+        body.appendChild(a);
       }
+
+      group.appendChild(head);
+      group.appendChild(body);
+      nav.appendChild(group);
     });
   }
 
@@ -554,13 +786,22 @@
 
     // 没有按关卡细分集的专业：用本专业的零基础课程兜底（VIDEO_COURSES）
     if (!VIDEO_MAP[level.id] && major.video) {
-      $('vSideTitle').textContent = '🎬 ' + major.name + ' · 零基础课';
-      $('vSideSub').textContent = '本专业推荐课程（暂未按关卡细分）';
+      $('vSideTitle').textContent = major.video.title;
+      $('vSideSub').textContent = '本专业推荐课程 · 暂未按关卡细分';
+      $('vSideNow').textContent = '';
       $('vLead').textContent = '这个专业暂时只配了一门零基础课程，没有拆到每一关。先看课程导论或第一章，再回来做题；完整课程可以在 B 站继续看。';
 
       var nav0 = $('videoNav');
       nav0.innerHTML = '';
-      nav0.appendChild(el('div', 'video-sec', '<span class="video-sec-name">本专业推荐课程</span>'));
+      var group0 = el('div', 'course-chapter is-open is-mine');
+      var head0 = el('div', 'course-chapter-head');
+      head0.innerHTML =
+        '<span class="course-chapter-idx">01</span>' +
+        '<span class="course-chapter-text">' +
+          '<span class="course-chapter-name">本专业推荐课程</span>' +
+          '<span class="course-chapter-range">完整课程</span>' +
+        '</span>';
+      var body0 = el('div', 'course-chapter-body');
       var item = el('a', 'video-ep is-on');
       item.href = major.video.url;
       item.target = '_blank';
@@ -569,7 +810,10 @@
         '<span class="video-ep-no">B站</span>' +
         '<span class="video-ep-title">' + esc(major.video.title) + '</span>' +
         '<span class="video-ep-dur">↗</span>';
-      nav0.appendChild(item);
+      body0.appendChild(item);
+      group0.appendChild(head0);
+      group0.appendChild(body0);
+      nav0.appendChild(group0);
 
       $('vPlayer').src = bvEmbedFromUrl(major.video.url);
       $('vNow').textContent = '正在播放：' + major.video.title;
@@ -583,8 +827,9 @@
     var page = state.videoPage || firstVideoPage(level.id);
     state.videoPage = page;
 
-    $('vSideTitle').textContent = '🎬 ' + BV_TITLE;
+    $('vSideTitle').textContent = BV_TITLE;
     $('vSideSub').textContent = '共 ' + BV_TOTAL + ' 集 · 约 26.5 小时';
+    $('vSideNow').textContent = '正在播放 P' + page + ' / ' + BV_TOTAL;
     renderVideoNav(level.id, page);
 
     $('vLead').textContent = v.note || '';
@@ -665,6 +910,15 @@
     $('docCrumb').textContent = found.stage.title + ' / ' + found.module.name;
     $('docTitle').textContent = level.name;
     $('docLead').textContent = doc.lead || '';
+
+    // 阅读信息 + 进度条
+    var plain = (doc.lead || '') + doc.sections.map(function (s) {
+      return (s.title || '') + (s.html || '').replace(/<[^>]+>/g, '');
+    }).join('');
+    var mins = Math.max(1, Math.round(plain.length / 400));
+    $('docReadMeta').textContent = doc.sections.length + ' 节 · 约 ' + mins + ' 分钟读完';
+    $('docReadBar').style.width = '0%';
+
     var body = $('docBody');
     body.innerHTML = '';
     doc.sections.forEach(function (sec, i) {
@@ -674,13 +928,13 @@
       body.appendChild(wrap);
     });
 
-    // 右侧：本页目录
+    // 右侧：本篇目录
     var toc = $('docToc');
-    toc.innerHTML = '<div class="doc-toc-title">本页目录</div>';
-    doc.sections.forEach(function (sec) {
+    toc.innerHTML = '<div class="doc-toc-title">本篇目录</div>';
+    doc.sections.forEach(function (sec, i) {
       var a = el('a', 'doc-toc-link');
       a.href = '#sec-' + sec.id;
-      a.textContent = sec.title;
+      a.textContent = (i + 1) + '. ' + sec.title;
       toc.appendChild(a);
     });
 
@@ -722,6 +976,7 @@
     if (!found) { show('map'); return; }
     $('crumb').textContent = found.module.name + ' · ' + found.stage.title;
     $('levelName').textContent = found.level.name;
+    state.quizDone = false;
 
     if (!found.level.questions) {
       $('quizCard').hidden = true;
@@ -733,6 +988,7 @@
       state.levelCorrect = 0;
       renderQuestion();
     }
+    setupCodeCard(found.level);
     show('level');
   }
 
@@ -755,7 +1011,9 @@
       box.appendChild(b);
     });
     $('feedback').hidden = true;
-    $('nextBtn').textContent = state.qi === qs.length - 1 ? '完成本关 →' : '下一题 →';
+    $('nextBtn').textContent = state.qi === qs.length - 1
+      ? (found.level.code && !state.code[found.level.id] ? '去完成代码任务 ↓' : '完成本关 →')
+      : '下一题 →';
   }
 
   function esc(s) {
@@ -791,9 +1049,10 @@
         body: JSON.stringify({ questionIndex: state.qi, choice: i })
       }).then(function (r) { return r.ok ? r.json() : null; })
         .then(function (res) {
-          if (!res) return;
-          revealResult(q, i, res.answer);
-        });
+          // 服务端没有这道题（新关卡还没同步）时退回本地答案，避免卡住
+          revealResult(q, i, res && typeof res.answer === 'number' ? res.answer : q.answer);
+        })
+        .catch(function () { revealResult(q, i, q.answer); });
     } else {
       revealResult(q, i, q.answer);
     }
@@ -808,6 +1067,21 @@
       renderQuestion();
       return;
     }
+
+    state.quizDone = true;
+
+    // 有代码任务的关卡：选择题答完还不算通关，要把代码也跑过
+    if (found.level.code && !state.code[found.level.id]) {
+      $('nextBtn').textContent = '去完成代码任务 ↓';
+      toast('选择题已完成，代码任务通过后即可通关');
+      $('codeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    finishLevel(found);
+  }
+
+  function finishLevel(found) {
+    var qs = found.level.questions || [];
     var total = qs.length;
     var stars = state.levelCorrect === total ? 3
       : (state.levelCorrect >= Math.ceil(total * 2 / 3) ? 2 : (state.levelCorrect > 0 ? 1 : 0));
@@ -815,12 +1089,172 @@
     if (!prev || stars >= (prev.stars || 0)) {
       state.done[state.levelId] = {
         ok: state.levelCorrect, total: total, stars: stars,
-        name: found.level.name, majorId: state.majorId, ts: Date.now()
+        name: found.level.name, majorId: state.majorId, ts: Date.now(),
+        code: !!found.level.code
       };
       save();
     }
-    toast('本关完成：' + state.levelCorrect + '/' + total + ' 题正确 ' + starsText(stars));
+    state.justLit = state.levelId;
+    toast('🎉 本关已点亮：' + state.levelCorrect + '/' + total + ' 题正确' +
+      (found.level.code ? '，代码任务已通过' : '') + ' ' + starsText(stars));
     show(state.fromMap ? 'map' : 'major');
+  }
+
+  /* ---------------- 代码任务：运行与判题 ---------------- */
+  var codeBusy = false;
+
+  function setupCodeCard(level) {
+    var card = $('codeCard');
+    if (!level.code) { card.hidden = true; return; }
+    card.hidden = false;
+    $('codeTitle').textContent = level.name.replace(/^第 \d+ 关 · /, '');
+    $('codeTask').innerHTML = '<strong>任务：</strong>' + esc(level.code.task);
+    $('codeHintWrap').hidden = !level.code.hint;
+    $('codeHintWrap').open = false;
+    $('codeHint').textContent = level.code.hint || '';
+    $('codeEditor').value = state.drafts[level.id] || level.code.starter;
+    var out = $('codeOutput');
+    out.hidden = true;
+    out.className = 'code-output';
+    out.textContent = '';
+    renderTests(level.code, null);
+    checkRunner();
+  }
+
+  function renderTests(task, results) {
+    var box = $('codeTests');
+    box.innerHTML = '';
+    task.tests.forEach(function (t, i) {
+      var r = results && results[i];
+      var cls = 'code-test' + (r ? (r.passed ? ' is-pass' : ' is-fail') : '');
+      var icon = r ? (r.passed ? '✓' : '✗') : '○';
+      box.appendChild(el('span', cls, icon + ' ' + esc(t.name || ('用例 ' + (i + 1)))));
+    });
+  }
+
+  function checkRunner(attempt) {
+    var st = $('runnerStatus');
+    attempt = attempt || 0;
+    st.className = 'runner-status';
+    st.textContent = '检测运行环境…';
+    fetch('/api/health', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (res) {
+        var c = res && res.compiler;
+        if (c && c.ready) {
+          st.className = 'runner-status is-ready';
+          st.textContent = '运行环境就绪 · ' + (c.detail || c.engine || 'gcc');
+        } else if (attempt < 1) {
+          window.setTimeout(function () { checkRunner(attempt + 1); }, 1000);
+        } else {
+          st.className = 'runner-status is-off';
+          st.textContent = '运行环境未就绪 · 需要安装 gcc 或 Docker';
+        }
+      })
+      .catch(function () {
+        if (attempt < 1) {
+          window.setTimeout(function () { checkRunner(attempt + 1); }, 1000);
+          return;
+        }
+        st.className = 'runner-status is-off';
+        st.textContent = '后端未启动 · 请用 npm start 打开';
+      });
+  }
+
+  function postCode(url, payload) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+        return data;
+      });
+    });
+  }
+
+  function setCodeBusy(busy) {
+    codeBusy = busy;
+    ['codeRun', 'codeSubmit', 'codeReset'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.disabled = busy;
+    });
+    $('codeRun').textContent = busy ? '运行中…' : '▶ 运行';
+  }
+
+  function runCode(judge) {
+    var found = currentLevel();
+    if (!found || !found.level.code || codeBusy) return;
+    var task = found.level.code;
+    var src = $('codeEditor').value;
+    state.drafts[found.level.id] = src;
+    save();
+
+    var out = $('codeOutput');
+    out.hidden = false;
+    out.className = 'code-output';
+    out.textContent = judge ? '正在编译并运行全部测试用例…' : '正在编译运行…';
+    setCodeBusy(true);
+
+    var req = judge
+      ? postCode('/api/judge', { source: src, tests: task.tests })
+      : postCode('/api/run', { source: src, stdin: (task.tests[0] && task.tests[0].stdin) || '' });
+
+    req.then(function (res) {
+      if (res.compileError) {
+        out.className = 'code-output is-bad';
+        out.textContent = '编译失败：\n' + res.compileError;
+        renderTests(task, null);
+        return;
+      }
+      if (!judge) {
+        var txt = res.stdout || '';
+        if (res.stderr) txt += (txt ? '\n' : '') + '[stderr]\n' + res.stderr;
+        if (!txt) txt = '（程序没有任何输出，退出码 ' + res.exitCode + '）';
+        out.textContent = txt;
+        out.className = 'code-output' + (res.exitCode === 0 ? '' : ' is-bad');
+        return;
+      }
+
+      renderTests(task, res.results);
+      var passed = res.results.filter(function (r) { return r.passed; }).length;
+      if (passed === res.results.length) {
+        out.className = 'code-output is-ok';
+        out.textContent = '✓ 全部 ' + res.results.length + ' 个测试用例通过（' + (res.ms || 0) + ' ms）';
+        onCodePassed(found);
+      } else {
+        var lines = [];
+        res.results.forEach(function (r, i) {
+          lines.push((r.passed ? '[通过] ' : '[未通过] ') + (task.tests[i].name || ('用例 ' + (i + 1))));
+          if (!r.passed) {
+            if (r.stderr) lines.push('  stderr: ' + String(r.stderr).trim());
+            lines.push('  期望输出: ' + JSON.stringify(r.expected));
+            lines.push('  你的输出: ' + JSON.stringify(r.stdout));
+          }
+        });
+        out.className = 'code-output is-bad';
+        out.textContent = '通过 ' + passed + ' / ' + res.results.length + '\n' + lines.join('\n');
+      }
+    }).catch(function (err) {
+      out.className = 'code-output is-bad';
+      out.textContent = '运行失败：' + (err && err.message ? err.message : '无法连接本地服务') +
+        '\n请确认已在项目目录执行 npm install 和 npm start，然后通过 http://localhost:3000 打开页面。';
+    }).finally(function () {
+      setCodeBusy(false);
+    });
+  }
+
+  function onCodePassed(found) {
+    state.code[found.level.id] = true;
+    save();
+    if (!found.level.questions || state.quizDone) {
+      toast('代码任务通过，本关通关 🎉');
+      finishLevel(found);
+    } else {
+      toast('代码任务通过！完成上面的选择题即可通关');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   /* ---------------- 报告 ---------------- */
@@ -912,6 +1346,48 @@
   });
 
   $('nextBtn').addEventListener('click', nextQuestion);
+
+  /* 代码任务按钮 */
+  $('codeRun').addEventListener('click', function () { runCode(false); });
+  $('codeSubmit').addEventListener('click', function () { runCode(true); });
+  $('codeReset').addEventListener('click', function () {
+    var found = currentLevel();
+    if (!found || !found.level.code) return;
+    if (!confirm('重置为初始代码？你当前写的内容会丢失。')) return;
+    $('codeEditor').value = found.level.code.starter;
+    delete state.drafts[found.level.id];
+    save();
+    $('codeOutput').hidden = true;
+    renderTests(found.level.code, null);
+    toast('已重置为初始代码');
+  });
+
+  var draftTimer = null;
+  $('codeEditor').addEventListener('input', function () {
+    var found = currentLevel();
+    if (!found) return;
+    var val = $('codeEditor').value;
+    if (draftTimer) clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () {
+      state.drafts[found.level.id] = val;
+      save();
+    }, 500);
+  });
+
+  // 编辑器里 Tab 缩进四个空格，Ctrl/Cmd + Enter 直接判题
+  $('codeEditor').addEventListener('keydown', function (e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      var ta = e.target;
+      var start = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, start) + '    ' + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = start + 4;
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      runCode(true);
+    }
+  });
+
   $('backToMap').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
   $('docStartQuiz').addEventListener('click', startQuiz);
@@ -941,21 +1417,15 @@
     toast(state.theme === 'night' ? '已切换到夜猫模式' : '已切换到晨雀模式');
   }
 
-  /* ---------------- 版式：自动 / 手机版 / 电脑版 ----------------
-     - 手机版：套用手机竖屏样式（桌面上内容收窄到 480px 模拟手机）
-     - 电脑版：把 viewport 伪装成 1080px，手机上也能看完整桌面布局 */
+  /* ---------------- 版式：自动 / 手机 / 电脑 ---------------- */
   function applyLayout() {
     var html = document.documentElement;
-    var meta = document.querySelector('meta[name="viewport"]');
     if (state.layout === 'mobile') {
       html.setAttribute('data-layout', 'mobile');
-      if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1');
     } else if (state.layout === 'desktop') {
       html.setAttribute('data-layout', 'desktop');
-      if (meta) meta.setAttribute('content', 'width=1080');
     } else {
       html.removeAttribute('data-layout');
-      if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1');
     }
     var ico = $('layoutIco'), txt = $('layoutText');
     if (ico) ico.textContent = state.layout === 'mobile' ? '📱' : state.layout === 'desktop' ? '💻' : '🖥️';
@@ -994,9 +1464,7 @@
     for (var i = 0; i < 400; i++) {
       if ((state.study[dateKey(d)] || 0) > 0) { n++; d.setDate(d.getDate() - 1); } else break;
     }
-    // 云端账号的打卡连续天数（来自服务器）与本机学习天数取大的一个
-    var cloudStreak = (state.profile && state.profile.streak) || 0;
-    return Math.max(n, cloudStreak);
+    return n;
   }
   function startStudyTimer() {
     window.setInterval(function () {
@@ -1004,6 +1472,66 @@
       addStudy(15);
       if (curView === 'profile') renderProfileStats();
     }, 15000);
+  }
+
+  /* ---------------- 每日打卡 ---------------- */
+  function checkinStreak() {
+    var n = 0, d = new Date();
+    if (!state.checkins[dateKey(d)]) d.setDate(d.getDate() - 1);
+    for (var i = 0; i < 400; i++) {
+      if (state.checkins[dateKey(d)]) { n++; d.setDate(d.getDate() - 1); } else break;
+    }
+    return n;
+  }
+  function checkinTotal() {
+    return Object.keys(state.checkins).length;
+  }
+  function todayChecked() {
+    return !!state.checkins[dateKey(new Date())];
+  }
+  function checkIn() {
+    // 在线时走服务器打卡（账号 + 全站人数），离线时退回本地记录
+    if (window.Cloud && window.Cloud.isOnline()) { window.Cloud.checkin(); return; }
+    var k = dateKey(new Date());
+    if (state.checkins[k]) { toast('今天已经打过卡啦，明天再来'); return; }
+    state.checkins[k] = true;
+    save();
+    renderCheckin();
+    toast('打卡成功 · 连续 ' + checkinStreak() + ' 天');
+  }
+  function renderCheckin() {
+    var done = todayChecked();
+    var streak = checkinStreak();
+
+    var home = $('homeCheckinBtn');
+    if (home) {
+      home.textContent = done ? '📅 已打卡 · 连续 ' + streak + ' 天' : '📅 今日打卡';
+      home.classList.toggle('is-done', done);
+      home.disabled = done;
+    }
+
+    var btn = $('checkinBtn');
+    if (btn) {
+      btn.textContent = done ? '今日已打卡 ✓' : '今日打卡';
+      btn.disabled = done;
+    }
+    if ($('ckStreak')) $('ckStreak').textContent = streak;
+    if ($('ckTotal')) $('ckTotal').textContent = checkinTotal();
+    if ($('ckToday')) $('ckToday').textContent = done ? '已打卡' : '未打卡';
+
+    var week = $('ckWeek');
+    if (!week) return;
+    week.innerHTML = '';
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(); d.setDate(d.getDate() - i);
+      var on = !!state.checkins[dateKey(d)];
+      var cell = el('div', 'ck-day' + (on ? ' is-on' : '') + (i === 0 ? ' is-today' : ''));
+      cell.innerHTML =
+        '<span class="ck-dow">' + (i === 0 ? '今天' : '周' + ['日', '一', '二', '三', '四', '五', '六'][d.getDay()]) + '</span>' +
+        '<span class="ck-dot">' + (on ? '✓' : '·') + '</span>' +
+        '<span class="ck-date">' + (d.getMonth() + 1) + '/' + d.getDate() + '</span>';
+      week.appendChild(cell);
+    }
   }
 
   /* ---------------- 上次学到哪 ---------------- */
@@ -1039,29 +1567,22 @@
   }
 
   /* ---------------- 首页：继续上次 + 鼓励语 + 公告轮播 ---------------- */
-  // 上一句的下标要存进 localStorage，否则刷新后“不重复”就失效（页面重载会忘记）
+  var quoteIdx = -1;
   function pickQuote() {
-    var n = HOME_QUOTES.length;
-    if (!n) return '';
-    var prev = (typeof state.lastQuote === 'number') ? state.lastQuote : -1;
-    var i = Math.floor(Math.random() * n);
-    if (n > 1 && i === prev) {
-      // 撞上上一句就往后跳一段随机距离，保证一定换一句
-      i = (prev + 1 + Math.floor(Math.random() * (n - 1))) % n;
+    if (!HOME_QUOTES.length) return;
+    var next = Math.floor(Math.random() * HOME_QUOTES.length);
+    if (HOME_QUOTES.length > 1 && next === quoteIdx) {
+      next = (next + 1 + Math.floor(Math.random() * (HOME_QUOTES.length - 1))) % HOME_QUOTES.length;
     }
-    state.lastQuote = i;
-    save();
-    return HOME_QUOTES[i];
+    quoteIdx = next;
+    $('homeQuote').textContent = HOME_QUOTES[next];
   }
 
-  function showQuote() {
-    var q = pickQuote();
-    if (q) $('homeQuote').textContent = q;
-  }
+  function showQuote() { pickQuote(); }
 
   function renderHomeExtras() {
     if (!HOME_QUOTES.length) return;
-    showQuote();
+    pickQuote();
 
     var box = $('resumeCard');
     var l = state.last, found = null;
@@ -1139,12 +1660,14 @@
     if (!wrap) return;
     wrap.innerHTML = '';
     if (!avatarPick) avatarPick = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    state.pendingAvatar = avatarPick;
     AVATARS.forEach(function (a) {
       var b = el('button', 'avatar-opt' + (a === avatarPick ? ' on' : ''));
       b.type = 'button';
       b.textContent = a;
       b.addEventListener('click', function () {
         avatarPick = a;
+        state.pendingAvatar = a;
         renderAvatarPick();
       });
       wrap.appendChild(b);
@@ -1196,15 +1719,28 @@
 
   function renderProfile() {
     var p = state.profile;
-    var guest = !(p && p.mode === 'member');
+    var guest = !isMember();
     $('guestPanel').hidden = !guest;
     $('memberPanel').hidden = guest;
     if (guest) {
       renderAvatarPick();
       // 记住上次选的学校简称，下次注册不用重选
       if ($('sidPrefix') && p && p.prefix) $('sidPrefix').value = p.prefix;
+      var hint = $('staleHint');
+      if (hint) {
+        if (hasStaleProfile()) {
+          hint.hidden = false;
+          hint.innerHTML = '这台设备上有一份<b>还没上传到服务器</b>的本地记录（' + esc(p.nickname || '同学') + '）。' +
+            '用学号注册或登录后，学习进度就会跟着账号走，换设备也能继续。';
+        } else {
+          hint.hidden = true;
+        }
+      }
+      updateNav();
       return;
     }
+    var hint2 = $('staleHint');
+    if (hint2) hint2.hidden = true;
     $('pfAvatar').textContent = p.avatar || '🐱';
     $('pfName').textContent = p.nickname || '同学';
     $('pfSid').textContent = '学号 ' + (p.sid || '—');
@@ -1283,14 +1819,18 @@
   startCarousel();
 
   $('themeBtn').addEventListener('click', toggleTheme);
-  $('themeBtn2').addEventListener('click', toggleTheme);
+  if ($('themeBtn2')) $('themeBtn2').addEventListener('click', toggleTheme);
   if ($('layoutBtn')) $('layoutBtn').addEventListener('click', cycleLayout);
   $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
   $('quoteNext').addEventListener('click', showQuote);
+  if ($('homeCheckinBtn')) $('homeCheckinBtn').addEventListener('click', checkIn);
+  if ($('checkinBtn')) $('checkinBtn').addEventListener('click', checkIn);
   $('caroPrev').addEventListener('click', function () { caroGo(-1); });
   $('caroNext').addEventListener('click', function () { caroGo(1); });
   $('carousel').addEventListener('mouseenter', function () { caroPaused = true; });
   $('carousel').addEventListener('mouseleave', function () { caroPaused = false; });
+
+  // 在线时注册/登录交给 js/cloud.js（服务器账号），离线时退回本地常驻模式
   function onAuthClick() {
     if (window.Cloud && window.Cloud.isOnline()) { window.Cloud.submitAuth(); return; }
     registerMember();
@@ -1299,8 +1839,8 @@
   $('registerBtn').addEventListener('click', onAuthClick);
   $('sidInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
   $('nickInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
-  $('pwdInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
-  $('pwdInput2').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
+  if ($('pwdInput')) $('pwdInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
+  if ($('pwdInput2')) $('pwdInput2').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAuthClick(); });
   $('logoutBtn').addEventListener('click', function () {
     if (window.Cloud && window.Cloud.hasSession()) { window.Cloud.logout(); return; }
     logoutMember();
@@ -1322,6 +1862,12 @@
   var docScrollTimer = null;
   window.addEventListener('scroll', function () {
     if (curView !== 'doc') return;
+    var bar = $('docReadBar');
+    if (bar) {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      bar.style.width = pct.toFixed(1) + '%';
+    }
     if (docScrollTimer) return;
     docScrollTimer = window.setTimeout(function () {
       docScrollTimer = null;
@@ -1337,9 +1883,16 @@
     }
   });
 
-  // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题
-  fetch('/api/health', { cache: 'no-store' }).then(function (r) {
-    if (r.ok) ONLINE = true;
-  }).catch(function () { ONLINE = false; })
-    .finally(function () { show('home'); });
+  // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题（首次可能被网络抖动打断，自动重试）
+  function detectBackend(attempt) {
+    fetch('/api/health', { cache: 'no-store' }).then(function (r) {
+      if (r.ok) { ONLINE = true; return; }
+      if (attempt < 2) window.setTimeout(function () { detectBackend(attempt + 1); }, 1200);
+    }).catch(function () {
+      if (attempt < 2) window.setTimeout(function () { detectBackend(attempt + 1); }, 1200);
+      else ONLINE = false;
+    });
+  }
+  detectBackend(0);
+  show('home');
 })();

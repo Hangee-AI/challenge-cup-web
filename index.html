@@ -295,7 +295,7 @@
       <span><i class="lg lg-lock"></i>未解锁</span>
     </div>
     <div id="mapList" class="map-list"></div>
-    <p class="muted map-note">🗺️ 地图视觉模板待替换（当前为结构版）。</p>
+    <p class="muted map-note">🗺️ 按住地图拖动，或者用滚轮 / 左右按钮横向浏览；点圆点进入关卡。</p>
   </section>
 
   <!-- ==================== 6. 文字说明：文档页（左侧目录 + 正文） ==================== -->
@@ -313,6 +313,11 @@
         <div class="doc-crumb" id="docCrumb"></div>
         <h1 class="doc-title" id="docTitle"></h1>
         <p class="doc-lead" id="docLead"></p>
+        <div class="doc-readbar">
+          <span class="doc-readtag">📄 图文讲义</span>
+          <span class="doc-readmeta" id="docReadMeta"></span>
+          <span class="doc-readbar-track"><i id="docReadBar"></i></span>
+        </div>
         <div class="doc-body" id="docBody"></div>
         <div class="doc-refs" id="docRefs"></div>
         <div class="doc-foot">
@@ -326,22 +331,20 @@
     </div>
   </section>
 
-  <!-- ==================== 7. 视频讲解：B 站课程 + 左侧全集目录 ==================== -->
+  <!-- ==================== 7. 视频讲解：课程播放页 + 右侧章节折叠目录 ==================== -->
   <section id="view-video" class="view view-video" hidden>
-    <div class="video-wrap">
-
-      <aside class="video-side">
+    <header class="course-head">
+      <div class="course-head-top">
         <a class="back" href="#" id="videoBack">← 返回地图</a>
-        <div class="doc-side-title" id="vSideTitle">视频讲解</div>
-        <div class="doc-side-sub" id="vSideSub"></div>
-        <nav class="video-nav" id="videoNav"></nav>
-      </aside>
+        <span class="course-kicker">🎬 视频讲解</span>
+      </div>
+      <h1 class="course-title" id="vTitle"></h1>
+      <p class="course-meta"><span id="vCrumb"></span><span class="course-dot">·</span><span id="vLead"></span></p>
+    </header>
 
-      <main class="video-main">
-        <div class="doc-crumb" id="vCrumb"></div>
-        <h1 class="doc-title" id="vTitle"></h1>
-        <p class="doc-lead" id="vLead"></p>
+    <div class="course-stage">
 
+      <main class="course-main">
         <div class="player-box">
           <iframe id="vPlayer" src="" allowfullscreen frameborder="0" scrolling="no"
                   allow="autoplay; fullscreen; picture-in-picture"></iframe>
@@ -361,8 +364,18 @@
           <button class="btn btn-ghost" type="button" data-switch-style="text">📄 换成文字说明</button>
           <button class="btn btn-primary" id="videoStartQuiz">看完，开始做题 →</button>
         </div>
+      </main>
 
-</main>
+      <aside class="course-side">
+        <div class="course-side-head">
+          <div class="course-side-kicker">🎬 课程目录</div>
+          <div class="course-side-title" id="vSideTitle">视频讲解</div>
+          <div class="course-side-sub" id="vSideSub"></div>
+          <div class="course-side-now" id="vSideNow"></div>
+        </div>
+        <nav class="video-nav" id="videoNav"></nav>
+      </aside>
+
     </div>
   </section>
 
@@ -383,6 +396,35 @@
         <p id="feedbackExplain"></p>
         <button class="btn btn-primary btn-sm" id="nextBtn">下一题 →</button>
       </div>
+    </div>
+
+    <div class="card code-card" id="codeCard" hidden>
+      <div class="code-head">
+        <div>
+          <span class="code-kicker">💻 代码任务</span>
+          <h2 class="code-title" id="codeTitle"></h2>
+        </div>
+        <span class="runner-status" id="runnerStatus">检测运行环境…</span>
+      </div>
+      <p class="code-task" id="codeTask"></p>
+      <details class="code-hint" id="codeHintWrap" hidden>
+        <summary>卡住了？点开看提示</summary>
+        <p id="codeHint"></p>
+      </details>
+      <div class="code-shell">
+        <div class="code-bar">
+          <span class="code-lang"><i></i>C · gcc</span>
+          <div class="code-btns">
+            <button type="button" class="code-btn" id="codeReset">重置</button>
+            <button type="button" class="code-btn" id="codeRun">▶ 运行</button>
+            <button type="button" class="code-btn is-primary" id="codeSubmit">提交判题</button>
+          </div>
+        </div>
+        <textarea class="code-editor" id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+        <pre class="code-output" id="codeOutput" hidden></pre>
+      </div>
+      <div class="code-tests" id="codeTests"></div>
+      <p class="code-note" id="codeNote">代码会提交到本地运行环境编译执行，测试用例全部通过才算完成代码任务。</p>
     </div>
 
     <div class="card empty-card" id="levelEmpty" hidden>
@@ -428,6 +470,7 @@
             <p class="muted">可以正常选专业、闯关、记时长，只是换台设备或清了浏览器就没了。</p>
           </div>
         </div>
+        <p class="stale-hint" id="staleHint" hidden></p>
         <div class="auth-tabs cloud-only" id="authTabs" hidden>
           <button type="button" class="auth-tab is-on" data-auth="register">注册</button>
           <button type="button" class="auth-tab" data-auth="login">登录</button>
