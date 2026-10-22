@@ -5,31 +5,6 @@
    已有 1–3 章保留，这里补第 4–15 章。
    ========================================================== */
 
-/* 追加章节（从现有章数之后继续编号） */
-function appendChapters(majorId, plan) {
-  var override = MAJOR_STAGE_OVERRIDES[majorId];
-  if (!override) return;
-  var mi = 0;
-  Object.keys(override).forEach(function (stageTitle) {
-    override[stageTitle].modules.forEach(function (mod) {
-      var cfg = plan[mi];
-      mi++;
-      if (!cfg) return;
-      var start = mod.levels.length;
-      (cfg.chapters || []).forEach(function (ch, k) {
-        var idx = start + k;
-        DOCS[majorId + '-m' + (mi - 1) + '-l' + idx] = ch.doc;
-        mod.levels.push({
-          name: '第 ' + (idx + 1) + ' 章 · ' + ch.title,
-          brief: ch.brief,
-          questions: ch.q,
-          ready: true
-        });
-      });
-    });
-  });
-}
-
 appendChapters('law-法学', [
   /* ---------- 1. 法理学：补第 4–15 章 ---------- */
   {

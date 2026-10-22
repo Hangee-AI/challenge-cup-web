@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    course-common.js · 公共必修课「文字说明」内容
    --------------------------------------------------------
    - 键名 = 课程 id，与 data.js 里 COMMON_COURSES 的 courseId 对应
@@ -9,6 +9,38 @@
      左标签右要点的树状图（见 css 的 .mm-*）
    - 内容为按教材/考纲框架重新组织的考点梳理，不是原文转载
    ========================================================== */
+
+/* ==========================================================
+   追加章节工具（appendChapters）
+   --------------------------------------------------------
+   很多 *-courses-more.js 会在顶部调用它，把第 4–15 章追加进
+   MAJOR_STAGE_OVERRIDES。原来定义在 law-courses-more.js 里，
+   加载顺序在部分调用者之后，导致 ReferenceError，章节丢失。
+   现在挪到这里（紧随 data.js 之后），保证先定义再使用。
+   ========================================================== */
+function appendChapters(majorId, plan) {
+  var override = MAJOR_STAGE_OVERRIDES[majorId];
+  if (!override) return;
+  var mi = 0;
+  Object.keys(override).forEach(function (stageTitle) {
+    override[stageTitle].modules.forEach(function (mod) {
+      var cfg = plan[mi];
+      mi++;
+      if (!cfg) return;
+      var start = mod.levels.length;
+      (cfg.chapters || []).forEach(function (ch, k) {
+        var idx = start + k;
+        DOCS[majorId + '-m' + (mi - 1) + '-l' + idx] = ch.doc;
+        mod.levels.push({
+          name: '第 ' + (idx + 1) + ' 章 · ' + ch.title,
+          brief: ch.brief,
+          questions: ch.q,
+          ready: true
+        });
+      });
+    });
+  });
+}
 
 var COMMON_COURSES_DATA = {
 
