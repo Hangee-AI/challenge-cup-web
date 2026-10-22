@@ -93,13 +93,19 @@ contentParts.push(
 const jsDir = path.join(outDir, 'js');
 fs.mkdirSync(jsDir, { recursive: true });
 fs.writeFileSync(path.join(jsDir, 'bundle-core.js'), coreParts.join('\n;\n'), 'utf8');
-fs.writeFileSync(path.join(jsDir, 'bundle-content.js'), contentParts.join('\n;\n'), 'utf8');
+// 内容包不写进 dist：由 Deno 域名提供（见下方 contentUrl）
+
+/* 内容包体积大（3.4 MB），不放 Surge（上传慢、CDN 更慢），改由 Deno 后端域名托管；
+   经典 script 允许跨域加载，所以直接 <script src> 引过去即可。
+   需要换地址时设环境变量 CONTENT_BASE。 */
+const contentBase = (process.env.CONTENT_BASE || 'https://challenge-cup-web.hangee-ai.deno.net').replace(/\/+$/, '');
+const contentUrl = contentBase + '/js/bundle-content.js?v=' + marker;
 
 const inject =
   '<script src="js/bundle-core.js?v=' + marker + '"></script>\n' +
   '<script>\n' +
   '(function(){function load(){var s=document.createElement("script");' +
-  's.src="js/bundle-content.js?v=' + marker + '";s.async=true;document.body.appendChild(s);}\n' +
+  's.src="' + contentUrl + '";s.async=true;document.body.appendChild(s);}\n' +
   'if(document.readyState==="complete")setTimeout(load,60);else window.addEventListener("load",function(){setTimeout(load,60);});})();\n' +
   '</script>\n';
 
