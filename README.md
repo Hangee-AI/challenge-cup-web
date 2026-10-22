@@ -76,6 +76,20 @@ $env:DEEPSEEK_API_KEY="sk-xxxx"; npm start
 没配 Key 也能用：猫头鹰会退回本地回答（这关重点 / 给我一道练习 / 我卡住了），页面不会坏。
 限流默认：单 IP 每小时 40 条、全站每天 800 条、单次回答 ≤500 tokens。
 
+## 代码任务怎么判（离线判定）
+
+线上是纯静态托管（Surge）+ 一个不放编译器的后端，所以**代码任务不跑 gcc**，
+改成两项「不用联网也能判」的检查，两项都对才算通过：
+
+1. **关键代码填空**：每关 1–2 个空，答案表在 `js/code-offline.js` 的 `blanks[i].accept`（忽略空格/大小写/全角括号）
+2. **运行结果预测**：给样例输入，让学习者写出程序跑完的输出，与该关 `code.tests[0].stdout` 比对
+
+想真跑编译器：点「复制去本地跑」，本机装好 gcc 直接编译——
+`gcc a.c -o a && ./a`。`server/` 里的 `/api/run`、`/api/judge` 仍然保留，
+本地开发（`npm start` + 装了 gcc/WSL）时可以用，线上不会调用。
+
+加新关卡/改答案：在 `js/code-offline.js` 里按「该关 `code.task` 原文」加一条即可。
+
 ## 目录结构
 
 ```
@@ -107,6 +121,7 @@ challenge-cup-web/
 ├─ js/majors/          食品科学与工程 / 临床医学 / 口腔医学 / 护理学 / 药学：各 12 门课 × 3 章（36 关）
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
+├─ js/code-offline.js  代码任务的离线判定答案表（填空 accept + 输出预测基准，15 关）
 ├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）
 ├─ server/             后端（Express）：index.js 入口、auth.js 密码与令牌、db.js JSON 存储、routes/ 接口
 ├─ docs/screens/       各页面截图（申报书、PPT 用；v12-*.png 为最新）

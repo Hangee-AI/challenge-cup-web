@@ -1354,63 +1354,176 @@
   /* ---------------- 代码任务：运行与判题 ---------------- */
   var codeBusy = false;
 
+  /* ---------------- 代码任务：离线判定 ----------------
+     线上没有编译环境，所以不跑 gcc，改成两项检查：
+     ① 关键代码填空  ② 运行结果预测（用本关 tests[0] 比对）
+     答案表在 js/code-offline.js。 */
+  var codeFailCount = {};
+
+  function offlineSpec(level) {
+    var table = window.CODE_OFFLINE || {};
+    return (level && level.code && table[level.code.task]) || null;
+  }
+
   function setupCodeCard(level) {
     var card = $('codeCard');
-    if (!level.code) { card.hidden = true; return; }
+    if (!level.code) { card.hidden = true; $('codeBlanks').innerHTML = ''; return; }
     card.hidden = false;
     $('codeTitle').textContent = level.name.replace(/^第 \d+ 关 · /, '');
     $('codeTask').innerHTML = '<strong>任务：</strong>' + esc(level.code.task);
     $('codeHintWrap').hidden = !level.code.hint;
     $('codeHintWrap').open = false;
     $('codeHint').textContent = level.code.hint || '';
-    $('codeEditor').value = state.drafts[level.id] || level.code.starter;
+
+    var st = $('runnerStatus');
+    st.className = 'runner-status is-ready';
+    st.textContent = offlineSpec(level) ? '离线判定 · 不用联网' : '这一关暂无离线判定';
+
+    $('codeRef').textContent = level.code.starter || '';
+    var t = (level.code.tests && level.code.tests[0]) || {};
+    $('codeSampleIn').textContent = t.stdin ? String(t.stdin).replace(/\n/g, ' ⏎ ') : '（无输入）';
+
     var out = $('codeOutput');
     out.hidden = true;
     out.className = 'code-output';
     out.textContent = '';
-    renderTests(level.code, null);
-    checkRunner();
+    $('codePredict').value = state.drafts[level.id] || '';
+    renderBlanks(level);
   }
 
-  function renderTests(task, results) {
-    var box = $('codeTests');
+  function renderBlanks(level) {
+    var box = $('codeBlanks');
     box.innerHTML = '';
-    task.tests.forEach(function (t, i) {
-      var r = results && results[i];
-      var cls = 'code-test' + (r ? (r.passed ? ' is-pass' : ' is-fail') : '');
-      var icon = r ? (r.passed ? '✓' : '✗') : '○';
-      box.appendChild(el('span', cls, icon + ' ' + esc(t.name || ('用例 ' + (i + 1)))));
+    var spec = offlineSpec(level);
+    if (!spec) {
+      box.appendChild(el('p', 'code-note', '这一关的离线判定还没配置，先做选择题吧。'));
+      return;
+    }
+    var saved = (state.drafts[level.id + ':blank'] || []);
+    spec.blanks.forEach(function (b, i) {
+      var item = el('div', 'blank-item');
+      item.appendChild(el('p', 'blank-q', (i + 1) + '. ' + b.q));
+      var inp = el('input', 'blank-input');
+      inp.type = 'text';
+      inp.spellcheck = false;
+      inp.setAttribute('data-blank', String(i));
+      inp.value = saved[i] || '';
+      inp.placeholder = '在这里写代码（末尾分号别忘了）';
+      item.appendChild(inp);
+      box.appendChild(item);
     });
   }
 
-  function checkRunner(attempt) {
-    var st = $('runnerStatus');
-    attempt = attempt || 0;
-    st.className = 'runner-status';
-    st.textContent = '检测运行环境…';
-    fetch(apiUrl('/api/health'), { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (res) {
-        var c = res && res.compiler;
-        if (c && c.ready) {
-          st.className = 'runner-status is-ready';
-          st.textContent = '运行环境就绪 · ' + (c.detail || c.engine || 'gcc');
-        } else if (attempt < 1) {
-          window.setTimeout(function () { checkRunner(attempt + 1); }, 1000);
-        } else {
-          st.className = 'runner-status is-off';
-          st.textContent = '运行环境未就绪 · 需要安装 gcc 或 Docker';
-        }
-      })
-      .catch(function () {
-        if (attempt < 1) {
-          window.setTimeout(function () { checkRunner(attempt + 1); }, 1000);
-          return;
-        }
-        st.className = 'runner-status is-off';
-        st.textContent = '后端未连接 · 代码运行暂不可用';
-      });
+  // 代码比对：去掉所有空白、统一全角括号/逗号、忽略大小写
+  function normCode(s) {
+    return String(s || '')
+      .replace(/[（]/g, '(').replace(/[）]/g, ')')
+      .replace(/[，]/g, ',')
+      .replace(/\s+/g, '')
+      .toLowerCase();
   }
+
+  // 输出比对：逐行去尾随空格、去掉末尾空行
+  function normOut(s) {
+    return String(s || '')
+      .replace(/\r/g, '')
+      .split('\n')
+      .map(function (l) { return l.replace(/\s+$/, ''); })
+      .join('\n')
+      .replace(/\n+$/, '')
+      .trim();
+  }
+
+  function submitCode() {
+    var found = currentLevel();
+    if (!found || !found.level.code) return;
+    var level = found.level;
+    var spec = offlineSpec(level);
+    var out = $('codeOutput');
+    out.hidden = false;
+    out.className = 'code-output';
+
+    if (!spec) {
+      out.className = 'code-output is-bad';
+      out.textContent = '这一关的离线判定还没配置，先做上面的选择题吧。';
+      return;
+    }
+
+    var lines = [];
+    var allOk = true;
+    var failCount = (codeFailCount[level.id] || 0) + 1;
+    codeFailCount[level.id] = failCount;
+
+    // ① 填空
+    var inputs = $('codeBlanks').querySelectorAll('.blank-input');
+    var answers = [];
+    spec.blanks.forEach(function (b, i) {
+      var v = inputs[i] ? inputs[i].value : '';
+      answers.push(v);
+      var ok = b.accept.some(function (a) { return normCode(a) === normCode(v); });
+      if (!ok) allOk = false;
+      lines.push((ok ? '✓ ' : '✗ ') + '第 ' + (i + 1) + ' 项填空：' + (ok ? '对了' : '再看一眼提示里的写法'));
+    });
+    state.drafts[level.id + ':blank'] = answers;
+    save();
+
+    // ② 输出预测
+    var t = (level.code.tests && level.code.tests[0]) || {};
+    var pred = $('codePredict').value;
+    state.drafts[level.id] = pred;
+    save();
+    var predOk = normOut(pred) === normOut(t.stdout);
+    if (!predOk) allOk = false;
+    lines.push((predOk ? '✓ ' : '✗ ') + '运行结果预测：' + (predOk ? '对了' : '还不对'));
+    if (!predOk && failCount >= 2) {
+      lines.push('   正确输出是：');
+      String(t.stdout || '').split('\n').forEach(function (l) { lines.push('   | ' + l); });
+    } else if (!predOk) {
+      lines.push('   提示：注意输出格式（空格、换行、小数位数），对着代码骨架一行行推。');
+    }
+
+    if (allOk) {
+      out.className = 'code-output is-ok';
+      out.textContent = '✓ 两项都通过，这一关的代码任务完成。\n' + lines.join('\n');
+      onCodePassed(found);
+    } else {
+      out.className = 'code-output is-bad';
+      out.textContent = lines.join('\n') + (failCount >= 2 ? '' : '\n\n别急，改一改再提一次就行。');
+    }
+  }
+
+  function resetCode() {
+    var found = currentLevel();
+    if (!found || !found.level.code) return;
+    if (!confirm('清空这次填的内容，重新开始？')) return;
+    delete state.drafts[found.level.id];
+    delete state.drafts[found.level.id + ':blank'];
+    save();
+    $('codeOutput').hidden = true;
+    setupCodeCard(found.level);
+    toast('已清空，重新来一遍');
+  }
+
+  function copyCode() {
+    var found = currentLevel();
+    if (!found || !found.level.code) return;
+    var text = found.level.code.starter || '';
+    function done() { toast('代码骨架已复制，粘贴到本机编辑器里，装好 gcc 就能跑'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else { fallback(); }
+    function fallback() {
+      var ta = el('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); }
+      catch (e) { toast('复制失败，请手动从骨架里选代码复制'); }
+      document.body.removeChild(ta);
+    }
+  }
+
 
   // 静态站（Surge）与后端不同源：所有接口请求都要拼 API 基地址
   function apiUrl(p) {
@@ -1431,76 +1544,6 @@
     });
   }
 
-  function setCodeBusy(busy) {
-    codeBusy = busy;
-    ['codeRun', 'codeSubmit', 'codeReset'].forEach(function (id) {
-      var b = $(id);
-      if (b) b.disabled = busy;
-    });
-    $('codeRun').textContent = busy ? '运行中…' : '▶ 运行';
-  }
-
-  function runCode(judge) {
-    var found = currentLevel();
-    if (!found || !found.level.code || codeBusy) return;
-    var task = found.level.code;
-    var src = $('codeEditor').value;
-    state.drafts[found.level.id] = src;
-    save();
-
-    var out = $('codeOutput');
-    out.hidden = false;
-    out.className = 'code-output';
-    out.textContent = judge ? '正在编译并运行全部测试用例…' : '正在编译运行…';
-    setCodeBusy(true);
-
-    var req = judge
-      ? postCode(apiUrl('/api/judge'), { source: src, tests: task.tests })
-      : postCode(apiUrl('/api/run'), { source: src, stdin: (task.tests[0] && task.tests[0].stdin) || '' });
-
-    req.then(function (res) {
-      if (res.compileError) {
-        out.className = 'code-output is-bad';
-        out.textContent = '编译失败：\n' + res.compileError;
-        renderTests(task, null);
-        return;
-      }
-      if (!judge) {
-        var txt = res.stdout || '';
-        if (res.stderr) txt += (txt ? '\n' : '') + '[stderr]\n' + res.stderr;
-        if (!txt) txt = '（程序没有任何输出，退出码 ' + res.exitCode + '）';
-        out.textContent = txt;
-        out.className = 'code-output' + (res.exitCode === 0 ? '' : ' is-bad');
-        return;
-      }
-
-      renderTests(task, res.results);
-      var passed = res.results.filter(function (r) { return r.passed; }).length;
-      if (passed === res.results.length) {
-        out.className = 'code-output is-ok';
-        out.textContent = '✓ 全部 ' + res.results.length + ' 个测试用例通过（' + (res.ms || 0) + ' ms）';
-        onCodePassed(found);
-      } else {
-        var lines = [];
-        res.results.forEach(function (r, i) {
-          lines.push((r.passed ? '[通过] ' : '[未通过] ') + (task.tests[i].name || ('用例 ' + (i + 1))));
-          if (!r.passed) {
-            if (r.stderr) lines.push('  stderr: ' + String(r.stderr).trim());
-            lines.push('  期望输出: ' + JSON.stringify(r.expected));
-            lines.push('  你的输出: ' + JSON.stringify(r.stdout));
-          }
-        });
-        out.className = 'code-output is-bad';
-        out.textContent = '通过 ' + passed + ' / ' + res.results.length + '\n' + lines.join('\n');
-      }
-    }).catch(function (err) {
-      out.className = 'code-output is-bad';
-      out.textContent = '运行失败：' + (err && err.message ? err.message : '连不上后端') +
-        '\n代码运行需要后台服务在线（编译在服务器上做）。选择题和讲解不受影响，可以先把题做了、稍后再试运行。';
-    }).finally(function () {
-      setCodeBusy(false);
-    });
-  }
 
   function onCodePassed(found) {
     state.code[found.level.id] = true;
@@ -1636,46 +1679,13 @@
   $('nextBtn').addEventListener('click', nextQuestion);
 
   /* 代码任务按钮 */
-  $('codeRun').addEventListener('click', function () { runCode(false); });
-  $('codeSubmit').addEventListener('click', function () { runCode(true); });
-  $('codeReset').addEventListener('click', function () {
-    var found = currentLevel();
-    if (!found || !found.level.code) return;
-    if (!confirm('重置为初始代码？你当前写的内容会丢失。')) return;
-    $('codeEditor').value = found.level.code.starter;
-    delete state.drafts[found.level.id];
-    save();
-    $('codeOutput').hidden = true;
-    renderTests(found.level.code, null);
-    toast('已重置为初始代码');
+  /* 代码任务按钮（离线判定） */
+  $('codeSubmit').addEventListener('click', submitCode);
+  $('codeReset').addEventListener('click', resetCode);
+  $('codeLocal').addEventListener('click', copyCode);
+  $('codePredict').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submitCode(); }
   });
-
-  var draftTimer = null;
-  $('codeEditor').addEventListener('input', function () {
-    var found = currentLevel();
-    if (!found) return;
-    var val = $('codeEditor').value;
-    if (draftTimer) clearTimeout(draftTimer);
-    draftTimer = setTimeout(function () {
-      state.drafts[found.level.id] = val;
-      save();
-    }, 500);
-  });
-
-  // 编辑器里 Tab 缩进四个空格，Ctrl/Cmd + Enter 直接判题
-  $('codeEditor').addEventListener('keydown', function (e) {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      var ta = e.target;
-      var start = ta.selectionStart, end = ta.selectionEnd;
-      ta.value = ta.value.slice(0, start) + '    ' + ta.value.slice(end);
-      ta.selectionStart = ta.selectionEnd = start + 4;
-    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      runCode(true);
-    }
-  });
-
   $('backToMap').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('openExplain').addEventListener('click', function (e) { e.preventDefault(); openExplainOfCurrentLevel(); });
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });

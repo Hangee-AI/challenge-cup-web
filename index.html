@@ -46,10 +46,10 @@
     <div class="hero">
       <div class="hero-text">
         <p class="eyebrow">大一新生防迷路指南</p>
-        <h1>四年学费不便宜，<br />别全花在试课上。</h1>
+        <h1>四年，<br />我们这样出发。</h1>
         <p class="lead">
-          每个专业该先学什么、后学什么，其实早有答案。我们把它拆成阶段、模块和十分钟一关的小任务——<br />
-          挑个专业往下闯就行，选课别再靠"感觉"了。
+          每个专业先学什么、后学什么，其实是有先后的。我们把它拆成阶段、模块和十分钟一关的小任务——<br />
+          挑个专业，一关一关往下走就行。
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" href="#" data-go="pickFirst" id="homeCta">选我的专业 →</a>
@@ -439,27 +439,38 @@
           <span class="code-kicker">💻 代码任务</span>
           <h2 class="code-title" id="codeTitle"></h2>
         </div>
-        <span class="runner-status" id="runnerStatus">检测运行环境…</span>
+        <span class="runner-status" id="runnerStatus">离线判定 · 不用联网</span>
       </div>
       <p class="code-task" id="codeTask"></p>
       <details class="code-hint" id="codeHintWrap" hidden>
         <summary>卡住了？点开看提示</summary>
         <p id="codeHint"></p>
       </details>
+
       <div class="code-shell">
         <div class="code-bar">
-          <span class="code-lang"><i></i>C · gcc</span>
+          <span class="code-lang"><i></i>C · 代码骨架</span>
           <div class="code-btns">
             <button type="button" class="code-btn" id="codeReset">重置</button>
-            <button type="button" class="code-btn" id="codeRun">▶ 运行</button>
-            <button type="button" class="code-btn is-primary" id="codeSubmit">提交判题</button>
+            <button type="button" class="code-btn" id="codeLocal">复制去本地跑</button>
           </div>
         </div>
-        <textarea class="code-editor" id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
-        <pre class="code-output" id="codeOutput" hidden></pre>
+        <pre class="code-ref" id="codeRef"></pre>
       </div>
-      <div class="code-tests" id="codeTests"></div>
-      <p class="code-note" id="codeNote">代码会提交到本地运行环境编译执行，测试用例全部通过才算完成代码任务。</p>
+
+      <div class="code-blanks" id="codeBlanks"></div>
+
+      <div class="code-predict">
+        <p class="code-predict-q">这一关的样例输入：<code id="codeSampleIn"></code></p>
+        <label class="code-predict-label" for="codePredict">你觉得这段程序跑完会输出什么？（照着写，一行一行来）</label>
+        <textarea class="code-predict-input" id="codePredict" rows="4" spellcheck="false" autocomplete="off"></textarea>
+      </div>
+
+      <div class="code-actions">
+        <button type="button" class="code-btn is-primary" id="codeSubmit">提交判定</button>
+      </div>
+      <pre class="code-output" id="codeOutput" hidden></pre>
+      <p class="code-note" id="codeNote">这一关用「离线判定」：不联网、不调编译器。两项都过才算通过——①关键代码填空 ②运行结果预测。想真的跑起来，点「复制去本地跑」，装好 gcc 编译即可。</p>
     </div>
 
     <div class="card empty-card" id="levelEmpty" hidden>
@@ -687,6 +698,7 @@
 <script src="js/majors/nursing-courses-more.js"></script>
 <script src="js/majors/pharmacy-courses-more.js"></script>
 <script src="js/videos.js"></script>
+<script src="js/code-offline.js"></script>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/cloud.js"></script>
