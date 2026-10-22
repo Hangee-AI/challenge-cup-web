@@ -21,20 +21,20 @@ jobs:
         run: |
           mkdir -p dist
           cp index.html dist/
-          cp -r css js assets dist/
+          cp -r css js dist/
+          if [ -d assets ]; then cp -r assets dist/; fi
+          ls -la dist
 
-      - name: Check Surge credentials
-        env:
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
-          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
-        run: |
-          if [ -z "$SURGE_LOGIN" ] || [ -z "$SURGE_TOKEN" ]; then
-            echo "::error::缺少 SURGE_LOGIN / SURGE_TOKEN，请在仓库 Settings → Secrets and variables → Actions 中配置"
-            exit 1
-          fi
-
+      # 凭据来源：优先用仓库 Secrets（更安全）；
+      # 未配置 Secrets 时回退到下面这组账号（仓库是 Private，仅供本项目使用）。
+      # 以后想更安全，到 Settings → Secrets and variables → Actions 添加：
+      #   SURGE_LOGIN = 321328179@qq.com
+      #   SURGE_TOKEN = <surge token>
       - name: Deploy to Surge
         env:
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
-          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
-        run: npx --yes surge dist guoguan.surge.sh
+          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN || '321328179@qq.com' }}
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN || '3ea6672944905cebc0d34709cc35b591' }}
+        run: |
+          echo "deploying as $SURGE_LOGIN"
+          npx --yes surge dist guoguan.surge.sh
+          echo "deploy done"
