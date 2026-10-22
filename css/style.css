@@ -201,11 +201,11 @@ button { font: inherit; cursor: pointer; }
 }
 .common-card {
   display: flex; flex-direction: column; gap: 4px;
-  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   padding: 18px 20px; box-shadow: var(--shadow-sm); text-decoration: none;
   transition: transform .16s, box-shadow .16s, border-color .16s;
 }
-.common-card:hover { transform: translateY(-3px); border-color: #cfd8ff; box-shadow: var(--shadow); }
+.common-card:hover { transform: translateY(-3px); border-color: var(--line-2); box-shadow: var(--shadow); }
 .common-tag {
   align-self: flex-start; font-size: 11.5px; font-weight: 700;
   color: var(--brand); background: var(--brand-soft);
@@ -1975,3 +1975,15 @@ html[data-theme="night"] .stale-hint b { color: #f2d79b; }
 html[data-layout="mobile"] .mm-branch { grid-template-columns: 1fr; gap: 6px; }
 html[data-layout="mobile"] .mm-branch::before { display: none; }
 html[data-layout="mobile"] .mm-label { justify-self: start; }
+/* ---- 夜猫模式补丁：公共必修课 / 已通关节点 / 角标 / 建设中标签 ----
+   （这几条曾被合并队友代码时误覆盖，重新补回，改动时请保留） */
+html[data-theme="night"] .style-badge { background: #3a2f14; border-color: #4a3a12; color: #f0d59a; }
+html[data-theme="night"] .common-card:hover { border-color: var(--brand); }
+html[data-theme="night"] .level-item.is-done,
+html[data-theme="night"] .map-node.is-done,
+html[data-theme="night"] .jnode.is-done {
+  background: #12301f;
+  border-color: #2b6b48;
+}
+html[data-theme="night"] .doc-nav-soon { background: var(--surface-2); }
+html[data-theme="night"] .jnode.is-done .jnode-badge { background: #1c5c3c; color: #d8f5e4; }
