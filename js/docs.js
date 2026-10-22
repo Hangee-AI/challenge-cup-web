@@ -92,6 +92,24 @@ int    d;            // 只声明不赋值，值是随机的</code></pre>
 <div class="doc-tip">💡 初学阶段别急着背这些步骤，但要知道「报错分两种」：<strong>编译错误</strong>（语法不对，程序根本生成不出来）和<strong>运行错误</strong>（能跑但结果不对 / 崩溃）。</div>`
       },
       {
+        id: 'header_guard',
+        title: '头文件保护：防止重复包含',
+        html: `<p>当一个项目里有多个 <code>.c</code> 和 <code>.h</code> 文件时，同一个头文件可能被 <code>#include</code> 多次——编译器会报「重复定义」。解决方法：<strong>头文件保护</strong>，每个 <code>.h</code> 开头写上：</p>
+<pre><code>#ifndef HELLO_H        // 第一次进来时 HELLO_H 没定义，往下走
+#define HELLO_H
+
+// 这里放头文件内容（函数声明、结构体定义、宏定义等）
+void hello(void);
+
+#endif                 // 第二次进来时 HELLO_H 已定义，整段跳过</code></pre>
+<ul>
+  <li>格式：<code>#ifndef</code> + 宏名 → <code>#define</code> + 同名宏 → <code>#endif</code>。</li>
+  <li>宏名约定大写 + <code>_H</code> 后缀，保证全局唯一（比如 <code>MYPROJ_UTILS_H</code>）。</li>
+  <li>C++11 还有个更简洁的 <code>#pragma once</code>，但跨平台兼容性不如 <code>#ifndef</code> 保险。</li>
+</ul>
+<div class="doc-tip">⚠️ 这是 C 语言必考知识点——考研、期末、找工作面试都会问：「为什么要用头文件保护？怎么写？」。养成<strong>每个 .h 都加</strong>的习惯。</div>`
+      },
+      {
         id: 'scanf',
         title: 'scanf：让用户输入',
         html: `<p><code>scanf</code> 是 <code>printf</code> 的搭档——负责从键盘读入数据。它的格式串和占位符用法跟 <code>printf</code> 一样，但变量前面要加 <code>&amp;</code>（取地址）。</p>
@@ -115,6 +133,38 @@ scanf("%s", name);         // 数组名本身就是地址，不用 &amp;</code><
 <div class="doc-tip">⚠️ <code>scanf("%s", name)</code> 遇到空格就停。要读带空格的整行，用 <code>fgets(name, sizeof(name), stdin)</code>。</div>`
       },
       {
+        id: 'string_input_4ways',
+        title: '记录输入字符串的 4 种常用方式',
+        html: `<p>C 语言读入字符串是新手常踩坑的地方，这里汇总<strong>4 种主流方式</strong>，每种有自己的适用场景和坑：</p>
+<table>
+<tr><th>方式</th><th>代码</th><th>能读空格？</th><th>安全？</th><th>备注</th></tr>
+<tr><td><code>scanf("%s", s)</code></td><td>见上节</td><td>❌ 空格即停</td><td>⚠️ 不限制长度</td><td>最简单，但只适合读单个单词</td></tr>
+<tr><td><code>scanf("%[^\n]", s)</code></td><td><code>scanf("%[^\n]%*c", s);</code></td><td>✅ 直到换行为止</td><td>⚠️ 不限制长度</td><td>正则扫集，<code>%*c</code> 吃掉残留的换行符</td></tr>
+<tr><td><code>gets(s)</code></td><td><code>gets(name);</code></td><td>✅</td><td>❌ <strong>极不安全</strong></td><td>无长度检查，容易溢出，<strong>C11 已废弃</strong>，绝对别用</td></tr>
+<tr><td><code>fgets(s, n, stdin)</code></td><td><code>fgets(name, 32, stdin);</code></td><td>✅</td><td>✅ 指定上限</td><td><strong>推荐首选</strong>，唯一的坑是会把换行符也读进数组</td></tr>
+</table>
+<p><strong>结论</strong>：<strong>永远用 <code>fgets</code></strong>，它是现代 C 唯一安全的行读函数。</p>`
+      },
+      {
+        id: 'fgets',
+        title: 'fgets 详解（最重要的输入函数）',
+        html: `<p><code>fgets</code> 是 C 里读一行字符串的<strong>标准首选</strong>，它同时解决了 <code>gets</code> 的溢出问题和 <code>scanf("%s")</code> 不能读空格的问题。</p>
+<pre><code>char buf[128];
+fgets(buf, sizeof(buf), stdin);    // 从键盘最多读 127 个字符 + \\0
+// 读文件时把 stdin 换成 FILE* 指针即可</code></pre>
+<p><strong>三个参数</strong>：目标数组、最大字符数（实际最多读 n-1 个，留一个给 <code>\\0</code>）、输入源（<code>stdin</code> / <code>FILE*</code>）。</p>
+<p><strong>和 gets 的核心区别</strong>：</p>
+<ul>
+  <li><code>gets</code> 不限制长度 → 缓冲区溢出 → 已被 C11 标准废弃（编译会警告）。</li>
+  <li><code>fgets</code> 遇到 <code>\\n</code> 或 <code>n-1</code> 字符就停，<strong>会把换行符 <code>\\n</code> 也存进数组</strong>——这是新手最不习惯的行为。</li>
+</ul>
+<p><strong>常见的"吃掉末尾换行符"写法</strong>：</p>
+<pre><code>if (buf[strlen(buf) - 1] == '\\n') {
+  buf[strlen(buf) - 1] = '\\0';   // 把末尾的 \\n 换成 \\0
+}</code></pre>
+<div class="doc-tip">⚠️ 面试必问：「gets 和 fgets 有什么区别？」答出「gets 不安全已废弃 / fgets 指定长度 / fgets 会读入 \\n 要手动去掉」三点就是满分。</div>`
+      },
+      {
         id: 'operators',
         title: '运算符速查',
         html: `<p>除了 <code>+ - * /</code>，C 还有几种常用运算符：</p>
@@ -128,6 +178,50 @@ scanf("%s", name);         // 数组名本身就是地址，不用 &amp;</code><
 <tr><td>逗号</td><td><code>,</code></td><td><code>a=1, b=2</code></td><td>从左往右依次执行，整个表达式的值是最右边那个</td></tr>
 </table>
 <p>优先级记不住没关系——<strong>不确定就加括号</strong>，代码更清晰。</p>`
+      },
+      {
+        id: 'operator_precedence',
+        title: '运算符优先级（从高到低，常用）',
+        html: `<p>C 的运算符优先级是<strong>面试/期末必考</strong>。不用全背，但记住<strong>常见几个层级</strong>就够解决 90% 的困惑：</p>
+<table>
+<tr><th>优先级</th><th>运算符</th><th>说明</th></tr>
+<tr><td>1（最高）</td><td><code>()</code> <code>[]</code> <code>.</code> <code>-></code></td><td>括号、数组、成员访问</td></tr>
+<tr><td>2</td><td><code>! ~ ++ -- + - * &amp;</code></td><td>单目（逻辑非、按位取反、自增自减、正负号、解引用、取地址）</td></tr>
+<tr><td>3</td><td><code>* / %</code></td><td>乘除取余</td></tr>
+<tr><td>4</td><td><code>+ -</code></td><td>加减</td></tr>
+<tr><td>5</td><td><code>&lt;&lt; &gt;&gt;</code></td><td>左右移（下面会讲）</td></tr>
+<tr><td>6</td><td><code>&amp;</code></td><td>按位与</td></tr>
+<tr><td>7</td><td><code>^</code></td><td>按位异或</td></tr>
+<tr><td>8</td><td><code>|</code></td><td>按位或</td></tr>
+<tr><td>9</td><td><code>&amp;&amp;</code></td><td>逻辑与</td></tr>
+<tr><td>10</td><td><code>||</code></td><td>逻辑或</td></tr>
+<tr><td>11</td><td><code>? :</code></td><td>条件运算符（三目）</td></tr>
+<tr><td>12</td><td><code>= += -= *= /=</code> 等</td><td>赋值（最低的几个之一）</td></tr>
+</table>
+<p>一个容易混淆的典型例子：<code>*p++</code> 等价于 <code>*(p++)</code>（因为 <code>*</code> 和 <code>++</code> 同优先级、<strong>右结合</strong>），即先解引用再让指针后移。</p>
+<div class="doc-tip">💡 口诀记忆（从高到低）：<strong>括号成员 → 单目 → 乘除余 → 加减 → 移位 → 按位与或异或 → 逻辑与或 → 三目 → 赋值</strong>。</div>`
+      },
+      {
+        id: 'bitwise_ops',
+        title: '按位运算符（& | ^ ~ << >>）',
+        html: `<p>按位运算符直接操作<strong>整数的二进制位</strong>——嵌入式、系统编程、算法优化里大量使用。</p>
+<table>
+<tr><th>运算符</th><th>意义</th><th>规则</th><th>示例（8 位）</th></tr>
+<tr><td><code>&amp;</code></td><td>按位与</td><td>两位都 1 才得 1</td><td><code>0b1010 &amp; 0b1100 = 0b1000</code></td></tr>
+<tr><td><code>|</code></td><td>按位或</td><td>有一个 1 就得 1</td><td><code>0b1010 | 0b0100 = 0b1110</code></td></tr>
+<tr><td><code>^</code></td><td>按位异或</td><td>不同为 1，相同为 0</td><td><code>0b1010 ^ 0b1100 = 0b0110</code></td></tr>
+<tr><td><code>~</code></td><td>按位取反</td><td>每位翻转</td><td><code>~0b1010 = 0b...0101</code></td></tr>
+<tr><td><code>&lt;&lt;</code></td><td>左移</td><td>整体左移 n 位，右边补 0</td><td><code>5 &lt;&lt; 1 = 10</code>（等价 ×2）</td></tr>
+<tr><td><code>&gt;&gt;</code></td><td>右移</td><td>整体右移 n 位，无符号左边补 0</td><td><code>8 &gt;&gt; 2 = 2</code>（等价 ÷4）</td></tr>
+</table>
+<p><strong>经典小技巧</strong>：</p>
+<ul>
+  <li><code>n &amp; 1</code> → 快速判断奇偶（最低位为 1 是奇数）。</li>
+  <li><code>n ^= 1</code> → 翻转最低位（0↔1）。</li>
+  <li><code>1 &lt;&lt; k</code> → 生成第 k 位为 1 的掩码。</li>
+  <li><code>n &amp; (n - 1)</code> → 把最低位的 1 清零（判断 2 的幂、统计 1 的个数）。</li>
+</ul>
+<div class="doc-tip">⚠️ 位运算只适合整数，浮点数不能用。左移相当于乘以 2 的 k 次方、右移相当于除以 2 的 k 次方，但编译器优化会自动用移位代替乘除法，你写不写都一样快——关键是能读懂别人的位运算技巧。</div>`
       }
     ],
     refs: [CS_REFS.entry, CS_REFS.tools].concat(C_SOURCES)
@@ -386,6 +480,50 @@ for (int i = 0; i &lt; 3; i++) {
   }
   printf("\\n");     // 每行结束后换行
 }</code></pre>`
+      },
+      {
+        id: 'array_name_as_ptr',
+        title: '数组名到底是什么？（数组名与指针）',
+        html: `<p>这是 C 语言<strong>最容易混淆</strong>的概念之一，也是考研/期末/面试高频考点：</p>
+<pre><code>int a[5] = {1, 2, 3, 4, 5};
+int *p = a;          // ✅ 能过编译，说明 a 确实能当指针用
+printf("%d", a[2]);   // 3
+printf("%d", p[2]);   // 3，和 a[2] 一样
+printf("%d", *(a+2)); // 3，等价写法</code></pre>
+<p><strong>核心规则（标准原文）</strong>：</p>
+<ol>
+  <li>在大多数表达式中，<strong>数组名会自动退化成首元素的地址</strong>（<code>&amp;a[0]</code>）。这就是为什么 <code>a</code> 能赋给 <code>int*</code>。</li>
+  <li>但有<strong>三个例外</strong>数组名不会退化：<strong>sizeof</strong>（<code>sizeof(a)</code> 得到整个数组大小）、<strong>&amp;</strong>（<code>&amp;a</code> 得到"指向整个数组的指针"）、<strong>字符串字面量</strong>（作为初始化器时）。</li>
+</ol>
+<p>所以 <code>a[i]</code> 的本质就是 <code>*(a + i)</code>——数组下标运算符在编译器里就是这么展开的。</p>
+<div class="doc-tip">⚠️ 经典反例：<code>int a[5]; int b[5]; a = b;</code> 编译报错——因为赋值时数组名<strong>没有退化成指针</strong>，C 不允许整体赋值数组。要复制数组只能用 <code>memcpy</code> 或循环逐个元素。</div>`
+      },
+      {
+        id: 'ptr_and_2d_array',
+        title: '指针与多维数组（考研/期末重点）',
+        html: `<p>二维数组和指针的关系更绕——<strong>二维数组名会退化成「指向第一行的指针」</strong>（一个指向数组的指针，也称"行指针"）：</p>
+<pre><code>int m[3][4];
+int (*p)[4] = m;    // ✅ p 指向"由 4 个 int 组成的一行"
+
+// 下面三者等价：
+m[0][1];
+p[0][1];
+(*(p + 0))[1];
+
+// 但 m 和 *(m+0) 类型不同：
+// m     → 指向行的指针（类型 int(*)[4]）
+// *(m+0) → 指向 int 的指针（类型 int*），即第一行首元素</code></pre>
+<p><strong>指针数组 vs 数组指针（容易混）</strong>：</p>
+<ul>
+  <li><code>int *p[4]</code> → <strong>指针数组</strong>，4 个元素每个是 <code>int*</code>（存 4 个地址）。<code>[]</code> 优先级高于 <code>*</code>。</li>
+  <li><code>int (*p)[4]</code> → <strong>数组指针</strong>，p 指向一个"4 个 int 的数组"。括号改变了优先级。</li>
+</ul>
+<p>初始化动态二维数组时，常用「一级指针数组」来模拟：</p>
+<pre><code>int **m = malloc(3 * sizeof(int*));   // 3 行
+for (int i = 0; i &lt; 3; i++)
+  m[i] = malloc(4 * sizeof(int));     // 每行 4 列
+// 用完记得逐行 free</code></pre>
+<div class="doc-tip">💡 记法：<code>*</code> 放括号里的是"指向数组"（数组指针），<code>*</code> 放外面的是"装指针的数组"（指针数组）。<strong>面试必考</strong>。</div>`
       }
     ],
     refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
