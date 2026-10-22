@@ -334,11 +334,11 @@ const CS_STAGE_OVERRIDE = {
     modules: [
       /* C 语言 15 关整合为「C 语言程序设计」一门课，按学习顺序排列 */
       { name: 'C 语言程序设计', levels: [CS_INTRO_LEVELS[0], CS_INTRO_LEVELS[8], CS_INTRO_LEVELS[7], CS_INTRO_LEVELS[1], CS_INTRO_LEVELS[9], CS_INTRO_LEVELS[2], CS_INTRO_LEVELS[10], CS_INTRO_LEVELS[3], CS_INTRO_LEVELS[11], CS_INTRO_LEVELS[12], CS_INTRO_LEVELS[4], CS_INTRO_LEVELS[13], CS_INTRO_LEVELS[5], CS_INTRO_LEVELS[6], CS_INTRO_LEVELS[14]] },
-      { name: '计算机导论与伦理', levels: null },
+      { name: '计算机科学与导论', levels: null },
       { name: '高等数学（上）', levels: null },
       { name: '高等数学（下）', levels: null },
       { name: '线性代数', levels: null },
-      { name: '面向对象程序设计（Java）', levels: null }
+      { name: '面向对象程序设计（C++）', levels: null }
     ]
   },
   '大二 · 专业基础': {
@@ -346,7 +346,7 @@ const CS_STAGE_OVERRIDE = {
       { name: '数据结构', levels: null },
       { name: '离散数学', levels: null },
       { name: '数字逻辑', levels: null },
-      { name: '计算机组织与结构', levels: null },
+      { name: '计算机组成与结构', levels: null },
       { name: '概率论与数理统计', levels: null },
       { name: '数据库原理', levels: null },
       { name: '数值计算', levels: null }
@@ -395,7 +395,7 @@ const CS_MODULE_RESOURCES = {
     { name: 'UCB CS61B: Data Structures and Algorithms', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS61B/', desc: 'Java 主讲的数据结构课，项目驱动' },
     { name: 'MIT 6.006: Introduction to Algorithms', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.006/', desc: '算法导论配套课程' }
   ],
-  '计算机组织与结构': [
+  '计算机组成与结构': [
     { name: 'CMU 15-213: CSAPP', school: 'CMU', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/', desc: '深入理解计算机系统，CS 必读经典' },
     { name: 'UCB CS61C: Great Ideas in Computer Architecture', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/CS61C/', desc: '体系结构核心思想' }
   ],
@@ -417,7 +417,7 @@ const CS_MODULE_RESOURCES = {
   '软件工程': [
     { name: 'UCB CS169: Software Engineering', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/', desc: '敏捷开发与 SaaS 项目实战' }
   ],
-  '计算机导论与伦理': [
+  '计算机科学与导论': [
     { name: 'UCB CS61A: SICP (Python)', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS61A/', desc: 'SICP 的 Python 改编版，无数人的自学起点' },
     { name: 'MIT Missing Semester', school: 'MIT', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/MIT-Missing-Semester/', desc: 'CSer 的效率工具集训' }
   ],
@@ -427,8 +427,8 @@ const CS_MODULE_RESOURCES = {
   '高等数学（下）': [
     { name: 'MIT 18.02: Multivariable Calculus', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.02/', desc: '多变量微积分' }
   ],
-  '面向对象程序设计（Java）': [
-    { name: 'UCB CS61B: Data Structures and Algorithms', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS61B/', desc: 'Java 主讲的数据结构课，项目驱动' }
+  '面向对象程序设计（C++）': [
+    { name: 'Stanford CS106B: Programming Abstractions in C++', school: 'Stanford', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C++/Stanford-CS106B/', desc: 'C++ 主讲的面向对象与数据结构入门课' }
   ],
   '数字逻辑': [
     { name: 'Nand2Tetris: From Nand to Tetris', school: 'Hebrew University', url: 'https://csdiy.wiki/%E7%A1%AC%E4%BB%B6%E4%B8%8E%E7%B3%BB%E7%BB%9F/Nand2Tetris/', desc: '从与非门搭出一台计算机，逻辑设计入门神课' }

@@ -723,14 +723,14 @@
 
   // 大一其余占位模块（南昌大学培养方案）
   var freshmanPlaceholders = [
-    '计算机导论与伦理', '高等数学（上）', '高等数学（下）', '线性代数', '面向对象程序设计（Java）'
+    '计算机科学与导论', '高等数学（上）', '高等数学（下）', '线性代数', '面向对象程序设计（C++）'
   ];
   freshmanPlaceholders.forEach(function (m) {
     override[TITLES[0]].modules.push({ name: m, levels: null });
   });
 
   // 大二 · 专业基础
-  var sophomoreModules = ['数据结构', '离散数学', '数字逻辑', '计算机组织与结构', '概率论与数理统计', '数据库原理', '数值计算'];
+  var sophomoreModules = ['数据结构', '离散数学', '数字逻辑', '计算机组成与结构', '概率论与数理统计', '数据库原理', '数值计算'];
   sophomoreModules.forEach(function (m) {
     override[TITLES[1]].modules.push({ name: m, levels: null });
   });
