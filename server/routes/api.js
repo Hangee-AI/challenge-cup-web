@@ -115,17 +115,20 @@ router.get('/majors/:id', (req, res) => {
 router.get('/majors/:id/resources', (req, res) => {
   const major = store.getMajor(req.params.id);
   if (!major) return res.status(404).json({ error: 'major not found' });
-  // 目前仅计算机专业模块挂有 csdiy 推荐课程
-  res.json(store.CS_MODULE_RESOURCES);
+  // 计科与软件工程专业挂有 csdiy 推荐课程
+  let resources = store.CS_MODULE_RESOURCES;
+  if (major.id === 'engineering-软件工程') resources = store.SE_MODULE_RESOURCES;
+  res.json(resources);
 });
 
 router.get('/levels/:id', (req, res) => {
-  // 先遍历所有能生成的专业路径找关卡
-  const majors = store.getPath('engineering-计算机科学与技术')
-    ? [store.getPath('engineering-计算机科学与技术')] : [];
+  // 遍历计科与软件工程专业路径找关卡
+  const paths = [
+    store.getPath('engineering-计算机科学与技术'),
+    store.getPath('engineering-软件工程')
+  ].filter(Boolean);
   let found = null;
-  majors.forEach(path => {
-    if (!path) return;
+  paths.forEach(path => {
     path.stages.forEach(s => { s.modules.forEach(m => {
       m.levels.forEach(lv => {
         if (lv.id === req.params.id) found = lv;
@@ -138,11 +141,12 @@ router.get('/levels/:id', (req, res) => {
 
 router.post('/levels/:id/check', (req, res) => {
   const body = req.body || {};
-  const majors = store.getPath('engineering-计算机科学与技术')
-    ? [store.getPath('engineering-计算机科学与技术')] : [];
+  const paths = [
+    store.getPath('engineering-计算机科学与技术'),
+    store.getPath('engineering-软件工程')
+  ].filter(Boolean);
   let found = null;
-  majors.forEach(path => {
-    if (!path) return;
+  paths.forEach(path => {
     path.stages.forEach(s => { s.modules.forEach(m => {
       m.levels.forEach(lv => {
         if (lv.id === req.params.id) found = lv;

@@ -47,7 +47,7 @@ const MAJOR_ROWS = [
   ['science',     '生物科学',                 '🧬', '生命与机制'],
   ['science',     '统计学',                   '📊', '从数据里找规律'],
   ['engineering', '计算机科学与技术',         '💻', '编程与系统', 1],
-  ['engineering', '软件工程',                 '🧩', '把需求做成产品'],
+  ['engineering', '软件工程',                 '🧩', '把需求做成产品', 1],
   ['engineering', '电子信息工程',             '📡', '信号与电路'],
   ['engineering', '自动化',                   '🤖', '让机器自己动'],
   ['engineering', '机械设计制造及其自动化',   '⚙️', '设计并造出机构'],
@@ -446,6 +446,77 @@ const CS_MODULE_RESOURCES = {
   ]
 };
 
+/* 南昌大学 · 软件工程专业（2024 版培养方案）
+   依据：https://jwccs.ncu.edu.cn/docs/2024-11/dc76c6fa9e71455e8a46fa344e4857d7.pdf
+   课程名称与 js/se-courses.js 中的 SE_STAGES 保持一致。 */
+const SE_STAGE_OVERRIDE = {
+  '大一 · 打地基': {
+    modules: [
+      { name: 'C 语言程序设计', levels: null },
+      { name: '计算机科学与导论', levels: null },
+      { name: '高等数学（上）', levels: null },
+      { name: '高等数学（下）', levels: null },
+      { name: '线性代数', levels: null },
+      { name: '数字逻辑', levels: null },
+      { name: '面向对象程序设计（C++）', levels: null },
+      { name: '大学物理', levels: null },
+      { name: '软件工程导论', levels: null }
+    ]
+  },
+  '大二 · 专业基础': {
+    modules: [
+      { name: '数据结构', levels: null },
+      { name: '离散数学', levels: null },
+      { name: '计算机系统基础', levels: null },
+      { name: '概率论与数理统计', levels: null },
+      { name: '计算机网络', levels: null },
+      { name: '操作系统', levels: null },
+      { name: '数据库原理', levels: null },
+      { name: '算法分析与设计', levels: null },
+      { name: 'Python大数据分析与可视化', levels: null },
+      { name: '软件开发实训', levels: null }
+    ]
+  },
+  '大三 · 核心专业课': {
+    modules: [
+      { name: '软件系统分析与设计', levels: null },
+      { name: '软件项目管理', levels: null },
+      { name: '软件工程经济学', levels: null },
+      { name: '软件测试', levels: null },
+      { name: '工程伦理与网络安全法', levels: null }
+    ]
+  },
+  '大四 · 出口': {
+    modules: [
+      { name: '软件综合实训', levels: null },
+      { name: '毕业实习', levels: null },
+      { name: '毕业设计', levels: null }
+    ]
+  }
+};
+
+/* 软件工程专业模块推荐课程（与计科共享的课程复用 CS_MODULE_RESOURCES） */
+const SE_MODULE_RESOURCES = Object.assign({}, CS_MODULE_RESOURCES, {
+  '软件工程导论': [
+    { name: 'UCB CS169: Software Engineering', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/', desc: '软件工程方法论与实践' }
+  ],
+  '计算机系统基础': [
+    { name: 'CMU 15-213: CSAPP', school: 'CMU', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/', desc: '深入理解计算机系统，CS 必读经典' }
+  ],
+  'Python大数据分析与可视化': [
+    { name: 'MIT 6.0001: Introduction to CS and Programming in Python', school: 'MIT', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/MIT-6.0001/', desc: 'Python 编程入门' }
+  ],
+  '软件系统分析与设计': [
+    { name: 'UCB CS169: Software Engineering', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/', desc: '敏捷开发与 SaaS 项目实战' }
+  ],
+  '软件项目管理': [
+    { name: 'CMU 17-803: Empirical Methods', school: 'CMU', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/17803/', desc: '软件工程中的实证方法' }
+  ],
+  '软件测试': [
+    { name: 'UCB CS169: Software Engineering', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/', desc: '测试驱动开发与软件质量保证' }
+  ]
+});
+
 /* ---------- 构建工具函数 ---------- */
 
 function buildLevels(majorId, moduleIndex, realLevels) {
@@ -493,7 +564,9 @@ function getPath(majorId) {
   var major = getMajor(majorId);
   if (!major) return null;
   var tpl = PATH_TEMPLATE[major.cat];
-  var override = major.id === 'engineering-计算机科学与技术' ? CS_STAGE_OVERRIDE : {};
+  var override = {};
+  if (major.id === 'engineering-计算机科学与技术') override = CS_STAGE_OVERRIDE;
+  else if (major.id === 'engineering-软件工程') override = SE_STAGE_OVERRIDE;
   var stages = [];
   var moduleIndex = 0;
   for (var i = 0; i < tpl.stages.length; i++) {
@@ -526,5 +599,5 @@ function stripAnswer(lv) {
 /* ---------- 对外接口 ---------- */
 
 module.exports = {
-  getCategory, majorsOfCategory, getMajor, getPath, CS_MODULE_RESOURCES, stripAnswer
+  getCategory, majorsOfCategory, getMajor, getPath, CS_MODULE_RESOURCES, SE_MODULE_RESOURCES, stripAnswer
 };
