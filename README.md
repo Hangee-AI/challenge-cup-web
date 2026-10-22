@@ -73,6 +73,8 @@ challenge-cup-web/
 ├─ js/education-chapters.js 教育学门类 3 个专业：每门课补第 2 章
 ├─ js/logic-chapters.js     逻辑学：每门课补到 3 章（36 关，每学期 9 关）
 ├─ js/law-courses.js        法学：整专业重排为 12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/ip-courses.js         知识产权：12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/sociology-courses.js  社会学：12 门课 × 3 章（36 关，每学期 9 关）
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置
 ├─ js/cloud.js         云端层：探测后端 / 注册登录重置 / 打卡 / 照明统计 / 点亮动画（离线自动隐藏）
