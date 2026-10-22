@@ -6,7 +6,7 @@
    每个模块 = 1 关：brief + doc（文字说明）+ 3 道题。
    ========================================================== */
 
-registerMajorPath('philosophy-逻辑学', [
+registerMajorPath('philosophy-逻辑学', PHILO_STAGE_TITLES, [
 
   /* ============ 大一 · 入门与阅读 ============ */
   {

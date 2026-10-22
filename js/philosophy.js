@@ -24,14 +24,20 @@ var PHILO_STAGE_TITLES = [
   '大四 · 输出与出口'
 ];
 
-/* 把「12 个模块」注册成路径覆盖 + 文字说明 */
-function registerMajorPath(majorId, modules, goals) {
+/* 把「模块表」注册成路径覆盖 + 文字说明
+   - stageTitles：该专业四个阶段的标题（必须与 PATH_TEMPLATE 里的一致）
+   - modules[i].stage：可选，指定该模块属于第几个阶段；
+     不写时按「每阶段 3 个模块」自动分配（哲学 / 逻辑学就是这种）
+   - 关卡 id 由模块序号生成：专业-m<序号>-l0 */
+function registerMajorPath(majorId, stageTitles, modules, goals) {
   var override = {};
-  PHILO_STAGE_TITLES.forEach(function (t, i) {
+  stageTitles.forEach(function (t, i) {
     override[t] = { goal: goals[i], modules: [] };
   });
   modules.forEach(function (m, i) {
-    var t = PHILO_STAGE_TITLES[Math.floor(i / 3)];
+    var si = (typeof m.stage === 'number') ? m.stage : Math.floor(i / 3);
+    var t = stageTitles[si];
+    if (!override[t]) return;
     override[t].modules.push({
       name: m.name,
       levels: [{
@@ -45,8 +51,13 @@ function registerMajorPath(majorId, modules, goals) {
   MAJOR_STAGE_OVERRIDES[majorId] = override;
 }
 
+/* 取某个门类模板的四个阶段标题（新专业复用门类阶段结构时用） */
+function stageTitlesOf(cat) {
+  return PATH_TEMPLATE[cat].stages.map(function (s) { return s.title; });
+}
+
 /* ---------------- 「哲学」专业：12 个模块 ---------------- */
-registerMajorPath('philosophy-哲学', [
+registerMajorPath('philosophy-哲学', PHILO_STAGE_TITLES, [
 
   /* ============ 大一 · 入门与阅读 ============ */
   {
