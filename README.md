@@ -54,6 +54,28 @@
 >
 > 🗺️ 闯关地图目前是**结构版**（阶段分组 + 节点），视觉模板待定稿后替换；替换时只改 `.map-*` 相关样式和 `renderMap()` 的 DOM 结构，数据不用动。
 
+## 学习搭子「小引」（网页内桌面宠物 + DeepSeek）
+
+右下角一只猫头鹰，可拖动、会冒话、点开能聊天。适合演示时"有人陪着你学"的感觉。
+
+- 前端：`js/pet.js`（挂件 UI、拖动、上下文收集、本地兜底回答）
+- 后端：`server/routes/chat.js`（`/api/chat`、`/api/chat/status`，Key 只在服务器上）
+- 样式：`css/style.css` 末尾的 `.pet-*` 区块（含夜猫模式）
+- 说明文档：`docs/学习搭子.md`（怎么配 Key、成本、限流、换模型）
+
+启用方式：给后端一个 DeepSeek Key，任选其一
+
+```powershell
+# A. 环境变量
+$env:DEEPSEEK_API_KEY="sk-xxxx"; npm start
+
+# B. 文件
+#   复制 server/deepseek.example.json → server/data/deepseek.json，填入 apiKey
+```
+
+没配 Key 也能用：猫头鹰会退回本地回答（这关重点 / 给我一道练习 / 我卡住了），页面不会坏。
+限流默认：单 IP 每小时 40 条、全站每天 800 条、单次回答 ≤500 tokens。
+
 ## 目录结构
 
 ```

@@ -10,6 +10,7 @@ const express = require('express');
 const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
 const engageRouter = require('./routes/engage');
+const chatRouter = require('./routes/chat');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next
 
 app.use('/api/auth', authRouter);
 app.use('/api', engageRouter);   // /api/checkin /api/stats /api/light
+app.use('/api', chatRouter);     // /api/chat /api/chat/status（学习搭子）
 app.use('/api', apiRouter);      // 内容接口 & 判题
 
 app.get('/api/ping', (req, res) => res.json({ ok: true, app: 'yinlu', ts: Date.now() }));
