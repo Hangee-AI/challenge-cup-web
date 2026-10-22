@@ -77,6 +77,8 @@ challenge-cup-web/
 ├─ js/sociology-courses.js  社会学：12 门课 × 3 章（36 关，每学期 9 关）
 ├─ js/econ-courses.js       经济学：12 门课 × 3 章（36 关，每学期 9 关）
 ├─ js/finance-courses.js    金融学：12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/trade-courses.js      国际经济与贸易：12 门课 × 3 章（36 关，每学期 9 关）
+├─ js/fiscal-courses.js     财政学：12 门课 × 3 章（36 关，每学期 9 关）
 ├─ js/majors/          食品科学与工程 / 临床医学 / 口腔医学 / 护理学 / 药学：各 12 门课 × 3 章（36 关）
 ├─ js/videos.js        视频层：B 站课程 165 集章节表 + 关卡↔分集映射（VIDEO_MAP）
 ├─ js/app.js           交互层：路由、渲染、判题、解锁、进度存储、主题切换、学习时长、续学位置

@@ -771,7 +771,7 @@ char b[20] = "World";
 
 strcpy(a, b);        // 把 b 复制到 a，a 现在是 "World"
 strcat(a, b);        // 把 b 拼到 a 末尾，a 变成 "WorldWorld"
-strcmp(a, b);        // 比较：a<b 返回负数，相等返回 0，a>b 返回正数
+strcmp(a, b);        // 比较：a&lt;b 返回负数，相等返回 0，a&gt;b 返回正数
 strlen(a);           // 长度</code></pre>
 <table>
 <tr><th>函数</th><th>作用</th><th>注意</th></tr>
