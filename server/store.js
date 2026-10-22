@@ -235,7 +235,37 @@ const CS_STAGE_OVERRIDE = {
     modules: [
       { name: 'C 语言入门', levels: CS_INTRO_LEVELS },
       { name: '高等数学（上）', levels: null },
-      { name: '大学计算机导论', levels: null }
+      { name: '计算机科学导论', levels: null },
+      { name: '线性代数', levels: null },
+      { name: '大学物理', levels: null }
+    ]
+  },
+  '大二 · 专业基础': {
+    modules: [
+      { name: '数据结构', levels: null },
+      { name: '离散数学', levels: null },
+      { name: '计算机组织与结构', levels: null },
+      { name: '面向对象程序设计（Java）', levels: null },
+      { name: '汇编语言程序设计', levels: null },
+      { name: '概率论与数理统计', levels: null }
+    ]
+  },
+  '大三 · 核心专业课': {
+    modules: [
+      { name: '操作系统', levels: null },
+      { name: '计算机网络', levels: null },
+      { name: '数据库原理', levels: null },
+      { name: '编译原理', levels: null },
+      { name: '软件工程', levels: null },
+      { name: '微机原理与接口技术', levels: null }
+    ]
+  },
+  '大四 · 出口': {
+    modules: [
+      { name: '方向选修（Web / 图形学 / 人工智能）', levels: null },
+      { name: '课程设计与生产实习', levels: null },
+      { name: '毕业设计', levels: null },
+      { name: '考研/求职准备', levels: null }
     ]
   }
 };
@@ -247,33 +277,54 @@ const CS_MODULE_RESOURCES = {
     { name: 'Harvard CS50: This is CS50x', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/', desc: '风靡全球的计算机入门课' },
     { name: 'Duke: Introductory C Programming Specialization', school: 'Duke / Coursera', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/Duke-Coursera-Intro-C/', desc: '体系化的 C 语言专项课程' }
   ],
-  '大学计算机导论': [
+  '计算机科学导论': [
     { name: 'UCB CS61A: SICP (Python)', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS61A/', desc: 'SICP 的 Python 改编版，无数人的自学起点' },
     { name: 'CS50P: Introduction to Programming with Python', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/Python/CS50P/', desc: 'CS50 家族的 Python 入门课' },
     { name: 'MIT Missing Semester', school: 'MIT', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/MIT-Missing-Semester/', desc: 'CSer 的效率工具集训' }
   ],
-  '专业基础课 Ⅰ': [
-    { name: 'UCB CS61B: Data Structures and Algorithms', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS61B/', desc: 'Java 主讲的数据结构课，项目驱动' },
-    { name: 'CMU 15-213: CSAPP', school: 'CMU', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/', desc: '深入理解计算机系统，CS 必读经典' }
+  '线性代数': [
+    { name: 'MIT 18.06: Linear Algebra (Gilbert Strang)', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.06/', desc: 'Strang 老爷子的线代神课' }
   ],
-  '专业基础课 Ⅱ': [
-    { name: 'MIT 6.1810 (6.S081): Operating System Engineering', school: 'MIT', url: 'https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6.S081/', desc: '基于 xv6 的操作系统工程课' },
+  '概率论与数理统计': [
+    { name: 'Harvard Stat 110: Probability', school: 'Harvard', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/Stat110/', desc: '概率论入门名课' }
+  ],
+  '离散数学': [
+    { name: 'MIT 6.042J: Mathematics for Computer Science', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/6.042/', desc: '专为 CS 学生设计的数学课' }
+  ],
+  '数据结构': [
+    { name: 'UCB CS61B: Data Structures and Algorithms', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/CS61B/', desc: 'Java 主讲的数据结构课，项目驱动' },
+    { name: 'MIT 6.006: Introduction to Algorithms', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.006/', desc: '算法导论配套课程' }
+  ],
+  '计算机组织与结构': [
+    { name: 'CMU 15-213: CSAPP', school: 'CMU', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/', desc: '深入理解计算机系统，CS 必读经典' },
     { name: 'UCB CS61C: Great Ideas in Computer Architecture', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/CS61C/', desc: '体系结构核心思想' }
   ],
-  '专业核心课 Ⅰ': [
+  '操作系统': [
+    { name: 'MIT 6.1810 (6.S081): Operating System Engineering', school: 'MIT', url: 'https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6.S081/', desc: '基于 xv6 的操作系统工程课' },
+    { name: 'NJU OS: Operating System (蒋炎岩)', school: '南京大学', url: 'https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/NJU-OS/', desc: '蒋炎岩老师的中文 OS 课，B 站全程录像' }
+  ],
+  '计算机网络': [
     { name: 'UCB CS168: Introduction to the Internet', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/CS168/', desc: '互联网架构与协议' },
-    { name: 'Stanford CS144: Computer Network', school: 'Stanford', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/CS144/', desc: '亲手实现一个 TCP' },
-    { name: 'UCB CS186: Introduction to Database System', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/CS186/', desc: '数据库系统导论' }
+    { name: 'Stanford CS144: Computer Network', school: 'Stanford', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/CS144/', desc: '亲手实现一个 TCP' }
   ],
-  '专业核心课 Ⅱ': [
-    { name: 'MIT 6.006: Introduction to Algorithms', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/6.006/', desc: '算法导论配套课程' },
-    { name: 'Stanford CS143: Compilers', school: 'Stanford', url: 'https://csdiy.wiki/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/CS143/', desc: '编译器原理与实现' },
-    { name: 'UCB CS161: Computer Security', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E7%B3%BB%E7%BB%9F%E5%AE%89%E5%85%A8/CS161/', desc: '计算机安全导论' }
+  '数据库原理': [
+    { name: 'UCB CS186: Introduction to Database System', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/CS186/', desc: '数据库系统导论' },
+    { name: 'CMU 15-445: Database Systems', school: 'CMU', url: 'https://csdiy.wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/15445/', desc: 'Andy Pavlo 的数据库系统，lab 硬核' }
   ],
-  '课程设计/项目': [
+  '编译原理': [
+    { name: 'Stanford CS143: Compilers', school: 'Stanford', url: 'https://csdiy.wiki/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/CS143/', desc: '编译器原理与实现' }
+  ],
+  '软件工程': [
+    { name: 'UCB CS169: Software Engineering', school: 'UC Berkeley', url: 'https://csdiy.wiki/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/CS169/', desc: '敏捷开发与 SaaS 项目实战' }
+  ],
+  '方向选修（Web / 图形学 / 人工智能）': [
+    { name: 'Stanford CS229: Machine Learning', school: 'Stanford', url: 'https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/CS229/', desc: '理论扎实的机器学习课' },
+    { name: 'Stanford CS231n: CNN for Visual Recognition', school: 'Stanford', url: 'https://csdiy.wiki/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/CS231n/', desc: '深度学习视觉方向名课' },
+    { name: 'GAMES101: 现代计算机图形学入门（闫令琪）', school: 'UCSB / 国内', url: 'https://csdiy.wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/GAMES101/', desc: '中文图形学入门首选' }
+  ],
+  '课程设计与生产实习': [
     { name: 'CMU 15-418 / Stanford CS149: Parallel Computing', school: 'CMU / Stanford', url: 'https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/CS149/', desc: '并行计算' },
-    { name: 'MIT 6.5840 (6.824): Distributed System', school: 'MIT', url: 'https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/MIT6.824/', desc: '分布式系统经典课' },
-    { name: 'Stanford CS229: Machine Learning', school: 'Stanford', url: 'https://csdiy.wiki/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/CS229/', desc: '理论扎实的机器学习课' }
+    { name: 'MIT 6.5840 (6.824): Distributed System', school: 'MIT', url: 'https://csdiy.wiki/%E5%B9%B6%E8%A1%8C%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/MIT6.824/', desc: '分布式系统经典课' }
   ]
 };
 

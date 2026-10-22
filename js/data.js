@@ -504,13 +504,45 @@ const CS_INTRO_LEVELS = [
   }
 ];
 
-/* 计算机专业的大一阶段，把「C 语言入门」换成有真题的模块 */
+/* 计算机专业四年完整路径：参考南昌大学计算机科学与技术专业培养方案
+   （依据国际 CC2001 / 国家 CCC2002 课程体系），大一到大四全部换成真实课程名。
+   只有「C 语言入门」带真题关卡，其余模块按占位关卡生成，后续逐步补充。 */
 const CS_STAGE_OVERRIDE = {
   '大一 · 打地基': {
     modules: [
       { name: 'C 语言入门', levels: CS_INTRO_LEVELS },
       { name: '高等数学（上）', levels: null },
-      { name: '大学计算机导论', levels: null }
+      { name: '计算机科学导论', levels: null },
+      { name: '线性代数', levels: null },
+      { name: '大学物理', levels: null }
+    ]
+  },
+  '大二 · 专业基础': {
+    modules: [
+      { name: '数据结构', levels: null },
+      { name: '离散数学', levels: null },
+      { name: '计算机组织与结构', levels: null },
+      { name: '面向对象程序设计（Java）', levels: null },
+      { name: '汇编语言程序设计', levels: null },
+      { name: '概率论与数理统计', levels: null }
+    ]
+  },
+  '大三 · 核心专业课': {
+    modules: [
+      { name: '操作系统', levels: null },
+      { name: '计算机网络', levels: null },
+      { name: '数据库原理', levels: null },
+      { name: '编译原理', levels: null },
+      { name: '软件工程', levels: null },
+      { name: '微机原理与接口技术', levels: null }
+    ]
+  },
+  '大四 · 出口': {
+    modules: [
+      { name: '方向选修（Web / 图形学 / 人工智能）', levels: null },
+      { name: '课程设计与生产实习', levels: null },
+      { name: '毕业设计', levels: null },
+      { name: '考研/求职准备', levels: null }
     ]
   }
 };
@@ -600,6 +632,11 @@ function findLevel(path, levelId) {
 
 /* ---------------- 10. 首页：公告轮播 / 鼓励语 / 头像 ---------------- */
 var ANNOUNCEMENTS = [
+  {
+    tag: '更新', emoji: '🏫', tone: 'blue',
+    title: '计科路径换成南大真实培养方案',
+    desc: '计算机专业大一到大四 21 门课全部按南昌大学计科课程体系排好：数据结构、操作系统、计网、数据库、编译原理……C 语言入门 7 关已可做题，其余课程陆续补内容。'
+  },
   {
     tag: '更新', emoji: '🆕', tone: 'blue',
     title: 'C 语言入门已扩到 7 关',
