@@ -1,0 +1,146 @@
+/* ==========================================================
+   学习数据（题目 / 方向 / 学习方式）
+   说明：纯静态项目，为了能直接双击 index.html 打开，
+   数据放在 js 文件里而不是 json（file:// 下 fetch 会被浏览器拦截）。
+   ========================================================== */
+
+/** 专业方向 */
+const TRACKS = [
+  { id: 'cs',    name: '计算机 / 软件',  emoji: '💻', desc: '打牢语法与算法基础' },
+  { id: 'ee',    name: '电子 / 自动化',  emoji: '🔌', desc: 'C 语言是硬件入门的第一课' },
+  { id: 'other', name: '其他专业',        emoji: '🧩', desc: '想补一门能用的编程技能' }
+];
+
+/** 学习方向：目前只开放 C 语言 */
+const TOPICS = [
+  { id: 'c',       name: 'C 语言',     emoji: '🅲', enabled: true,  desc: '大一课程常用，语法基础' },
+  { id: 'python',  name: 'Python',     emoji: '🐍', enabled: false, desc: '即将开放' },
+  { id: 'web',     name: '前端网页',    emoji: '🌐', enabled: false, desc: '即将开放' },
+  { id: 'algo',    name: '算法入门',    emoji: '🧮', enabled: false, desc: '即将开放' }
+];
+
+/** 学习方式 */
+const STYLES = [
+  { id: 'game',    name: '闯关模式',   emoji: '🎮', desc: '直接做题，一关一关往前推' },
+  { id: 'video',   name: '先看讲解',   emoji: '🎬', desc: '每关先看要点，再做题' },
+  { id: 'example', name: '先看例题',   emoji: '📝', desc: '先看一个例子，照着理解' }
+];
+
+/** 关卡（MVP：4 关 × 3 题） */
+const LEVELS = [
+  {
+    id: 'l1',
+    title: '第 1 关 · 认识你的第一行代码',
+    brief: 'C 程序从 main 函数开始执行。printf 负责把内容打印到屏幕上；变量是给数据起的名字，类型写在变量名前面。',
+    questions: [
+      {
+        stem: '想让程序在屏幕上输出 Hello, C! —— 下面哪种写法是正确的？',
+        options: [
+          'printf("Hello, C!");',
+          'print("Hello, C!");',
+          'console.log("Hello, C!");',
+          'echo "Hello, C!";'
+        ],
+        answer: 0,
+        explain: 'C 语言用 printf 输出，字符串要放在双引号里，语句结尾要有分号。print 是 Python 的写法，console.log 是 JavaScript 的。'
+      },
+      {
+        stem: '在 C 语言里，定义一个整数变量 age 并赋值为 18，写法正确的是？',
+        options: [
+          'int age = 18;',
+          'age = int 18;',
+          'var age = 18;',
+          'integer age := 18;'
+        ],
+        answer: 0,
+        explain: '格式是「类型 变量名 = 值;」。int 表示整数，写在变量名前面。var 是别的语言的写法。'
+      },
+      {
+        stem: '执行下面两行代码后，a 的值是？\n\nint a = 3;\na = a + 1;',
+        options: ['3', '4', '5', '程序报错'],
+        answer: 1,
+        explain: '先算等号右边的 a + 1（3 + 1 = 4），再把 4 赋值给 a，所以 a 变成 4。'
+      }
+    ]
+  },
+  {
+    id: 'l2',
+    title: '第 2 关 · 让程序学会判断',
+    brief: 'if 让程序做选择：条件成立走一条路，不成立走另一条。注意单个 = 是赋值，两个 == 才是比较。',
+    questions: [
+      {
+        stem: 'score 是已经定义好的变量。要判断「成绩及格（60 分及以上）」，哪个写法正确？',
+        options: [
+          'if (score >= 60)',
+          'if score >= 60',
+          'if (score => 60)',
+          'while (score >= 60)'
+        ],
+        answer: 0,
+        explain: 'if 的条件必须写在圆括号里；「大于等于」是 >=，=> 不是 C 语言里的运算符；while 是循环不是判断。'
+      },
+      {
+        stem: '下面这段程序会输出什么？\n\nint a = 5, b = 8;\nif (a > b) printf("A");\nelse printf("B");',
+        options: ['A', 'B', 'AB', '什么都不输出'],
+        answer: 1,
+        explain: '5 > 8 不成立，所以跳过 if 分支，执行 else 分支，输出 B。'
+      },
+      {
+        stem: '下面哪个符号用来判断「两个数是否相等」？',
+        options: ['=（单个等号）', '==（两个等号）', '>=', '!='],
+        answer: 1,
+        explain: '单个 = 是赋值（把右边放进左边），两个 == 才是比较是否相等；!= 表示「不等于」。'
+      }
+    ]
+  },
+  {
+    id: 'l3',
+    title: '第 3 关 · 重复的力量',
+    brief: 'for 循环把同一段代码重复执行。要看清三件事：从哪开始、什么时候停、每次怎么变。',
+    questions: [
+      {
+        stem: '下面这段程序会输出什么？\n\nfor (int i = 1; i <= 3; i++) printf("%d", i);',
+        options: ['123', '012', '1234', '321'],
+        answer: 0,
+        explain: 'i 依次取 1、2、3 并打印；当 i 变成 4 时，4 <= 3 不成立，循环结束。'
+      },
+      {
+        stem: '下面这个循环，循环体一共执行多少次？\n\nfor (int i = 0; i < 5; i++) { /* 循环体 */ }',
+        options: ['4 次', '5 次', '6 次', '无限次'],
+        answer: 1,
+        explain: 'i 取 0、1、2、3、4 共 5 个值；当 i = 5 时 5 < 5 不成立，循环退出。'
+      },
+      {
+        stem: '循环结束时，i 的值是多少？\n\nint i = 0;\nwhile (i < 3) { i++; }',
+        options: ['0', '2', '3', '死循环'],
+        answer: 2,
+        explain: 'i 从 0 开始，每轮加 1：0 → 1 → 2 → 3。当 i = 3 时 3 < 3 不成立，循环退出，此时 i 就是 3。'
+      }
+    ]
+  },
+  {
+    id: 'l4',
+    title: '第 4 关 · 把一组数存起来',
+    brief: '数组是连续存放的一排变量。C 语言的数组下标从 0 开始，所以长度为 5 的数组，最后一个元素是 nums[4]。',
+    questions: [
+      {
+        stem: 'int nums[5]; 这行代码定义了一个数组，它最多能放几个整数？',
+        options: ['4 个', '5 个', '6 个', '不确定'],
+        answer: 1,
+        explain: '方括号里的数字就是元素个数，int nums[5] 表示能放 5 个整数，下标范围是 0 ~ 4。'
+      },
+      {
+        stem: 'C 语言里，数组的下标是从几开始的？',
+        options: ['0', '1', '-1', '没有规定'],
+        answer: 0,
+        explain: '从 0 开始。所以第一个元素是 nums[0]，第二个是 nums[1]，以此类推。'
+      },
+      {
+        stem: '下面这段程序会输出什么？\n\nint nums[3] = {10, 20, 30};\nprintf("%d", nums[1]);',
+        options: ['10', '20', '30', '1'],
+        answer: 1,
+        explain: 'nums[0] 是 10，nums[1] 是 20，nums[2] 是 30，所以输出 20。'
+      }
+    ]
+  }
+];

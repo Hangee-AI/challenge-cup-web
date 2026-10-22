@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>闯关学编程 · 新生编程入门引导</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">🎯 <span>闯关学编程</span></div>
+    <div class="progress-wrap" id="topProgressWrap" hidden>
+      <div class="progress-track"><div class="progress-fill" id="topProgressFill"></div></div>
+      <span class="progress-text" id="topProgressText">0%</span>
+    </div>
+    <button class="ghost-btn small" id="homeBtn" hidden>首页</button>
+  </header>
+
+  <main class="app">
+
+    <!-- ========== 欢迎页 ========== -->
+    <section class="view" id="view-welcome">
+      <div class="hero">
+        <p class="eyebrow">写给刚上大学的你</p>
+        <h1>想自学编程，<br />却不知道从哪下手？</h1>
+        <p class="sub">
+          先花 30 秒告诉我们：你学什么、想怎么学。<br />
+          然后一关一关，把基础真正打下来。
+        </p>
+        <div class="hero-actions">
+          <button class="primary-btn" id="startBtn">开始第一步 →</button>
+          <button class="text-btn" id="continueBtn" hidden>继续上次进度</button>
+        </div>
+        <ul class="hero-points">
+          <li>✅ 每关 3 道题，10 分钟一关</li>
+          <li>✅ 答错立刻告诉你为什么</li>
+          <li>✅ 进度自动保存，随时接着学</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== 选择页 ========== -->
+    <section class="view" id="view-setup" hidden>
+      <h2 class="view-title">先认识一下你</h2>
+      <p class="view-sub">这些选择只影响推荐内容，之后可以随时回来改。</p>
+
+      <div class="setup-block">
+        <p class="setup-label">1. 你的专业方向</p>
+        <div class="chip-group" id="trackGroup"></div>
+      </div>
+
+      <div class="setup-block">
+        <p class="setup-label">2. 你想学什么</p>
+        <div class="chip-group" id="topicGroup"></div>
+      </div>
+
+      <div class="setup-block">
+        <p class="setup-label">3. 你喜欢的学习方式</p>
+        <div class="chip-group" id="styleGroup"></div>
+      </div>
+
+      <button class="primary-btn block" id="beginBtn" disabled>进入闯关地图</button>
+    </section>
+
+    <!-- ========== 地图页 ========== -->
+    <section class="view" id="view-map" hidden>
+      <div class="map-head">
+        <div>
+          <h2 class="view-title">C 语言 · 入门闯关</h2>
+          <p class="map-sub" id="mapSub"></p>
+        </div>
+        <button class="ghost-btn" id="reportBtn">学习报告</button>
+      </div>
+      <div class="level-list" id="levelList"></div>
+    </section>
+
+    <!-- ========== 答题页 ========== -->
+    <section class="view" id="view-level" hidden>
+      <div class="level-head">
+        <button class="text-btn" id="backToMap">← 返回地图</button>
+        <span class="level-name" id="levelName"></span>
+        <span class="q-count" id="qCount"></span>
+      </div>
+
+      <div class="brief-box" id="briefBox" hidden></div>
+
+      <div class="card question-card">
+        <p class="q-stem" id="qStem"></p>
+        <div class="option-list" id="optionList"></div>
+
+        <div class="feedback" id="feedback" hidden>
+          <p class="feedback-title" id="feedbackTitle"></p>
+          <p class="feedback-explain" id="feedbackExplain"></p>
+          <button class="primary-btn" id="nextBtn">下一题 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 报告页 ========== -->
+    <section class="view" id="view-result" hidden>
+      <h2 class="view-title">学习报告</h2>
+      <p class="view-sub" id="reportSub"></p>
+
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="card records-card">
+        <h3>关卡记录</h3>
+        <div id="levelRecords"></div>
+      </div>
+
+      <div class="result-actions">
+        <button class="ghost-btn" id="backToMap2">← 返回地图</button>
+        <button class="ghost-btn danger" id="resetBtn">重置全部进度</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">第二十届“挑战杯”南昌大学 · 院赛作品原型</footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
