@@ -1808,3 +1808,14 @@ html[data-theme="night"] .stale-hint {
   color: #e6c98a;
 }
 html[data-theme="night"] .stale-hint b { color: #f2d79b; }
+
+/* ---- 题目页右上角：看这一关的讲解 ---- */
+.level-top .level-explain {
+  color: var(--brand);
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  font-weight: 600;
+}
+.level-top .level-explain:hover { text-decoration: none; filter: brightness(1.04); }

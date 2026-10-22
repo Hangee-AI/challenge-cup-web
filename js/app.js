@@ -685,11 +685,11 @@
     });
   }
 
-  /* ---------------- 打开关卡：先按学习方式分流 ---------------- */
-  function openLevel(levelId, fromMap) {
+  /* ---------------- 进入关卡：只做状态准备，不决定落在哪个页面 ---------------- */
+  function enterLevel(levelId, fromMap) {
     var path = getPath(state.majorId);
     var found = path && findLevel(path, levelId);
-    if (!found) { show('map'); return; }
+    if (!found) { show('map'); return null; }
 
     state.levelId = levelId;
     state.qi = 0;
@@ -697,15 +697,33 @@
     state.fromMap = fromMap !== false;
     state.levelMeta = found;
     remember({ page: null, docY: 0 });
+    return found;
+  }
 
-    // 视频讲解：进 B 站课程页（左侧是整门课的目录）
+  /* 从路径 / 文档目录进关卡：先看讲解（视频或文档），再点「开始做题」 */
+  function openLevel(levelId, fromMap) {
+    var found = enterLevel(levelId, fromMap);
+    if (!found) return;
+
     if (state.style === 'video') {
       state.videoPage = null;   // 每次进关卡重新定位到本关第一集
       show('video');
       return;
     }
-
     show('doc');
+  }
+
+  /* 从闯关地图点圆点：直接进题目（选择题 → 代码任务） */
+  function startLevelQuiz(levelId, fromMap) {
+    var found = enterLevel(levelId, fromMap);
+    if (!found) return;
+    startQuiz();
+  }
+
+  /* 在题目页点「看这一关的讲解」：回到讲解页 */
+  function openExplainOfCurrentLevel() {
+    if (!state.levelId) return;
+    openLevel(state.levelId, state.fromMap);
   }
 
   /* ---------------- 视频讲解页 ---------------- */
@@ -976,6 +994,7 @@
     if (!found) { show('map'); return; }
     $('crumb').textContent = found.module.name + ' · ' + found.stage.title;
     $('levelName').textContent = found.level.name;
+    $('openExplain').textContent = state.style === 'video' ? '🎬 看这一关的视频' : '📖 看这一关的讲解';
     state.quizDone = false;
 
     if (!found.level.questions) {
@@ -1330,9 +1349,15 @@
     var lv = e.target.closest('[data-level]');
     if (lv) {
       e.preventDefault();
-      // 文档页左侧目录切换关卡时，保持"从哪来"的返回目标不变
-      var keepFrom = lv.classList.contains('doc-nav-item') ? state.fromMap : true;
-      openLevel(lv.getAttribute('data-level'), keepFrom);
+      var lvId = lv.getAttribute('data-level');
+      // 闯关地图的圆点：直接进题目；路径页 / 文档目录：先进讲解
+      if (lv.classList.contains('jnode')) {
+        startLevelQuiz(lvId, true);
+      } else {
+        // 文档页左侧目录切换关卡时，保持"从哪来"的返回目标不变
+        var keepFrom = lv.classList.contains('doc-nav-item') ? state.fromMap : true;
+        openLevel(lvId, keepFrom);
+      }
       return;
     }
     var vp = e.target.closest('[data-page]');
@@ -1389,6 +1414,7 @@
   });
 
   $('backToMap').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
+  $('openExplain').addEventListener('click', function (e) { e.preventDefault(); openExplainOfCurrentLevel(); });
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
   $('docStartQuiz').addEventListener('click', startQuiz);
   $('docBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
