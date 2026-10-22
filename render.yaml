@@ -1,0 +1,16 @@
+# Render 部署配置（免费版）
+# 用法：Render → New → Blueprint → 选这个仓库 → Apply
+# 说明：本项目是「Express 托管前端 + /api 接口」的单服务，
+#      部署后同一个域名既能打开网页，也能注册/登录/打卡。
+services:
+  - type: web
+    name: yinlu
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/ping
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
