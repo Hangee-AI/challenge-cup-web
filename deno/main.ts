@@ -523,7 +523,71 @@ async function handle(req: Request): Promise<Response> {
   if (path === '/api/chat/status') return json(await chatStatus(), 200, cors);
   if (path === '/api/chat' && req.method === 'POST') return await handleChat(req, await readBody());
 
-  return json({ error: 'not found' }, 404, cors);
+  if (path.startsWith('/api/')) return json({ error: 'not found' }, 404, cors);
+
+  /* --- 静态站点：同一个域名既跑接口又跑前端（顺手把 CORS 也免了） --- */
+  return await serveStatic(path, req);
+}
+
+/* ---------------- 静态文件 ---------------- */
+
+const STATIC_TYPES: Record<string, string> = {
+  html: 'text/html; charset=utf-8',
+  css: 'text/css; charset=utf-8',
+  js: 'text/javascript; charset=utf-8',
+  mjs: 'text/javascript; charset=utf-8',
+  json: 'application/json; charset=utf-8',
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  ico: 'image/x-icon',
+  txt: 'text/plain; charset=utf-8',
+  md: 'text/markdown; charset=utf-8',
+  woff: 'font/woff',
+  woff2: 'font/woff2',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+};
+
+async function serveStatic(path: string, req: Request): Promise<Response> {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+  let rel = path === '/' ? 'index.html' : path.replace(/^\/+/, '');
+  // 防目录穿越
+  if (rel.includes('..')) return new Response('Not Found', { status: 404 });
+
+  const tryRead = async (name: string) => {
+    try {
+      return await Deno.readFile(new URL('../' + name, import.meta.url));
+    } catch {
+      return null;
+    }
+  };
+
+  let data = await tryRead(rel);
+  let name = rel;
+  // 目录或未知路径 → 回落到 index.html（前端是单页视图切换，不需要服务端路由）
+  if (!data) {
+    data = await tryRead('index.html');
+    name = 'index.html';
+  }
+  if (!data) return new Response('Not Found', { status: 404 });
+
+  const ext = (name.split('.').pop() || 'html').toLowerCase();
+  const type = STATIC_TYPES[ext] || 'application/octet-stream';
+  const isHtml = ext === 'html';
+  return new Response(req.method === 'HEAD' ? null : data, {
+    headers: {
+      'content-type': type,
+      // HTML 不缓存（保证发新版本立刻生效），其它静态资源给 10 分钟
+      'cache-control': isHtml ? 'no-cache' : 'public, max-age=600',
+      'x-served-by': 'deno-static',
+    },
+  });
 }
 
 Deno.serve({ port: Number(Deno.env.get('PORT') || 8000) }, (req) => {
