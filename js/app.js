@@ -380,8 +380,27 @@
 
     var box = $('stageList');
     box.innerHTML = '';
+
+    // 折叠默认展开位置：有上次学到的关卡就展开它那一阶段/模块，否则展开第一个有已就绪关卡的模块
+    var focus = { si: 0, mi: 0 };
+    var hit = false;
+    path.stages.forEach(function (st, i) {
+      st.modules.forEach(function (md, j) {
+        md.levels.forEach(function (lv) {
+          if (state.levelId && lv.id === state.levelId) { focus.si = i; focus.mi = j; hit = true; }
+        });
+      });
+    });
+    if (!hit) {
+      var found = false;
+      path.stages[0].modules.forEach(function (md, j) {
+        if (!found && md.levels.some(function (lv) { return lv.ready; })) { focus.mi = j; found = true; }
+      });
+    }
+
     path.stages.forEach(function (stage, si) {
-      var wrap = el('div', 'stage');
+      var stageOpen = si === focus.si;
+      var wrap = el('div', 'stage fold' + (stageOpen ? ' is-open' : ''));
       var stageDone = 0, stageTotal = 0;
       stage.modules.forEach(function (mod) {
         mod.levels.forEach(function (lv) {
@@ -390,28 +409,37 @@
         });
       });
 
-      var head = el('div', 'stage-head');
+      var head = el('button', 'stage-head');
+      head.type = 'button';
+      head.setAttribute('data-fold', '');
+      head.setAttribute('aria-expanded', stageOpen ? 'true' : 'false');
       head.innerHTML =
         '<span class="stage-badge">' + (si + 1) + '</span>' +
-        '<div class="stage-title-wrap">' +
-          '<h2 class="stage-title">' + stage.title + '</h2>' +
-          '<p class="stage-goal">' + stage.goal + '</p>' +
-        '</div>' +
-        '<span class="stage-progress">' + stageDone + '/' + stageTotal + '</span>';
+        '<span class="stage-title-wrap">' +
+          '<span class="stage-title">' + stage.title + '</span>' +
+          '<span class="stage-goal">' + stage.goal + '</span>' +
+        '</span>' +
+        '<span class="stage-progress">' + stageDone + '/' + stageTotal + '</span>' +
+        '<span class="fold-arrow" aria-hidden="true">▾</span>';
       wrap.appendChild(head);
 
-      var mods = el('div', 'modules');
-      stage.modules.forEach(function (mod) {
-        var card = el('div', 'module');
+      var mods = el('div', 'modules stage-body');
+      stage.modules.forEach(function (mod, mi) {
+        var modOpen = stageOpen && mi === focus.mi;
+        var card = el('div', 'module fold' + (modOpen ? ' is-open' : ''));
         var modDone = mod.levels.filter(function (lv) { return !!state.done[lv.id]; }).length;
 
-        var mh = el('div', 'module-head');
+        var mh = el('button', 'module-head');
+        mh.type = 'button';
+        mh.setAttribute('data-fold', '');
+        mh.setAttribute('aria-expanded', modOpen ? 'true' : 'false');
         mh.innerHTML =
           '<span class="module-name">' + mod.name + '</span>' +
-          '<span class="module-count">' + modDone + '/' + mod.levels.length + '</span>';
+          '<span class="module-count">' + modDone + '/' + mod.levels.length + '</span>' +
+          '<span class="fold-arrow" aria-hidden="true">▾</span>';
         card.appendChild(mh);
 
-        var lvBox = el('div', 'level-list');
+        var lvBox = el('div', 'level-list module-body');
         mod.levels.forEach(function (lv) {
           var rec = state.done[lv.id];
           var a = el('a', 'level-item' + (rec ? ' is-done' : '') + (lv.ready ? '' : ' is-soon'));
@@ -1073,15 +1101,43 @@
     $('docSideTitle').textContent = major.emoji + ' ' + major.name;
     $('docSideSub').textContent = found.stage.title + ' · ' + found.module.name;
 
-    // 左侧：整个专业路径的目录（阶段 → 模块 → 关卡），可滚动
+    // 左侧：整个专业路径的目录（阶段 → 模块 → 关卡），手机上是多级折叠
     var nav = $('docNav');
     nav.innerHTML = '';
-    path.stages.forEach(function (stage) {
-      var stageHead = el('div', 'doc-nav-stage', stage.title);
-      nav.appendChild(stageHead);
-      stage.modules.forEach(function (mod) {
-        var modHead = el('div', 'doc-nav-label', mod.name);
-        nav.appendChild(modHead);
+    var curStage = -1, curModule = -1;
+    path.stages.forEach(function (stage, si) {
+      stage.modules.forEach(function (mod, mi) {
+        mod.levels.forEach(function (lv) {
+          if (lv.id === level.id) { curStage = si; curModule = mi; }
+        });
+      });
+    });
+
+    path.stages.forEach(function (stage, si) {
+      var group = el('div', 'doc-nav-group fold' + (si === curStage ? ' is-open' : ''));
+      var stageHead = el('button', 'doc-nav-stage');
+      stageHead.type = 'button';
+      stageHead.setAttribute('data-fold', '');
+      stageHead.setAttribute('aria-expanded', si === curStage ? 'true' : 'false');
+      stageHead.innerHTML =
+        '<span class="doc-nav-stage-txt">' + stage.title + '</span>' +
+        '<span class="fold-arrow" aria-hidden="true">▾</span>';
+      group.appendChild(stageHead);
+
+      var groupBody = el('div', 'doc-nav-group-body');
+      stage.modules.forEach(function (mod, mi) {
+        var open = si === curStage && mi === curModule;
+        var sub = el('div', 'doc-nav-sub fold' + (open ? ' is-open' : ''));
+        var modHead = el('button', 'doc-nav-label');
+        modHead.type = 'button';
+        modHead.setAttribute('data-fold', '');
+        modHead.setAttribute('aria-expanded', open ? 'true' : 'false');
+        modHead.innerHTML =
+          '<span class="doc-nav-label-txt">' + mod.name + '</span>' +
+          '<span class="fold-arrow" aria-hidden="true">▾</span>';
+        sub.appendChild(modHead);
+
+        var subBody = el('div', 'doc-nav-sub-body');
         mod.levels.forEach(function (lv) {
           var rec = state.done[lv.id];
           var a = el('a', 'doc-nav-item' + (lv.id === level.id ? ' is-on' : ''));
@@ -1091,9 +1147,13 @@
             '<span class="doc-nav-dot">' + (rec ? '✓' : '·') + '</span>' +
             '<span class="doc-nav-txt">' + lv.name + '</span>' +
             (lv.ready ? '' : '<span class="doc-nav-soon">建设中</span>');
-          nav.appendChild(a);
+          subBody.appendChild(a);
         });
+        sub.appendChild(subBody);
+        groupBody.appendChild(sub);
       });
+      group.appendChild(groupBody);
+      nav.appendChild(group);
     });
 
     // 正文
@@ -1522,6 +1582,17 @@
     if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
     var sw = e.target.closest('[data-switch-style]');
     if (sw) { e.preventDefault(); switchStyle(sw.getAttribute('data-switch-style')); return; }
+    // 多级折叠：阶段 / 模块 / 目录分组（必须排在 data-level 之前，否则会被关卡点击吃掉）
+    var fold = e.target.closest('[data-fold]');
+    if (fold) {
+      e.preventDefault();
+      var host = fold.closest('.fold');
+      if (host) {
+        var opened = host.classList.toggle('is-open');
+        fold.setAttribute('aria-expanded', opened ? 'true' : 'false');
+      }
+      return;
+    }
     var lv = e.target.closest('[data-level]');
     if (lv) {
       e.preventDefault();
@@ -1531,8 +1602,13 @@
         startLevelQuiz(lvId, true);
       } else {
         // 文档页左侧目录切换关卡时，保持"从哪来"的返回目标不变
-        var keepFrom = lv.classList.contains('doc-nav-item') ? state.fromMap : true;
-        openLevel(lvId, keepFrom);
+        var fromNav = lv.classList.contains('doc-nav-item');
+        openLevel(lvId, fromNav ? state.fromMap : true);
+        // 手机版：从目录选了章节就收起目录，直接看正文
+        if (fromNav && isMobileView()) {
+          collapseFold('.doc-side', '.doc-fold-btn');
+          scrollToNode('.doc-main');
+        }
       }
       return;
     }
@@ -1540,6 +1616,11 @@
     if (vp) {
       e.preventDefault();
       playVideo(Number(vp.getAttribute('data-page')));
+      // 手机版：从目录选集就收起目录，回到播放器
+      if (vp.closest('.course-side') && isMobileView()) {
+        collapseFold('.course-side', '.side-fold-btn');
+        scrollToNode('.course-main');
+      }
       return;
     }
     var opt = e.target.closest('.option');
@@ -1621,6 +1702,23 @@
   }
 
   /* ---------------- 版式：自动 / 手机 / 电脑 ---------------- */
+  /* 当前是否手机版视口（真的是窄屏，或用户手动切到手机版） */
+  function isMobileView() {
+    return document.documentElement.getAttribute('data-layout') === 'mobile' ||
+      window.matchMedia('(max-width: 640px)').matches;
+  }
+  /* 收起某个折叠容器（目录卡片），同步按钮的 aria-expanded */
+  function collapseFold(hostSel, btnSel) {
+    var host = document.querySelector(hostSel);
+    if (host) host.classList.remove('is-open');
+    var btn = document.querySelector(btnSel);
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  function scrollToNode(sel) {
+    var node = document.querySelector(sel);
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function applyLayout() {
     var html = document.documentElement;
     if (state.layout === 'mobile') {

@@ -1987,3 +1987,156 @@ html[data-theme="night"] .jnode.is-done {
 }
 html[data-theme="night"] .doc-nav-soon { background: var(--surface-2); }
 html[data-theme="night"] .jnode.is-done .jnode-badge { background: #1c5c3c; color: #d8f5e4; }
+
+/* ==========================================================
+   多级折叠：阶段 → 模块 → 关卡（路径页 / 文档页目录）
+   桌面端保持原样全部展开，折叠只在手机版生效
+   ========================================================== */
+button.stage-head, button.module-head,
+button.doc-nav-stage, button.doc-nav-label, button.side-fold-btn {
+  font: inherit; color: inherit; background: none; border: 0;
+  text-align: left; width: 100%; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+}
+button.stage-head { align-items: center; }
+/* 折叠头是 button，标题/说明改用 span，需要补回块级显示 */
+.stage-title { display: block; }
+.stage-goal { display: block; }
+button.doc-nav-stage { margin-left: -2px; }
+button.doc-nav-label { display: flex; align-items: center; gap: 8px; }
+.doc-nav-label-txt { flex: 1; min-width: 0; }
+.doc-nav-stage-txt { flex: 1; min-width: 0; }
+.stage-head .fold-arrow,
+.module-head .fold-arrow { margin-left: 2px; }
+.fold-arrow {
+  display: none; flex: none; font-size: 11px; color: var(--text-3);
+  transition: transform .18s ease;
+}
+.fold.is-open > * > .fold-arrow { transform: rotate(180deg); }
+
+/* 桌面端：目录卡片的折叠按钮不显示 */
+.doc-fold-btn { display: none; }
+.side-fold-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; width: 100%; padding: 0; border: 0; background: none;
+  font: inherit; text-align: left; cursor: pointer;
+}
+
+/* ---------- 手机竖屏：三级折叠 ---------- */
+@media (max-width: 640px) {
+  .fold-arrow { display: inline-block; }
+
+  /* 路径页 */
+  .stage { padding: 14px 14px 12px; border-radius: 14px; }
+  .stage-list { gap: 12px; }
+  .stage-head { min-height: 52px; padding-bottom: 0; border-bottom: 0; }
+  .stage.is-open > .stage-head { padding-bottom: 12px; border-bottom: 1px solid var(--surface-2); }
+  .stage-title { font-size: 16.5px; }
+  .stage-goal { font-size: 12.5px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .stage-progress { font-size: 12px; }
+  .stage:not(.is-open) > .stage-body { display: none !important; }
+  .modules { grid-template-columns: 1fr; gap: 8px; padding-top: 12px; }
+  .module { padding: 0 12px; }
+  .module-head { min-height: 48px; margin-bottom: 0; }
+  .module.is-open > .module-head { margin-bottom: 10px; }
+  .module:not(.is-open) > .module-body { display: none !important; }
+  .module-name { font-size: 14.5px; }
+
+  /* 文档页：目录收成一张可展开的卡片 */
+  .doc-fold-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    width: 100%; min-height: 44px; margin-top: 10px; padding: 0 13px;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+    font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); cursor: pointer;
+  }
+  .doc-side { position: static; max-height: none; }
+  .doc-side > .doc-nav { display: none; margin-top: 10px; max-height: 56vh; }
+  .doc-side.is-open > .doc-nav { display: flex; }
+  .doc-nav {
+    border-left: 0; padding-left: 0;
+    flex-direction: column; flex-wrap: nowrap; gap: 4px; max-height: 56vh;
+  }
+  .doc-nav-item { white-space: normal; }
+  .doc-nav-stage { margin-top: 0; border-radius: 8px; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+  .doc-nav-label { min-height: 40px; padding-left: 16px; }
+  .doc-nav-group:not(.is-open) > .doc-nav-group-body { display: none; }
+  .doc-nav-sub:not(.is-open) > .doc-nav-sub-body { display: none; }
+  .doc-nav-sub-body { padding-left: 10px; }
+  .doc-nav-item { min-height: 42px; }
+
+  /* 视频页：播放器在上，目录收成可展开卡片 */
+  .course-stage { grid-template-columns: 1fr; gap: 14px; }
+  .course-head { margin-bottom: 12px; }
+  .course-title { font-size: 21px; letter-spacing: -.3px; }
+  .course-meta { font-size: 12.5px; }
+  .course-main { padding: 12px 12px 14px; border-radius: 14px; }
+  .player-box { border-radius: 10px; }
+  .player-foot { font-size: 12px; gap: 8px; }
+  .player-hint { font-size: 11.5px; line-height: 1.6; }
+  .course-side { position: static; max-height: none; border-radius: 14px; }
+  .course-side-head { padding: 12px 14px; }
+  .course-side:not(.is-open) > .video-nav { display: none !important; }
+  .video-nav { max-height: 56vh; }
+  .video-ep { min-height: 42px; padding: 9px 10px; font-size: 13px; }
+  .video-ep-dur { display: none; }
+  .course-chapter-head { min-height: 48px; }
+  .ep-group-label { margin: 16px 0 8px; }
+  .ep-card { flex-wrap: wrap; gap: 6px 8px; padding: 11px 12px; }
+  .ep-card .ep-name { flex: 1 1 100%; order: 3; white-space: normal; line-height: 1.5; }
+  .ep-card .ep-dur { display: none; }
+  .ep-card .ep-play { order: 1; margin-left: auto; }
+  .doc-foot { flex-direction: column; align-items: stretch; gap: 8px; }
+  .doc-foot .btn { width: 100%; }
+}
+
+/* ---------- 强制手机版（桌面演示）同样折叠 ---------- */
+html[data-layout="mobile"] .fold-arrow { display: inline-block; }
+html[data-layout="mobile"] .stage { padding: 14px 14px 12px; border-radius: 14px; }
+html[data-layout="mobile"] .stage-list { gap: 12px; }
+html[data-layout="mobile"] .stage-head { min-height: 52px; padding-bottom: 0; border-bottom: 0; }
+html[data-layout="mobile"] .stage.is-open > .stage-head { padding-bottom: 12px; border-bottom: 1px solid var(--surface-2); }
+html[data-layout="mobile"] .stage-title { font-size: 16.5px; }
+html[data-layout="mobile"] .stage-goal { font-size: 12.5px; line-height: 1.5; }
+html[data-layout="mobile"] .stage:not(.is-open) > .stage-body { display: none !important; }
+html[data-layout="mobile"] .modules { grid-template-columns: 1fr; gap: 8px; padding-top: 12px; }
+html[data-layout="mobile"] .module { padding: 0 12px; }
+html[data-layout="mobile"] .module-name { font-size: 14.5px; }
+html[data-layout="mobile"] .module-head { min-height: 48px; margin-bottom: 0; }
+html[data-layout="mobile"] .module.is-open > .module-head { margin-bottom: 10px; }
+html[data-layout="mobile"] .module:not(.is-open) > .module-body { display: none !important; }
+html[data-layout="mobile"] .doc-fold-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; min-height: 44px; margin-top: 10px; padding: 0 13px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+  font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); cursor: pointer;
+}
+html[data-layout="mobile"] .doc-side > .doc-nav { display: none; margin-top: 10px; max-height: 56vh; }
+html[data-layout="mobile"] .doc-side.is-open > .doc-nav { display: flex; }
+html[data-layout="mobile"] .doc-nav {
+  border-left: 0; padding-left: 0;
+  flex-direction: column; flex-wrap: nowrap; gap: 4px; max-height: 56vh;
+}
+html[data-layout="mobile"] .doc-nav-item { white-space: normal; }
+html[data-layout="mobile"] .doc-nav-stage { margin-top: 0; border-radius: 8px; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+html[data-layout="mobile"] .doc-nav-label { min-height: 40px; padding-left: 16px; }
+html[data-layout="mobile"] .doc-nav-group:not(.is-open) > .doc-nav-group-body { display: none; }
+html[data-layout="mobile"] .doc-nav-sub:not(.is-open) > .doc-nav-sub-body { display: none; }
+html[data-layout="mobile"] .doc-nav-sub-body { padding-left: 10px; }
+html[data-layout="mobile"] .doc-nav-item { min-height: 42px; }
+html[data-layout="mobile"] .course-stage { grid-template-columns: 1fr; gap: 14px; }
+html[data-layout="mobile"] .course-title { font-size: 21px; letter-spacing: -.3px; }
+html[data-layout="mobile"] .course-main { padding: 12px 12px 14px; border-radius: 14px; }
+html[data-layout="mobile"] .player-box { border-radius: 10px; }
+html[data-layout="mobile"] .course-side { position: static; max-height: none; border-radius: 14px; }
+html[data-layout="mobile"] .course-side-head { padding: 12px 14px; }
+html[data-layout="mobile"] .course-side:not(.is-open) > .video-nav { display: none !important; }
+html[data-layout="mobile"] .video-nav { max-height: 56vh; }
+html[data-layout="mobile"] .video-ep { min-height: 42px; padding: 9px 10px; font-size: 13px; }
+html[data-layout="mobile"] .video-ep-dur { display: none; }
+html[data-layout="mobile"] .course-chapter-head { min-height: 48px; }
+html[data-layout="mobile"] .ep-card { flex-wrap: wrap; gap: 6px 8px; padding: 11px 12px; }
+html[data-layout="mobile"] .ep-card .ep-name { flex: 1 1 100%; order: 3; white-space: normal; line-height: 1.5; }
+html[data-layout="mobile"] .ep-card .ep-dur { display: none; }
+html[data-layout="mobile"] .ep-card .ep-play { order: 1; margin-left: auto; }
+html[data-layout="mobile"] .doc-foot { flex-direction: column; align-items: stretch; gap: 8px; }
+html[data-layout="mobile"] .doc-foot .btn { width: 100%; }

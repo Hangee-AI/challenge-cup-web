@@ -330,10 +330,13 @@
   <section id="view-doc" class="view view-doc" hidden>
     <div class="doc-wrap">
 
-      <aside class="doc-side">
+      <aside class="doc-side fold">
         <a class="back" href="#" id="docBack">← 返回路径</a>
         <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
         <div class="doc-side-sub" id="docSideSub"></div>
+        <button class="doc-fold-btn" type="button" data-fold aria-expanded="false">
+          <span>📚 课程目录</span><span class="fold-arrow" aria-hidden="true">▾</span>
+        </button>
         <nav class="doc-nav" id="docNav"></nav>
       </aside>
 
@@ -394,9 +397,12 @@
         </div>
       </main>
 
-      <aside class="course-side">
+      <aside class="course-side fold">
         <div class="course-side-head">
-          <div class="course-side-kicker">🎬 课程目录</div>
+          <button class="side-fold-btn" type="button" data-fold aria-expanded="false">
+            <span class="course-side-kicker">🎬 课程目录</span>
+            <span class="fold-arrow" aria-hidden="true">▾</span>
+          </button>
           <div class="course-side-title" id="vSideTitle">视频讲解</div>
           <div class="course-side-sub" id="vSideSub"></div>
           <div class="course-side-now" id="vSideNow"></div>
