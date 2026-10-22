@@ -1,12 +1,12 @@
 /* ============================================================
  * 后端地址配置（唯一需要改的地方）
  * ------------------------------------------------------------
- * 前端是静态站（guoguan.surge.sh），账号/打卡/照明这些接口跑在
+ * 前端是静态站（guoguan.surge.sh），账号/打卡/照明/小引这些接口跑在
  * 另一台公网后端上，这里填后端的公网地址（末尾不要带 /）。
  *
- * 现在用的是 Cloudflare 隧道地址；**隧道重启后地址会变**
- * （形如 https://xxx-yyy-zzz.trycloudflare.com），把下面换掉再 push 即可，
- * GitHub Actions 会自动重新发布静态站。
+ * 当前后端：Deno Deploy（常驻，不依赖任何人开机）
+ *   源码在 deno/main.ts，数据库是 Deno KV
+ *   地址不会变；换机器/换平台时才需要改这里
  *
  * 说明：
  *  - 本机打开（localhost / 127.0.0.1 / 双击 index.html）时自动走同源或本地模式，
@@ -16,6 +16,6 @@
  *    （优先级：本文件 > localStorage > 同源）
  * ============================================================ */
 
-window.YL_API_BASE = 'https://juan-zinc-newman-lighter.trycloudflare.com';
+window.YL_API_BASE = 'https://challenge-cup-web.hangee-ai.deno.net';
 
-// ci-marker: 2026-10-22-c
+// ci-marker: 2026-10-22-d
