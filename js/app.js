@@ -1,400 +1,432 @@
 /* ==========================================================
-   闯关学编程 · 交互逻辑
-   纯原生 JS，无框架、无依赖，双击 index.html 即可运行
+   引路 · 页面逻辑
+   视图：home（首页）/ browse（专业库）/ major（路径）/ level（关卡）/ report（报告）
+   进度保存在 localStorage，key = yinlu_v1
    ========================================================== */
-
 (function () {
   'use strict';
 
-  var STORAGE_KEY = 'ccc_progress_v1';
-  var LETTERS = ['A', 'B', 'C', 'D', 'E'];
-
-  function $(id) { return document.getElementById(id); }
-
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
-  /* ---------------- 状态 ---------------- */
+  var STORE_KEY = 'yinlu_v1';
 
   var state = {
-    track: null,          // 专业方向 id
-    topic: 'c',           // 学习方向 id
-    style: null,          // 学习方式 id
-    levelIndex: 0,
-    questionIndex: 0,
+    majorId: null,
+    levelId: null,
+    qi: 0,
     levelCorrect: 0,
-    progress: loadProgress()
+    answered: false,
+    done: {}              // levelId -> { ok, total, stars, name, majorId, ts }
   };
 
-  function emptyProgress() {
-    return { track: null, style: null, levels: {} };
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
   }
 
-  function loadProgress() {
+  /* ---------------- 存储 ---------------- */
+  function load() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return emptyProgress();
-      var p = JSON.parse(raw) || {};
-      return {
-        track: p.track || null,
-        style: p.style || null,
-        levels: p.levels || {}
-      };
-    } catch (e) {
-      return emptyProgress();
-    }
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      state.majorId = data.majorId || null;
+      state.done = data.done || {};
+    } catch (e) { /* 忽略损坏数据 */ }
   }
-
-  function saveProgress() {
+  function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
-    } catch (e) { /* 隐私模式下可能写不进去，忽略 */ }
+      localStorage.setItem(STORE_KEY, JSON.stringify({ majorId: state.majorId, done: state.done }));
+    } catch (e) { /* 隐私模式下可能不可写 */ }
   }
 
   /* ---------------- 视图切换 ---------------- */
-
-  var VIEWS = ['view-welcome', 'view-setup', 'view-map', 'view-level', 'view-result'];
-
-  function show(id) {
-    VIEWS.forEach(function (v) { $(v).hidden = (v !== id); });
-    $('topProgressWrap').hidden = (id === 'view-welcome' || id === 'view-setup');
-    $('homeBtn').hidden = (id === 'view-welcome');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  var VIEWS = ['home', 'browse', 'major', 'level', 'report'];
+  function show(name) {
+    VIEWS.forEach(function (v) {
+      var node = $('view-' + v);
+      if (node) node.hidden = (v !== name);
+    });
+    document.querySelectorAll('.nav-links a').forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('data-go') === name);
+    });
+    window.scrollTo(0, 0);
+    if (name === 'browse') renderBrowse();
+    if (name === 'major') renderMajor();
+    if (name === 'report') renderReport();
   }
 
-  /* ---------------- 进度计算 ---------------- */
-
-  function completedCount() {
-    return LEVELS.filter(function (l) { return !!state.progress.levels[l.id]; }).length;
+  /* ---------------- 小工具 ---------------- */
+  function starSum() {
+    return Object.keys(state.done).reduce(function (s, k) { return s + (state.done[k].stars || 0); }, 0);
+  }
+  function toast(msg) {
+    var t = $('toast');
+    if (!t) {
+      t = el('div', 'toast');
+      t.id = 'toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.classList.remove('show'); }, 2400);
   }
 
-  function unlockedCount() {
-    return Math.min(completedCount() + 1, LEVELS.length);
+  /* ---------------- 首页 ---------------- */
+  function renderHomeCats() {
+    var box = $('homeCats');
+    if (!box || box.childElementCount) return;
+    CATEGORIES.forEach(function (c) {
+      var n = majorsOfCategory(c.id).length;
+      var a = el('a', 'cat-card');
+      a.href = '#';
+      a.setAttribute('data-cat', c.id);
+      a.innerHTML =
+        '<span class="cat-emoji">' + c.emoji + '</span>' +
+        '<span class="cat-name">' + c.name + '</span>' +
+        '<span class="cat-desc">' + c.desc + '</span>' +
+        '<span class="cat-count">' + n + ' 个专业 →</span>';
+      box.appendChild(a);
+    });
   }
 
-  function isUnlocked(i) { return i < unlockedCount(); }
+  /* ---------------- 专业库 ---------------- */
+  var curCat = null;
 
-  function updateTopProgress() {
-    var pct = Math.round((completedCount() / LEVELS.length) * 100);
-    $('topProgressFill').style.width = pct + '%';
-    $('topProgressText').textContent = pct + '%';
+  function renderBrowse() {
+    var chips = $('catChips');
+    chips.innerHTML = '';
+    var all = el('button', 'chip' + (curCat === null ? ' chip-on' : ''), '全部专业');
+    all.setAttribute('data-cat', '');
+    chips.appendChild(all);
+    CATEGORIES.forEach(function (c) {
+      var b = el('button', 'chip' + (curCat === c.id ? ' chip-on' : ''), c.emoji + ' ' + c.name);
+      b.setAttribute('data-cat', c.id);
+      chips.appendChild(b);
+    });
+    renderMajorList();
+  }
+
+  function renderMajorList() {
+    var cat = curCat ? getCategory(curCat) : null;
+    $('browseCatName').textContent = cat ? cat.name : '全部专业（' + MAJORS.length + '）';
+    $('browseCatDesc').textContent = cat ? cat.desc : '按学科门类浏览，或者直接从下面找你的专业';
+
+    var list = curCat ? majorsOfCategory(curCat) : MAJORS;
+    var box = $('majorList');
+    box.innerHTML = '';
+    list.forEach(function (m) {
+      var a = el('a', 'major-card');
+      a.href = '#';
+      a.setAttribute('data-major', m.id);
+      var doneN = 0, totalN = 0;
+      var path = getPath(m.id);
+      if (path) {
+        allLevelsOf(path).forEach(function (lv) {
+          totalN++;
+          if (state.done[lv.id]) doneN++;
+        });
+      }
+      var badge = m.ready
+        ? '<span class="badge badge-on">示例关卡已就绪</span>'
+        : '<span class="badge">路径框架</span>';
+      var progress = doneN ? '<span class="badge badge-done">已完成 ' + doneN + ' 关</span>' : '';
+      a.innerHTML =
+        '<span class="major-card-emoji">' + m.emoji + '</span>' +
+        '<span class="major-card-body">' +
+          '<span class="major-card-name">' + m.name + '</span>' +
+          '<span class="major-card-desc">' + m.desc + '</span>' +
+          '<span class="major-card-badges">' + badge + progress +
+            '<span class="badge badge-ghost">' + totalN + ' 关</span></span>' +
+        '</span>';
+      box.appendChild(a);
+    });
+  }
+
+  /* ---------------- 专业路径 ---------------- */
+  function openMajor(id) {
+    state.majorId = id;
+    save();
+    show('major');
+  }
+
+  function renderMajor() {
+    if (!state.majorId) { show('browse'); return; }
+    var path = getPath(state.majorId);
+    if (!path) { show('browse'); return; }
+    var m = path.major;
+    var cat = getCategory(m.cat);
+    $('mjEmoji').textContent = m.emoji;
+    $('mjName').textContent = m.name;
+    $('mjMeta').textContent = (cat ? cat.name : '') + ' · ' + m.desc +
+      (m.ready ? ' · 已有 C 语言示例关卡' : ' · 路径框架（关卡内容建设中）');
+
+    var levels = allLevelsOf(path);
+    var doneN = levels.filter(function (lv) { return !!state.done[lv.id]; }).length;
+    $('mjProgressFill').style.width = levels.length ? Math.round(doneN / levels.length * 100) + '%' : '0%';
+    $('mjProgressText').textContent = doneN + ' / ' + levels.length + ' 关';
+
+    var box = $('stageList');
+    box.innerHTML = '';
+    path.stages.forEach(function (stage, si) {
+      var wrap = el('div', 'stage');
+      var stageDone = 0, stageTotal = 0;
+      stage.modules.forEach(function (mod) {
+        mod.levels.forEach(function (lv) {
+          stageTotal++;
+          if (state.done[lv.id]) stageDone++;
+        });
+      });
+
+      var head = el('div', 'stage-head');
+      head.innerHTML =
+        '<span class="stage-badge">' + (si + 1) + '</span>' +
+        '<div class="stage-title-wrap">' +
+          '<h2 class="stage-title">' + stage.title + '</h2>' +
+          '<p class="stage-goal">' + stage.goal + '</p>' +
+        '</div>' +
+        '<span class="stage-progress">' + stageDone + '/' + stageTotal + '</span>';
+      wrap.appendChild(head);
+
+      var mods = el('div', 'modules');
+      stage.modules.forEach(function (mod) {
+        var card = el('div', 'module');
+        var modDone = mod.levels.filter(function (lv) { return !!state.done[lv.id]; }).length;
+
+        var mh = el('div', 'module-head');
+        mh.innerHTML =
+          '<span class="module-name">' + mod.name + '</span>' +
+          '<span class="module-count">' + modDone + '/' + mod.levels.length + '</span>';
+        card.appendChild(mh);
+
+        var lvBox = el('div', 'level-list');
+        mod.levels.forEach(function (lv) {
+          var rec = state.done[lv.id];
+          var a = el('a', 'level-item' + (rec ? ' is-done' : '') + (lv.ready ? '' : ' is-soon'));
+          a.href = '#';
+          a.setAttribute('data-level', lv.id);
+          var right = rec
+            ? '<span class="stars">' + starsText(rec.stars) + '</span>'
+            : (lv.ready ? '<span class="level-go">开始 →</span>' : '<span class="level-soon">建设中</span>');
+          a.innerHTML =
+            '<span class="level-dot">' + (rec ? '✓' : (lv.ready ? '▶' : '·')) + '</span>' +
+            '<span class="level-name-txt">' + lv.name + '</span>' + right;
+          lvBox.appendChild(a);
+        });
+        card.appendChild(lvBox);
+        mods.appendChild(card);
+      });
+      wrap.appendChild(mods);
+      box.appendChild(wrap);
+    });
   }
 
   function starsText(n) {
-    var out = '';
-    for (var i = 0; i < 3; i++) {
-      out += i < n ? '<span>★</span>' : '<span class="empty">★</span>';
-    }
-    return out;
+    n = n || 0;
+    var s = '';
+    for (var i = 0; i < 3; i++) s += i < n ? '★' : '☆';
+    return s;
   }
 
-  /* ---------------- 选择页 ---------------- */
+  /* ---------------- 关卡 ---------------- */
+  function openLevel(levelId) {
+    var path = getPath(state.majorId);
+    var found = path && findLevel(path, levelId);
+    if (!found) { show('major'); return; }
 
-  function renderSetup() {
-    /* 专业方向 */
-    var tg = $('trackGroup');
-    tg.innerHTML = '';
-    TRACKS.forEach(function (t) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip' + (state.track === t.id ? ' selected' : '');
-      b.innerHTML = '<span class="chip-name">' + t.emoji + ' ' + esc(t.name) + '</span>' +
-                    '<span class="chip-desc">' + esc(t.desc) + '</span>';
-      b.onclick = function () { state.track = t.id; renderSetup(); };
-      tg.appendChild(b);
-    });
-
-    /* 学习方向 */
-    var topg = $('topicGroup');
-    topg.innerHTML = '';
-    TOPICS.forEach(function (tp) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip' + (state.topic === tp.id ? ' selected' : '');
-      b.disabled = !tp.enabled;
-      b.innerHTML = '<span class="chip-name">' + tp.emoji + ' ' + esc(tp.name) + '</span>' +
-                    '<span class="chip-desc">' + esc(tp.desc) + '</span>';
-      if (tp.enabled) b.onclick = function () { state.topic = tp.id; renderSetup(); };
-      topg.appendChild(b);
-    });
-
-    /* 学习方式 */
-    var sg = $('styleGroup');
-    sg.innerHTML = '';
-    STYLES.forEach(function (s) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip' + (state.style === s.id ? ' selected' : '');
-      b.innerHTML = '<span class="chip-name">' + s.emoji + ' ' + esc(s.name) + '</span>' +
-                    '<span class="chip-desc">' + esc(s.desc) + '</span>';
-      b.onclick = function () { state.style = s.id; renderSetup(); };
-      sg.appendChild(b);
-    });
-
-    $('beginBtn').disabled = !(state.track && state.style);
-  }
-
-  /* ---------------- 地图页 ---------------- */
-
-  function renderMap() {
-    var parts = [];
-    if (state.progress.track) {
-      TRACKS.forEach(function (t) { if (t.id === state.progress.track) parts.push(t.emoji + ' ' + t.name); });
-    }
-    if (state.progress.style) {
-      STYLES.forEach(function (s) { if (s.id === state.progress.style) parts.push(s.emoji + ' ' + s.name); });
-    }
-    $('mapSub').textContent = parts.length
-      ? '你的选择：' + parts.join(' · ') + '　|　完成当前关卡解锁下一关'
-      : '完成当前关卡解锁下一关';
-
-    var list = $('levelList');
-    list.innerHTML = '';
-
-    LEVELS.forEach(function (lvl, i) {
-      var rec = state.progress.levels[lvl.id];
-      var unlocked = isUnlocked(i);
-
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'level-card' + (unlocked ? '' : ' locked') + (rec ? ' done' : '');
-      btn.disabled = !unlocked;
-
-      btn.innerHTML =
-        '<span class="level-index">' + (unlocked ? (rec ? '✓' : i + 1) : '🔒') + '</span>' +
-        '<span class="level-info">' +
-          '<span class="level-title">' + esc(lvl.title) + '</span>' +
-          '<span class="level-meta">' +
-            (rec ? ('已通关 · 答对 ' + rec.correct + '/' + rec.total + ' 题')
-                 : (unlocked ? ('共 ' + lvl.questions.length + ' 题 · 约 5 分钟')
-                             : '完成上一关后解锁')) +
-          '</span>' +
-        '</span>' +
-        '<span class="level-stars">' + (rec ? starsText(rec.stars) : '') + '</span>';
-
-      btn.onclick = function () { startLevel(i); };
-      list.appendChild(btn);
-    });
-
-    updateTopProgress();
-  }
-
-  /* ---------------- 答题页 ---------------- */
-
-  function startLevel(i) {
-    state.levelIndex = i;
-    state.questionIndex = 0;
+    state.levelId = levelId;
+    state.qi = 0;
     state.levelCorrect = 0;
-    show('view-level');
+
+    $('crumb').textContent = found.module.name + ' · ' + found.stage.title;
+    $('levelName').textContent = found.level.name;
+    $('briefBox').innerHTML = '<b>本关要点：</b>' + found.level.brief;
+
+    if (!found.level.questions) {
+      $('quizCard').hidden = true;
+      $('levelEmpty').hidden = false;
+      show('level');
+      return;
+    }
+    $('quizCard').hidden = false;
+    $('levelEmpty').hidden = true;
+    show('level');
     renderQuestion();
   }
 
-  function renderQuestion() {
-    var lvl = LEVELS[state.levelIndex];
-    var q = lvl.questions[state.questionIndex];
+  function currentLevel() {
+    var path = getPath(state.majorId);
+    return path ? findLevel(path, state.levelId) : null;
+  }
 
-    $('levelName').textContent = lvl.title;
-    $('qCount').textContent = '第 ' + (state.questionIndex + 1) + ' / ' + lvl.questions.length + ' 题';
+  function renderQuestion() {
+    var found = currentLevel();
+    if (!found) return;
+    var qs = found.level.questions;
+    var q = qs[state.qi];
+    state.answered = false;
+
+    $('qCount').textContent = '第 ' + (state.qi + 1) + ' / ' + qs.length + ' 题';
     $('qStem').textContent = q.stem;
 
-    /* 学习方式为「先看讲解 / 先看例题」时，本关第一题前展示要点 */
-    var briefBox = $('briefBox');
-    if (state.questionIndex === 0 && state.style && state.style !== 'game') {
-      briefBox.hidden = false;
-      briefBox.innerHTML = '<strong>本关要点</strong>' + esc(lvl.brief);
-    } else {
-      briefBox.hidden = true;
-    }
-
-    var ol = $('optionList');
-    ol.innerHTML = '';
-    q.options.forEach(function (opt, idx) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'option';
-      b.innerHTML = '<span class="idx">' + LETTERS[idx] + '</span><span>' + esc(opt) + '</span>';
-      b.onclick = function () { chooseOption(idx); };
-      ol.appendChild(b);
+    var box = $('optionList');
+    box.innerHTML = '';
+    q.options.forEach(function (opt, i) {
+      var b = el('button', 'option');
+      b.innerHTML = '<span class="option-key">' + 'ABCD'[i] + '</span><span class="option-txt">' + esc(opt) + '</span>';
+      b.setAttribute('data-i', i);
+      box.appendChild(b);
     });
-
     $('feedback').hidden = true;
-
-    var isLast = state.questionIndex === lvl.questions.length - 1;
-    $('nextBtn').textContent = isLast ? '完成本关 →' : '下一题 →';
+    $('nextBtn').textContent = state.qi === qs.length - 1 ? '完成本关 →' : '下一题 →';
   }
 
-  function chooseOption(idx) {
-    if (!$('feedback').hidden) return; /* 已作答过，忽略重复点击 */
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
 
-    var lvl = LEVELS[state.levelIndex];
-    var q = lvl.questions[state.questionIndex];
-    var correct = idx === q.answer;
+  function chooseOption(i) {
+    if (state.answered) return;
+    var found = currentLevel();
+    if (!found) return;
+    var q = found.level.questions[state.qi];
+    state.answered = true;
 
     var opts = $('optionList').querySelectorAll('.option');
-    for (var i = 0; i < opts.length; i++) {
-      opts[i].disabled = true;
-      if (i === q.answer) opts[i].classList.add('correct');
-      if (i === idx && !correct) opts[i].classList.add('wrong');
-    }
+    opts.forEach(function (b, idx) {
+      b.disabled = true;
+      if (idx === q.answer) b.classList.add('correct');
+      if (idx === i && i !== q.answer) b.classList.add('wrong');
+    });
 
-    if (correct) state.levelCorrect++;
+    var ok = i === q.answer;
+    if (ok) state.levelCorrect++;
 
-    var ft = $('feedbackTitle');
-    ft.textContent = correct ? '✅ 答对了！' : '❌ 再想想，正确答案是 ' + LETTERS[q.answer];
-    ft.className = 'feedback-title ' + (correct ? 'ok' : 'bad');
-    $('feedbackExplain').textContent = q.explain;
     $('feedback').hidden = false;
-    $('feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[q.answer];
+    $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
+    $('feedbackExplain').textContent = q.explain;
   }
 
-  /* ---------------- 结算 ---------------- */
-
-  function finishLevel() {
-    var lvl = LEVELS[state.levelIndex];
-    var total = lvl.questions.length;
-    var ratio = state.levelCorrect / total;
-    var stars = ratio === 1 ? 3 : ratio >= 0.67 ? 2 : ratio > 0 ? 1 : 0;
-
-    var prev = state.progress.levels[lvl.id];
-    state.progress.levels[lvl.id] = {
-      stars: Math.max(stars, prev ? prev.stars : 0),
-      correct: state.levelCorrect,
-      total: total,
-      doneAt: new Date().toISOString()
-    };
-    saveProgress();
-    updateTopProgress();
-
-    show('view-result');
-    renderResult(lvl);
+  function nextQuestion() {
+    var found = currentLevel();
+    if (!found) return;
+    var qs = found.level.questions;
+    if (state.qi < qs.length - 1) {
+      state.qi++;
+      renderQuestion();
+      return;
+    }
+    var total = qs.length;
+    var stars = state.levelCorrect === total ? 3
+      : (state.levelCorrect >= Math.ceil(total * 2 / 3) ? 2 : (state.levelCorrect > 0 ? 1 : 0));
+    var prev = state.done[state.levelId];
+    if (!prev || stars >= (prev.stars || 0)) {
+      state.done[state.levelId] = {
+        ok: state.levelCorrect, total: total, stars: stars,
+        name: found.level.name, majorId: state.majorId, ts: Date.now()
+      };
+      save();
+    }
+    toast('本关完成：' + state.levelCorrect + '/' + total + ' 题正确 ' + starsText(stars));
+    show('major');
   }
 
-  function renderResult(justFinished) {
-    var done = 0, totalQ = 0, totalC = 0, stars = 0;
-    LEVELS.forEach(function (l) {
-      var r = state.progress.levels[l.id];
-      if (r) {
-        done++;
-        totalQ += r.total;
-        totalC += r.correct;
-        stars += r.stars;
-      }
+  /* ---------------- 报告 ---------------- */
+  function renderReport() {
+    var ids = Object.keys(state.done);
+    var okSum = 0, totalSum = 0;
+    ids.forEach(function (k) {
+      okSum += state.done[k].ok || 0;
+      totalSum += state.done[k].total || 0;
     });
-    var acc = totalQ ? Math.round((totalC / totalQ) * 100) : 0;
+    var acc = totalSum ? Math.round(okSum / totalSum * 100) : 0;
 
-    $('reportSub').textContent = justFinished
-      ? '刚才这关：' + justFinished.title + '　答对 ' + state.levelCorrect + '/' + justFinished.questions.length + ' 题'
-      : '把所有关卡刷到 3 星，是这一步的小目标。';
+    $('reportSub').textContent = ids.length
+      ? '已完成 ' + ids.length + ' 关，累计答对 ' + okSum + ' / ' + totalSum + ' 题'
+      : '还没有开始任何关卡';
 
-    $('statGrid').innerHTML =
-      statCard(done + ' / ' + LEVELS.length, '已通关卡') +
-      statCard(totalQ, '累计答题') +
-      statCard(acc + '<span class="unit">%</span>', '总体正确率') +
-      statCard(stars + ' <span class="unit">/ ' + LEVELS.length * 3 + ' ★</span>', '已获星星');
+    var stats = [
+      { n: ids.length, label: '已完成关卡' },
+      { n: totalSum, label: '累计答题' },
+      { n: acc + '%', label: '总体正确率' },
+      { n: starSum(), label: '获得星星' }
+    ];
+    var grid = $('statGrid');
+    grid.innerHTML = '';
+    stats.forEach(function (s) {
+      grid.appendChild(el('div', 'stat',
+        '<div class="stat-num">' + s.n + '</div><div class="stat-label">' + s.label + '</div>'));
+    });
 
-    var rec = $('levelRecords');
-    rec.innerHTML = '';
-    LEVELS.forEach(function (l) {
-      var r = state.progress.levels[l.id];
-      var row = document.createElement('div');
-      row.className = 'record-row';
+    var list = $('levelRecords');
+    list.innerHTML = '';
+    if (!ids.length) {
+      list.appendChild(el('p', 'muted', '做几关之后，这里会显示你每一关的记录。'));
+      return;
+    }
+    ids.sort(function (a, b) { return (state.done[b].ts || 0) - (state.done[a].ts || 0); });
+    ids.forEach(function (k) {
+      var r = state.done[k];
+      var major = getMajor(r.majorId);
+      var row = el('div', 'record');
       row.innerHTML =
-        '<span>' + esc(l.title) + '</span>' +
-        (r
-          ? '<span class="muted">' + r.correct + '/' + r.total + ' 题 · <span style="color:#f5a623">' + '★'.repeat(r.stars) + '</span></span>'
-          : '<span class="muted">未开始</span>');
-      rec.appendChild(row);
+        '<span class="record-name">' + r.name + '</span>' +
+        '<span class="record-major">' + (major ? major.name : '') + '</span>' +
+        '<span class="record-score">' + r.ok + '/' + r.total + '</span>' +
+        '<span class="stars">' + starsText(r.stars) + '</span>';
+      list.appendChild(row);
     });
-  }
-
-  function statCard(num, label) {
-    return '<div class="stat"><div class="stat-num">' + num + '</div><div class="stat-label">' + esc(label) + '</div></div>';
   }
 
   /* ---------------- 事件绑定 ---------------- */
-
-  $('startBtn').onclick = function () {
-    show('view-setup');
-    renderSetup();
-  };
-
-  $('continueBtn').onclick = function () {
-    show('view-map');
-    renderMap();
-  };
-
-  $('beginBtn').onclick = function () {
-    state.progress.track = state.track;
-    state.progress.style = state.style;
-    saveProgress();
-    show('view-map');
-    renderMap();
-  };
-
-  $('backToMap').onclick = function () {
-    show('view-map');
-    renderMap();
-  };
-
-  $('backToMap2').onclick = function () {
-    show('view-map');
-    renderMap();
-  };
-
-  $('reportBtn').onclick = function () {
-    show('view-result');
-    renderResult(null);
-  };
-
-  $('homeBtn').onclick = function () {
-    show('view-welcome');
-    refreshWelcome();
-  };
-
-  $('nextBtn').onclick = function () {
-    var lvl = LEVELS[state.levelIndex];
-    if (state.questionIndex < lvl.questions.length - 1) {
-      state.questionIndex++;
-      renderQuestion();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      finishLevel();
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (t) {
+      e.preventDefault();
+      show(t.getAttribute('data-go'));
+      return;
     }
-  };
+    var cat = e.target.closest('[data-cat]');
+    if (cat) {
+      e.preventDefault();
+      curCat = cat.getAttribute('data-cat') || null;
+      show('browse');
+      return;
+    }
+    var mj = e.target.closest('[data-major]');
+    if (mj) {
+      e.preventDefault();
+      openMajor(mj.getAttribute('data-major'));
+      return;
+    }
+    var lv = e.target.closest('[data-level]');
+    if (lv) {
+      e.preventDefault();
+      openLevel(lv.getAttribute('data-level'));
+      return;
+    }
+    var opt = e.target.closest('.option');
+    if (opt && !opt.disabled) {
+      chooseOption(Number(opt.getAttribute('data-i')));
+    }
+  });
 
-  $('resetBtn').onclick = function () {
-    if (!window.confirm('确定要清空全部学习进度吗？这个操作不能撤销。')) return;
-    state.progress = emptyProgress();
-    state.track = null;
-    state.style = null;
-    saveProgress();
-    updateTopProgress();
-    show('view-welcome');
-    refreshWelcome();
-  };
+  $('nextBtn').addEventListener('click', nextQuestion);
+  $('backToMajor').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
+  $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
+  $('resetBtn').addEventListener('click', function () {
+    if (!confirm('确定要清空所有学习进度吗？此操作不可撤销。')) return;
+    state.done = {};
+    save();
+    renderReport();
+    toast('进度已清空');
+  });
 
-  /* ---------------- 欢迎页状态 ---------------- */
-
-  function refreshWelcome() {
-    var hasProgress = completedCount() > 0 || !!state.progress.track;
-    $('continueBtn').hidden = !hasProgress;
-    $('startBtn').textContent = hasProgress ? '重新选择方向' : '开始第一步 →';
-  }
-
-  /* ---------------- 初始化 ---------------- */
-
-  function init() {
-    /* 恢复上次的选择 */
-    if (state.progress.track) state.track = state.progress.track;
-    if (state.progress.style) state.style = state.progress.style;
-
-    refreshWelcome();
-    updateTopProgress();
-    show('view-welcome');
-  }
-
-  init();
+  /* ---------------- 启动 ---------------- */
+  load();
+  renderHomeCats();
+  show('home');
 })();

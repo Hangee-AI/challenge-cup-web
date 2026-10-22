@@ -3,123 +3,219 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>闯关学编程 · 新生编程入门引导</title>
+  <title>引路 · 大学新生专业学习导航</title>
+  <meta name="description" content="选一个专业，给你一条从大一到大四、能一关一关走完的学习路线。" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="brand">🎯 <span>闯关学编程</span></div>
-    <div class="progress-wrap" id="topProgressWrap" hidden>
-      <div class="progress-track"><div class="progress-fill" id="topProgressFill"></div></div>
-      <span class="progress-text" id="topProgressText">0%</span>
-    </div>
-    <button class="ghost-btn small" id="homeBtn" hidden>首页</button>
-  </header>
+<!-- ==================== 顶部导航 ==================== -->
+<header class="nav">
+  <a class="brand" href="#" data-go="home">
+    <span class="brand-mark">引</span>
+    <span class="brand-name">引路</span>
+    <span class="brand-sub">大学新生学习导航</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#" data-go="home">首页</a>
+    <a href="#" data-go="browse">专业库</a>
+    <a href="#" data-go="report">我的进度</a>
+  </nav>
+  <a class="btn btn-primary btn-sm" href="#" data-go="browse">开始选专业</a>
+</header>
 
-  <main class="app">
+<main id="main">
 
-    <!-- ========== 欢迎页 ========== -->
-    <section class="view" id="view-welcome">
-      <div class="hero">
+  <!-- ==================== 1. 首页 ==================== -->
+  <section id="view-home" class="view">
+    <div class="hero">
+      <div class="hero-text">
         <p class="eyebrow">写给刚上大学的你</p>
-        <h1>想自学编程，<br />却不知道从哪下手？</h1>
-        <p class="sub">
-          先花 30 秒告诉我们：你学什么、想怎么学。<br />
-          然后一关一关，把基础真正打下来。
+        <h1>大学四年，<br />先看清该往哪走。</h1>
+        <p class="lead">
+          选一个专业，我们把它拆成四个阶段、几个模块、一关一关的小任务。<br />
+          你不用再问"我这学期到底该干什么"。
         </p>
         <div class="hero-actions">
-          <button class="primary-btn" id="startBtn">开始第一步 →</button>
-          <button class="text-btn" id="continueBtn" hidden>继续上次进度</button>
+          <a class="btn btn-primary btn-lg" href="#" data-go="browse">选我的专业 →</a>
+          <a class="btn btn-ghost btn-lg" href="#how">看看它怎么用</a>
         </div>
         <ul class="hero-points">
-          <li>✅ 每关 3 道题，10 分钟一关</li>
-          <li>✅ 答错立刻告诉你为什么</li>
-          <li>✅ 进度自动保存，随时接着学</li>
+          <li>覆盖 13 个学科门类、近 50 个常见专业</li>
+          <li>每个专业拆成 4 个阶段、12 个模块</li>
+          <li>每个模块 3 个小关卡，答错立刻讲清楚</li>
         </ul>
       </div>
-    </section>
-
-    <!-- ========== 选择页 ========== -->
-    <section class="view" id="view-setup" hidden>
-      <h2 class="view-title">先认识一下你</h2>
-      <p class="view-sub">这些选择只影响推荐内容，之后可以随时回来改。</p>
-
-      <div class="setup-block">
-        <p class="setup-label">1. 你的专业方向</p>
-        <div class="chip-group" id="trackGroup"></div>
+      <div class="hero-card">
+        <div class="hero-card-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="hero-card-title">你的学习路径 · 预览</span>
+        </div>
+        <div class="preview-stage">
+          <span class="preview-tag">大一</span>
+          <div class="preview-lines">
+            <div class="preview-line"><b>打地基</b><em>高数 · 大学物理 · 工程导论</em></div>
+          </div>
+        </div>
+        <div class="preview-stage">
+          <span class="preview-tag">大二</span>
+          <div class="preview-lines">
+            <div class="preview-line"><b>专业基础</b><em>专业基础课 · 上机实验</em></div>
+          </div>
+        </div>
+        <div class="preview-stage">
+          <span class="preview-tag">大三</span>
+          <div class="preview-lines">
+            <div class="preview-line"><b>核心专业课</b><em>核心课 · 课程设计</em></div>
+          </div>
+        </div>
+        <div class="preview-stage">
+          <span class="preview-tag">大四</span>
+          <div class="preview-lines">
+            <div class="preview-line"><b>实践与出口</b><em>实习 · 毕设 · 考研/求职</em></div>
+          </div>
+        </div>
+        <div class="preview-foot">↓ 每个模块下面，还有 3 个小关卡</div>
       </div>
+    </div>
 
-      <div class="setup-block">
-        <p class="setup-label">2. 你想学什么</p>
-        <div class="chip-group" id="topicGroup"></div>
+    <div class="section" id="how">
+      <h2 class="section-title">它到底解决什么问题</h2>
+      <p class="section-sub">不是又一个网课平台，是帮你把"该学什么、先学什么"排清楚。</p>
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="feature-icon">🧭</div>
+          <h3>先给你一张地图</h3>
+          <p>大部分新生不是不努力，是不知道这学期该学什么、和后面怎么连。先把四年拆成阶段和模块。</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🎯</div>
+          <h3>再给你能动手的小任务</h3>
+          <p>每个模块拆成 3 个小关卡，10 分钟一关。不用先有完整计划，先做完眼前这一关。</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">💬</div>
+          <h3>错了立刻告诉你为什么</h3>
+          <p>答错不只判错，还说明错在哪、和哪个知识点有关，避免同一个坑踩三次。</p>
+        </div>
       </div>
+    </div>
 
-      <div class="setup-block">
-        <p class="setup-label">3. 你喜欢的学习方式</p>
-        <div class="chip-group" id="styleGroup"></div>
+    <div class="section">
+      <h2 class="section-title">先选一个学科门类</h2>
+      <p class="section-sub">点进去看这个门类下有哪些专业，每个专业都有一条自己的路径。</p>
+      <div class="cat-grid" id="homeCats"></div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">三步走完第一轮</h2>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><h3>选专业</h3><p>从 13 个门类里找到你的专业，或者相近的专业。</p></div>
+        <div class="step"><span class="step-num">2</span><h3>拿到路径</h3><p>系统按这个专业给出四阶段、十二模块的框架。</p></div>
+        <div class="step"><span class="step-num">3</span><h3>一关一关过</h3><p>从大一第一个模块开始，做关卡、看讲解、记进度。</p></div>
       </div>
+    </div>
 
-      <button class="primary-btn block" id="beginBtn" disabled>进入闯关地图</button>
-    </section>
+    <div class="cta-band">
+      <div>
+        <h3>不知道自己的专业以后干什么？</h3>
+        <p>先看路径，再看每门课在整条路线里的位置——比听别人讲十遍有用。</p>
+      </div>
+      <a class="btn btn-primary btn-lg" href="#" data-go="browse">现在开始 →</a>
+    </div>
+  </section>
 
-    <!-- ========== 地图页 ========== -->
-    <section class="view" id="view-map" hidden>
-      <div class="map-head">
+  <!-- ==================== 2. 专业库 ==================== -->
+  <section id="view-browse" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="home">← 返回首页</a>
+      <h1>专业库</h1>
+      <p>先选学科门类，再选专业。没找到你的专业？选一个相近的，路径逻辑是一样的。</p>
+    </div>
+    <div class="cat-chips" id="catChips"></div>
+    <div class="major-head">
+      <h2 id="browseCatName">全部专业</h2>
+      <span id="browseCatDesc" class="muted"></span>
+    </div>
+    <div class="major-grid" id="majorList"></div>
+  </section>
+
+  <!-- ==================== 3. 专业路径 ==================== -->
+  <section id="view-major" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="browse">← 换个专业</a>
+      <div class="major-title">
+        <span class="major-emoji" id="mjEmoji">💻</span>
         <div>
-          <h2 class="view-title">C 语言 · 入门闯关</h2>
-          <p class="map-sub" id="mapSub"></p>
-        </div>
-        <button class="ghost-btn" id="reportBtn">学习报告</button>
-      </div>
-      <div class="level-list" id="levelList"></div>
-    </section>
-
-    <!-- ========== 答题页 ========== -->
-    <section class="view" id="view-level" hidden>
-      <div class="level-head">
-        <button class="text-btn" id="backToMap">← 返回地图</button>
-        <span class="level-name" id="levelName"></span>
-        <span class="q-count" id="qCount"></span>
-      </div>
-
-      <div class="brief-box" id="briefBox" hidden></div>
-
-      <div class="card question-card">
-        <p class="q-stem" id="qStem"></p>
-        <div class="option-list" id="optionList"></div>
-
-        <div class="feedback" id="feedback" hidden>
-          <p class="feedback-title" id="feedbackTitle"></p>
-          <p class="feedback-explain" id="feedbackExplain"></p>
-          <button class="primary-btn" id="nextBtn">下一题 →</button>
+          <h1 id="mjName">计算机科学与技术</h1>
+          <p id="mjMeta" class="muted"></p>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- ========== 报告页 ========== -->
-    <section class="view" id="view-result" hidden>
-      <h2 class="view-title">学习报告</h2>
-      <p class="view-sub" id="reportSub"></p>
+    <div class="progress-row">
+      <div class="progress-bar"><div class="progress-fill" id="mjProgressFill"></div></div>
+      <span id="mjProgressText" class="muted">0 / 36 关</span>
+      <a class="btn btn-ghost btn-sm" href="#" data-go="report">学习报告</a>
+    </div>
 
-      <div class="stat-grid" id="statGrid"></div>
+    <div id="stageList" class="stage-list"></div>
+  </section>
 
-      <div class="card records-card">
-        <h3>关卡记录</h3>
-        <div id="levelRecords"></div>
+  <!-- ==================== 4. 关卡（答题） ==================== -->
+  <section id="view-level" class="view" hidden>
+    <div class="level-top">
+      <a class="back" href="#" id="backToMajor">← 返回路径</a>
+      <div class="crumb" id="crumb"></div>
+      <span class="muted" id="qCount"></span>
+    </div>
+
+    <div class="card quiz-card" id="quizCard">
+      <h2 class="level-name" id="levelName"></h2>
+      <div class="brief" id="briefBox"></div>
+      <p class="stem" id="qStem"></p>
+      <div class="options" id="optionList"></div>
+      <div class="feedback" id="feedback" hidden>
+        <strong id="feedbackTitle"></strong>
+        <p id="feedbackExplain"></p>
+        <button class="btn btn-primary btn-sm" id="nextBtn">下一题 →</button>
       </div>
+    </div>
 
-      <div class="result-actions">
-        <button class="ghost-btn" id="backToMap2">← 返回地图</button>
-        <button class="ghost-btn danger" id="resetBtn">重置全部进度</button>
-      </div>
-    </section>
+    <div class="card empty-card" id="levelEmpty" hidden>
+      <div class="empty-icon">🚧</div>
+      <h2>这一关的内容还在建设中</h2>
+      <p>框架已经到位：每个模块都会有 3 个小关卡。这一关的题目由团队按培养方案补充。</p>
+      <a class="btn btn-primary btn-sm" href="#" id="backToMajor2">返回路径</a>
+    </div>
+  </section>
 
-  </main>
+  <!-- ==================== 5. 学习报告 ==================== -->
+  <section id="view-report" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="browse">← 返回专业库</a>
+      <h1>学习报告</h1>
+      <p id="reportSub">还没有开始任何关卡</p>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <h3 class="card-title">最近的关卡</h3>
+      <div id="levelRecords" class="record-list"></div>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-ghost" href="#" data-go="browse">回专业库</a>
+      <button class="btn btn-danger" id="resetBtn">重置全部进度</button>
+    </div>
+  </section>
 
-  <footer class="foot">第二十届“挑战杯”南昌大学 · 院赛作品原型</footer>
+</main>
 
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+<footer class="footer">
+  <div>引路 · 大学新生专业学习导航</div>
+  <div class="footer-sub">第二十届"挑战杯"南昌大学大学生课外学术科技作品竞赛 · 院赛作品原型</div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
