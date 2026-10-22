@@ -277,8 +277,8 @@
 
     toggleEl('nickField', isReg);
     toggleEl('avatarField', isReg);
-    toggleEl('pwdField', !isLogin);
-    toggleEl('pwd2Field', !isLogin);
+    toggleEl('pwdField', true); // 三种模式都要填密码：注册=设置密码，登录=原密码，忘记=新密码
+    toggleEl('pwd2Field', !isLogin); // 只有登录不需要「再输一次」
 
     if ($('pwdLabel')) {
       $('pwdLabel').textContent = isReg ? '设置密码（6–32 位）'
@@ -294,7 +294,7 @@
         ? '注册后账号存在服务器上，换设备登录也能找回学习记录。'
         : (isLogin ? '用「学校简称 + 学号 + 密码」登录。' : '忘记密码？只要输入注册时的学校简称和学号，就能直接设置新密码，不需要邮箱和手机。');
     }
-    if ($('cloudHint')) $('cloudHint').hidden = isReg;
+    if ($('cloudHint')) $('cloudHint').hidden = true; // 说明文字统一由 #authHint 承担，避免重复
   }
 
   function toggleEl(id, show) {
@@ -351,8 +351,12 @@
       })
       .catch(function (err) {
         var msg = err.message || '操作失败';
-        if (err.status === 409) msg = '这个学号已经注册过了，试试「登录」';
-        if (err.status === 401) msg = '密码不对';
+        if (err.status === 409) {
+          msg = '这个学号已经注册过了，已帮你切到「登录」，输入密码即可';
+          setAuthMode('login');
+          if ($('pwdInput')) $('pwdInput').focus();
+        }
+        if (err.status === 401) msg = '密码不对，忘了的话点「忘记密码」用学校简称+学号重置';
         if (err.status === 404) msg = '没找到这个学号，先注册一下';
         toast(msg);
       })
