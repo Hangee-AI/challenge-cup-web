@@ -529,7 +529,7 @@ async function handle(req: Request): Promise<Response> {
   return await serveStatic(path, req);
 }
 
-/* ---------------- 静态文件 ---------------- */
+/* ---------------- 打包：把 90+ 个脚本合成 1 个（运行时算一次，内存里缓存） ---------------- */
 
 const STATIC_TYPES: Record<string, string> = {
   html: 'text/html; charset=utf-8',
@@ -552,6 +552,152 @@ const STATIC_TYPES: Record<string, string> = {
   webm: 'video/webm',
 };
 
+type Bundle = {
+  js: Uint8Array;
+  jsGz: Uint8Array;
+  jsBr: Uint8Array | null;
+  html: Uint8Array;
+  htmlGz: Uint8Array;
+  htmlBr: Uint8Array | null;
+  count: number;
+};
+let bundleCache: Bundle | null = null;
+let bundlePromise: Promise<Bundle | null> | null = null;
+
+async function gzip(data: Uint8Array): Promise<Uint8Array> {
+  const cs = new CompressionStream('gzip');
+  const stream = new Blob([data as unknown as BlobPart]).stream().pipeThrough(cs);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+/* brotli 比 gzip 再小 30% 左右（中文内容尤其明显）。
+   通过 node:zlib 动态引入：万一部署环境不支持，就自动退回 gzip，不影响可用性。 */
+type BrotliFn = (data: Uint8Array) => Uint8Array;
+let brotliFn: BrotliFn | null = null;
+try {
+  const zlib = await import('node:zlib');
+  brotliFn = (data: Uint8Array) =>
+    new Uint8Array(
+      zlib.brotliCompressSync(data as unknown as Uint8Array, {
+        params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 },
+      }),
+    );
+} catch {
+  brotliFn = null;
+}
+
+async function brotli(data: Uint8Array): Promise<Uint8Array | null> {
+  if (!brotliFn) return null;
+  try {
+    return brotliFn(data);
+  } catch {
+    return null;
+  }
+}
+
+/* 轻量压缩：只去掉整行的 // 注释、空行和行尾空格，不动字符串里的内容 */
+function lightMinify(code: string): string {
+  const out: string[] = [];
+  for (const line of code.split('\n')) {
+    const t = line.trim();
+    if (!t) continue;
+    if (t.startsWith('//')) continue;
+    out.push(line.replace(/\s+$/, ''));
+  }
+  return out.join('\n');
+}
+async function readRepoFile(name: string): Promise<Uint8Array | null> {
+  try {
+    return await Deno.readFile(new URL('../' + name, import.meta.url));
+  } catch {
+    return null;
+  }
+}
+
+function buildBundleOnce(): Promise<Bundle | null> {
+  if (bundleCache) return Promise.resolve(bundleCache);
+  if (bundlePromise) return bundlePromise;
+  bundlePromise = (async () => {
+    const htmlRaw = await readRepoFile('index.html');
+    if (!htmlRaw) return null;
+    const htmlText = new TextDecoder().decode(htmlRaw);
+
+    const tagRe = /<script\s+src="([^"]+)"\s*><\/script>\s*/g;
+    const srcs: string[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(htmlText)) !== null) srcs.push(m[1]);
+    if (!srcs.length) return null;
+
+    const parts: string[] = [];
+    for (const raw of srcs) {
+      const rel = raw.replace(/\?.*$/, '').replace(/^\.?\//, '');
+      const bytes = await readRepoFile(rel);
+      if (!bytes) return null;
+      parts.push('/* ==== ' + rel + ' ==== */\n' + lightMinify(new TextDecoder().decode(bytes)));
+    }
+
+    const jsText = parts.join('\n;\n');
+    const js = new TextEncoder().encode(jsText);
+
+    const firstIdx = htmlText.search(tagRe);
+    tagRe.lastIndex = 0;
+    let lastEnd = -1;
+    while ((m = tagRe.exec(htmlText)) !== null) lastEnd = tagRe.lastIndex;
+    const html = new TextEncoder().encode(
+      htmlText.slice(0, firstIdx) + '<script src="js/bundle.js?v=deno"></script>\n' + htmlText.slice(lastEnd),
+    );
+
+    const bundle: Bundle = {
+      js,
+      jsGz: await gzip(js),
+      jsBr: await brotli(js),
+      html,
+      htmlGz: await gzip(html),
+      htmlBr: await brotli(html),
+      count: srcs.length,
+    };
+    bundleCache = bundle;
+    console.log(
+      'bundle ready: ' + bundle.count + ' scripts, ' +
+      (js.length / 1048576).toFixed(2) + ' MB raw, br ' +
+      (bundle.jsBr ? (bundle.jsBr.length / 1024).toFixed(0) : 'n/a') + ' KB',
+    );
+    return bundle;
+  })();
+  return bundlePromise;
+}
+
+function accepts(req: Request, enc: string): boolean {
+  return (req.headers.get('accept-encoding') || '').toLowerCase().includes(enc);
+}
+
+function staticResponse(
+  req: Request,
+  data: Uint8Array,
+  gz: Uint8Array | null,
+  br: Uint8Array | null,
+  type: string,
+  cacheControl: string,
+): Response {
+  let body = data;
+  let enc = '';
+  if (br && accepts(req, 'br')) {
+    body = br;
+    enc = 'br';
+  } else if (gz && accepts(req, 'gzip')) {
+    body = gz;
+    enc = 'gzip';
+  }
+  const headers: Record<string, string> = {
+    'content-type': type,
+    'cache-control': cacheControl,
+    'vary': 'Accept-Encoding',
+    'x-served-by': 'deno-static',
+  };
+  if (enc) headers['content-encoding'] = enc;
+  return new Response(req.method === 'HEAD' ? null : (body as unknown as BodyInit), { headers });
+}
+
 async function serveStatic(path: string, req: Request): Promise<Response> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return new Response('Method Not Allowed', { status: 405 });
@@ -560,19 +706,24 @@ async function serveStatic(path: string, req: Request): Promise<Response> {
   // 防目录穿越
   if (rel.includes('..')) return new Response('Not Found', { status: 404 });
 
-  const tryRead = async (name: string) => {
-    try {
-      return await Deno.readFile(new URL('../' + name, import.meta.url));
-    } catch {
-      return null;
-    }
-  };
+  // 合并后的脚本（一个请求代替九十几个）
+  if (rel === 'js/bundle.js') {
+    const b = await buildBundleOnce();
+    if (b) return staticResponse(req, b.js, b.jsGz, b.jsBr, 'text/javascript; charset=utf-8', 'public, max-age=600');
+  }
 
-  let data = await tryRead(rel);
+  // 首页 / 未知路径 → 用合并后的 index.html
+  if (rel === 'index.html' || rel === '') {
+    const b = await buildBundleOnce();
+    if (b) return staticResponse(req, b.html, b.htmlGz, b.htmlBr, 'text/html; charset=utf-8', 'no-cache');
+  }
+
+  let data = await readRepoFile(rel);
   let name = rel;
-  // 目录或未知路径 → 回落到 index.html（前端是单页视图切换，不需要服务端路由）
   if (!data) {
-    data = await tryRead('index.html');
+    const b = await buildBundleOnce();
+    if (b) return staticResponse(req, b.html, b.htmlGz, b.htmlBr, 'text/html; charset=utf-8', 'no-cache');
+    data = await readRepoFile('index.html');
     name = 'index.html';
   }
   if (!data) return new Response('Not Found', { status: 404 });
@@ -580,14 +731,10 @@ async function serveStatic(path: string, req: Request): Promise<Response> {
   const ext = (name.split('.').pop() || 'html').toLowerCase();
   const type = STATIC_TYPES[ext] || 'application/octet-stream';
   const isHtml = ext === 'html';
-  return new Response(req.method === 'HEAD' ? null : data, {
-    headers: {
-      'content-type': type,
-      // HTML 不缓存（保证发新版本立刻生效），其它静态资源给 10 分钟
-      'cache-control': isHtml ? 'no-cache' : 'public, max-age=600',
-      'x-served-by': 'deno-static',
-    },
-  });
+  const compressible = isHtml || ext === 'css' || ext === 'js' || ext === 'json' || ext === 'svg';
+  const gz = compressible ? await gzip(data) : null;
+  const br = compressible ? await brotli(data) : null;
+  return staticResponse(req, data, gz, br, type, isHtml ? 'no-cache' : 'public, max-age=600');
 }
 
 Deno.serve({ port: Number(Deno.env.get('PORT') || 8000) }, (req) => {
