@@ -371,7 +371,7 @@
     $('mjName').textContent = m.name;
     $('mjMeta').textContent = (cat ? cat.name : '') + ' · ' + m.desc +
       ' · ' + styleName(state.style) +
-      (m.ready ? ' · 已有 C 语言示例关卡' : ' · 路径框架（关卡内容建设中）');
+      (m.ready ? ' · 已有讲解与练习' : ' · 路径框架（关卡内容建设中）');
 
     var levels = allLevelsOf(path);
     var doneN = levels.filter(function (lv) { return !!state.done[lv.id]; }).length;

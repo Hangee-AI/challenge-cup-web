@@ -41,8 +41,8 @@ const COMMON_COURSES = [
 /* ---------------- 2. 专业（id, 门类, 名称, 图标, 一句话方向） ----------------
    ready = 1 表示已有可运行的示例关卡（目前只有计算机专业） */
 const MAJOR_ROWS = [
-  ['philosophy',  '哲学',                     '💭', '读原著、练逻辑'],
-  ['philosophy',  '逻辑学',                   '🧠', '形式推理与论证'],
+  ['philosophy',  '哲学',                     '💭', '读原著、练逻辑', 1],
+  ['philosophy',  '逻辑学',                   '🧠', '形式推理与论证', 1],
   ['law',         '法学',                     '⚖️', '规则与案例'],
   ['law',         '知识产权',                 '📜', '创新与保护'],
   ['law',         '社会学',                   '🤝', '观察社会运行'],
@@ -1018,6 +1018,14 @@ const CS_STAGE_OVERRIDE = {
   }
 };
 
+/* ---------------- 5.1 专业级路径覆盖 ----------------
+   默认所有专业都用 PATH_TEMPLATE 的门类模板（模块为占位）。
+   在这里登记的专业改用「一模块一关」的真实模块表；
+   哲学 / 逻辑学 的覆盖由 js/philosophy.js、js/logic.js 在加载时补进来。 */
+var MAJOR_STAGE_OVERRIDES = {
+  'engineering-计算机科学与技术': CS_STAGE_OVERRIDE
+};
+
 /* ---------------- 6. 组装：把专业 + 模板 → 完整路径 ---------------- */
 function buildLevels(majorId, moduleIndex, realLevels) {
   var list = [];
@@ -1053,13 +1061,14 @@ function getPath(majorId) {
   var major = getMajor(majorId);
   if (!major) return null;
   var tpl = PATH_TEMPLATE[major.cat];
-  var override = major.id === 'engineering-计算机科学与技术' ? CS_STAGE_OVERRIDE : {};
+  // 有专门模块表的专业（计科、哲学、逻辑学）走覆盖，其余用门类模板
+  var override = (typeof MAJOR_STAGE_OVERRIDES !== 'undefined' && MAJOR_STAGE_OVERRIDES[major.id]) || {};
   var stages = [];
   var moduleIndex = 0;
   for (var i = 0; i < tpl.stages.length; i++) {
     var s = tpl.stages[i];
     var mods = (override[s.title] && override[s.title].modules) || s.modules.map(function (m) { return { name: m, levels: null }; });
-    var stage = { title: s.title, goal: s.goal, modules: [] };
+    var stage = { title: s.title, goal: (override[s.title] && override[s.title].goal) || s.goal, modules: [] };
     for (var j = 0; j < mods.length; j++) {
       var m = mods[j];
       stage.modules.push({
