@@ -5,7 +5,7 @@
 
 > 一句话：新生不是不努力，是不知道"该学什么、先学什么"。选一个专业，我们把四年拆成阶段、模块和一关一关的小任务，让学生知道下一步该干什么。
 
-线上演示地址（GitHub Pages，随 main 推送自动更新）：<https://hangee-ai.github.io/challenge-cup-web/>
+线上演示地址（surge.sh，随 main 推送由 GitHub Actions 自动部署）：<https://guoguan.surge.sh>
 
 ## 当前版本做了什么（v9 改版）
 
