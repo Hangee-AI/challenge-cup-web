@@ -19,7 +19,13 @@
     answered: false,
     fromMap: true,
     videoPage: null,      // 视频页当前播放第几集
-    done: {}              // levelId -> { ok, total, stars, name, majorId, ts }
+    done: {},             // levelId -> { ok, total, stars, name, majorId, ts }
+    profile: null,        // { mode:'guest'|'member', sid, nickname, avatar, since }
+    study: {},            // 'YYYY-MM-DD' -> 秒
+    last: null,           // { majorId, levelId, mode, page, docY, ts } 上次学到哪
+    theme: 'morning',     // 'morning' | 'night'
+    caro: 0,
+    quote: 0
   };
 
   function $(id) { return document.getElementById(id); }
@@ -39,18 +45,24 @@
       state.majorId = data.majorId || null;
       state.style = data.style || null;
       state.done = data.done || {};
+      state.profile = data.profile || null;
+      state.study = data.study || {};
+      state.last = data.last || null;
+      state.theme = data.theme === 'night' ? 'night' : 'morning';
     } catch (e) { /* 忽略损坏数据 */ }
   }
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        majorId: state.majorId, style: state.style, done: state.done
+        majorId: state.majorId, style: state.style, done: state.done,
+        profile: state.profile, study: state.study, last: state.last,
+        theme: state.theme
       }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report', 'profile'];
   var curView = 'home';
 
   function show(name) {
@@ -72,7 +84,7 @@
     markStyleSwitch();
     window.scrollTo(0, 0);
 
-    if (name === 'home') renderHomeCta();
+    if (name === 'home') { renderHomeCta(); renderHomeExtras(); }
     if (name === 'browse') renderBrowse();
     if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
@@ -80,6 +92,7 @@
     if (name === 'doc') renderDoc();
     if (name === 'video') renderVideo();
     if (name === 'report') renderReport();
+    if (name === 'profile') renderProfile();
   }
 
   function updateNav() {
@@ -93,6 +106,19 @@
     if (major) $('navMajor').textContent = major.emoji + ' ' + major.name;
     var cta = $('homeCta');
     if (cta) cta.textContent = has ? '继续我的路径 →' : '选我的专业 →';
+    var me = $('navMe');
+    if (me) {
+      var p = state.profile;
+      if (p && p.mode === 'member') {
+        $('navMeAvatar').textContent = p.avatar || '🐱';
+        $('navMeName').textContent = p.nickname || '同学';
+        me.classList.add('nav-me-on');
+      } else {
+        $('navMeAvatar').textContent = '👤';
+        $('navMeName').textContent = '登录';
+        me.classList.remove('nav-me-on');
+      }
+    }
   }
 
   /* ---------------- 小工具 ---------------- */
@@ -430,6 +456,7 @@
     state.levelCorrect = 0;
     state.fromMap = fromMap !== false;
     state.levelMeta = found;
+    remember({ page: null, docY: 0 });
 
     // 视频讲解：进 B 站课程页（左侧是整门课的目录）
     if (state.style === 'video') {
@@ -568,6 +595,7 @@
   /* 点目录/推荐分集：只换播放器，不整页重绘 */
   function playVideo(page) {
     state.videoPage = page;
+    remember({ page: page });
     $('vPlayer').src = bvPlayerUrl(page);
     $('vNow').textContent = '正在播放 P' + page + ' · ' + bvTitle(page).replace(/^[^-]+-\d+-/, '') + '（' + bvDuration(page) + '）';
     $('vOpen').href = bvPageUrl(page);
@@ -877,9 +905,321 @@
     toast('进度已清空');
   });
 
+  /* ---------------- 主题：晨雀 / 夜猫 ---------------- */
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', state.theme === 'night' ? 'night' : 'morning');
+    var ico = $('themeIco'), txt = $('themeText');
+    if (ico) ico.textContent = state.theme === 'night' ? '🌙' : '☀️';
+    if (txt) txt.textContent = state.theme === 'night' ? '夜猫' : '晨雀';
+  }
+  function toggleTheme() {
+    state.theme = state.theme === 'night' ? 'morning' : 'night';
+    save(); applyTheme();
+    toast(state.theme === 'night' ? '已切换到夜猫模式' : '已切换到晨雀模式');
+  }
+
+  /* ---------------- 学习时长 ---------------- */
+  function dateKey(d) {
+    var m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+  }
+  function addStudy(sec) {
+    var k = dateKey(new Date());
+    state.study[k] = (state.study[k] || 0) + sec;
+    save();
+  }
+  function totalStudy() {
+    var t = 0;
+    for (var k in state.study) if (state.study.hasOwnProperty(k)) t += state.study[k] || 0;
+    return t;
+  }
+  function fmtDur(sec) {
+    sec = Math.round(sec || 0);
+    var h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+    if (h > 0) return h + ' 小时' + (m > 0 ? ' ' + m + ' 分' : '');
+    if (m > 0) return m + ' 分钟';
+    return sec + ' 秒';
+  }
+  function streakDays() {
+    var n = 0, d = new Date();
+    for (var i = 0; i < 400; i++) {
+      if ((state.study[dateKey(d)] || 0) > 0) { n++; d.setDate(d.getDate() - 1); } else break;
+    }
+    return n;
+  }
+  function startStudyTimer() {
+    window.setInterval(function () {
+      if (document.visibilityState !== 'visible') return;
+      addStudy(15);
+      if (curView === 'profile') renderProfileStats();
+    }, 15000);
+  }
+
+  /* ---------------- 上次学到哪 ---------------- */
+  function remember(extra) {
+    if (!state.majorId || !state.levelId) return;
+    state.last = state.last || {};
+    state.last.majorId = state.majorId;
+    state.last.levelId = state.levelId;
+    state.last.mode = state.style;
+    if (extra) {
+      for (var k in extra) if (extra.hasOwnProperty(k)) state.last[k] = extra[k];
+    }
+    state.last.ts = Date.now();
+    save();
+  }
+  function resumeLast() {
+    var l = state.last;
+    if (!l || !l.levelId) return;
+    var lv = l.levelId, md = l.majorId, mode = l.mode, page = l.page, docY = l.docY;
+    var path = getPath(md);
+    var found = path && findLevel(path, lv);
+    if (!found) { show('browse'); return; }
+    state.majorId = md;
+    state.style = mode || state.style || 'text';
+    openLevel(lv, true);
+    remember({ page: page || null, docY: docY || 0 });
+    if (state.style === 'video') {
+      if (page) playVideo(page);
+    } else if (docY) {
+      window.setTimeout(function () { window.scrollTo(0, docY); }, 80);
+    }
+    toast('接着上次的地方继续');
+  }
+
+  /* ---------------- 首页：继续上次 + 鼓励语 + 公告轮播 ---------------- */
+  function renderHomeExtras() {
+    if (!HOME_QUOTES.length) return;
+    if (!state.quote && state.quote !== 0) state.quote = 0;
+    $('homeQuote').textContent = HOME_QUOTES[state.quote % HOME_QUOTES.length];
+
+    var box = $('resumeCard');
+    var l = state.last, found = null;
+    if (l && l.majorId && l.levelId) {
+      var p = getPath(l.majorId);
+      found = p && findLevel(p, l.levelId);
+    }
+    if (found) {
+      var mj = getMajor(l.majorId) || {};
+      var modeTxt = l.mode === 'video' ? '视频讲解' : '文字说明';
+      box.innerHTML =
+        '<div class="resume-major">' + (mj.emoji || '') + ' ' + (mj.name || '') + '</div>' +
+        '<div class="resume-level">' + found.level.name + '</div>' +
+        '<div class="resume-meta">上次用「' + modeTxt + '」学到这儿</div>' +
+        '<button class="btn btn-primary btn-sm" type="button" id="resumeBtn">接着学 →</button>';
+      $('resumeBtn').addEventListener('click', resumeLast);
+    } else {
+      box.innerHTML =
+        '<div class="resume-empty">还没开始。<br>先选个专业，我们给你一条从大一到大四的路。</div>' +
+        '<a class="btn btn-primary btn-sm" href="#" data-go="pickFirst">选专业 →</a>';
+    }
+  }
+
+  function renderCarousel() {
+    var track = $('caroTrack'), dots = $('caroDots');
+    if (!track) return;
+    track.innerHTML = '';
+    dots.innerHTML = '';
+    ANNOUNCEMENTS.forEach(function (a, i) {
+      var card = el('div', 'caro-card tone-' + a.tone);
+      card.innerHTML =
+        '<div class="caro-emoji">' + a.emoji + '</div>' +
+        '<div class="caro-body">' +
+        '<span class="caro-tag">' + a.tag + '</span>' +
+        '<h3 class="caro-title">' + a.title + '</h3>' +
+        '<p class="caro-desc">' + a.desc + '</p>' +
+        '</div>';
+      track.appendChild(card);
+
+      var d = el('button', 'caro-dot' + (i === 0 ? ' on' : ''));
+      d.type = 'button';
+      d.setAttribute('aria-label', '第 ' + (i + 1) + ' 条');
+      d.addEventListener('click', function () { state.caro = i; renderCarouselPos(); });
+      dots.appendChild(d);
+    });
+    renderCarouselPos();
+  }
+  function renderCarouselPos() {
+    var track = $('caroTrack');
+    if (!track || !track.children.length) return;
+    var n = track.children.length;
+    if (state.caro >= n) state.caro = 0;
+    if (state.caro < 0) state.caro = n - 1;
+    track.style.transform = 'translateX(' + (-state.caro * 100) + '%)';
+    var ds = $('caroDots').children;
+    for (var i = 0; i < ds.length; i++) ds[i].classList.toggle('on', i === state.caro);
+  }
+  function caroGo(delta) {
+    state.caro = (state.caro + delta);
+    renderCarouselPos();
+  }
+  function startCarousel() {
+    window.setInterval(function () {
+      if (curView !== 'home' || caroPaused || document.visibilityState !== 'visible') return;
+      caroGo(1);
+    }, 5000);
+  }
+  var caroPaused = false;
+
+  /* ---------------- 个人中心 ---------------- */
+  var avatarPick = null;
+
+  function renderAvatarPick() {
+    var wrap = $('avatarPick');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (!avatarPick) avatarPick = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    AVATARS.forEach(function (a) {
+      var b = el('button', 'avatar-opt' + (a === avatarPick ? ' on' : ''));
+      b.type = 'button';
+      b.textContent = a;
+      b.addEventListener('click', function () {
+        avatarPick = a;
+        renderAvatarPick();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderProfileStats() {
+    var grid = $('pfStats');
+    if (!grid) return;
+    var doneN = Object.keys(state.done).length;
+    var q = 0, ok = 0;
+    for (var k in state.done) {
+      if (!state.done.hasOwnProperty(k)) continue;
+      q += state.done[k].total || 0;
+      ok += state.done[k].ok || 0;
+    }
+    var acc = q ? Math.round(ok / q * 100) : 0;
+    var items = [
+      ['学习时长', fmtDur(totalStudy())],
+      ['连续天数', streakDays() + ' 天'],
+      ['通关数', doneN + ' 关'],
+      ['答题数', q + ' 题'],
+      ['正确率', acc + '%'],
+      ['星星', starSum() + ' ★']
+    ];
+    grid.innerHTML = items.map(function (it) {
+      return '<div class="pf-stat"><b>' + it[1] + '</b><span>' + it[0] + '</span></div>';
+    }).join('');
+
+    var bars = $('studyBars');
+    if (bars) {
+      var days = [];
+      var max = 1;
+      for (var i = 6; i >= 0; i--) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var sec = state.study[dateKey(d)] || 0;
+        if (sec > max) max = sec;
+        days.push({ d: d, sec: sec });
+      }
+      bars.innerHTML = days.map(function (x) {
+        var h = Math.max(4, Math.round(x.sec / max * 100));
+        var w = ['日', '一', '二', '三', '四', '五', '六'][x.d.getDay()];
+        return '<div class="bar-col">' +
+          '<div class="bar-wrap"><div class="bar' + (x.sec ? '' : ' bar-empty') + '" style="height:' + h + '%" title="' + fmtDur(x.sec) + '"></div></div>' +
+          '<span class="bar-label">' + w + '</span></div>';
+      }).join('');
+    }
+  }
+
+  function renderProfile() {
+    var p = state.profile;
+    var guest = !(p && p.mode === 'member');
+    $('guestPanel').hidden = !guest;
+    $('memberPanel').hidden = guest;
+    if (guest) { renderAvatarPick(); return; }
+    $('pfAvatar').textContent = p.avatar || '🐱';
+    $('pfName').textContent = p.nickname || '同学';
+    $('pfSid').textContent = '学号 ' + (p.sid || '—');
+    $('pfMode').textContent = '常驻模式';
+    $('pfSince').textContent = '加入于 ' + (p.since || '—');
+    renderProfileStats();
+  }
+
+  function registerMember() {
+    var sid = ($('sidInput').value || '').trim();
+    if (!/^\d{6,20}$/.test(sid)) { toast('学号应该是 6–20 位数字'); $('sidInput').focus(); return; }
+    var nick = ($('nickInput').value || '').trim();
+    if (!nick) nick = '同学' + sid.slice(-4);
+    state.profile = {
+      mode: 'member',
+      sid: sid,
+      nickname: nick.slice(0, 16),
+      avatar: avatarPick || AVATARS[0],
+      since: dateKey(new Date())
+    };
+    save();
+    updateNav();
+    renderProfile();
+    toast('注册成功，欢迎你，' + state.profile.nickname);
+  }
+
+  function logoutMember() {
+    if (!confirm('退出后会回到游客模式，学习进度仍保留在这台设备上。确定退出？')) return;
+    state.profile = { mode: 'guest' };
+    save();
+    updateNav();
+    renderProfile();
+    toast('已回到游客模式');
+  }
+
+  function changeAvatar() {
+    var p = state.profile;
+    if (!p || p.mode !== 'member') return;
+    var i = AVATARS.indexOf(p.avatar);
+    state.profile.avatar = AVATARS[(i + 1) % AVATARS.length];
+    save();
+    $('pfAvatar').textContent = state.profile.avatar;
+    updateNav();
+    toast('头像已换');
+  }
+
   /* ---------------- 启动 ---------------- */
   load();
+  applyTheme();
   renderHomeCats();
+  renderCarousel();
+  renderHomeExtras();
+  startStudyTimer();
+  startCarousel();
+
+  $('themeBtn').addEventListener('click', toggleTheme);
+  $('themeBtn2').addEventListener('click', toggleTheme);
+  $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
+  $('quoteNext').addEventListener('click', function () {
+    state.quote = (state.quote + 1) % HOME_QUOTES.length;
+    $('homeQuote').textContent = HOME_QUOTES[state.quote];
+  });
+  $('caroPrev').addEventListener('click', function () { caroGo(-1); });
+  $('caroNext').addEventListener('click', function () { caroGo(1); });
+  $('carousel').addEventListener('mouseenter', function () { caroPaused = true; });
+  $('carousel').addEventListener('mouseleave', function () { caroPaused = false; });
+  $('registerBtn').addEventListener('click', registerMember);
+  $('sidInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') registerMember(); });
+  $('nickInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') registerMember(); });
+  $('logoutBtn').addEventListener('click', logoutMember);
+  $('editAvatarBtn').addEventListener('click', changeAvatar);
+
+  var docScrollTimer = null;
+  window.addEventListener('scroll', function () {
+    if (curView !== 'doc') return;
+    if (docScrollTimer) return;
+    docScrollTimer = window.setTimeout(function () {
+      docScrollTimer = null;
+      remember({ docY: Math.round(window.scrollY) });
+    }, 400);
+  });
+  window.addEventListener('pagehide', function () {
+    if (curView === 'doc') remember({ docY: Math.round(window.scrollY) });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && curView === 'doc') {
+      remember({ docY: Math.round(window.scrollY) });
+    }
+  });
+
   // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题
   fetch('/api/health', { cache: 'no-store' }).then(function (r) {
     if (r.ok) ONLINE = true;

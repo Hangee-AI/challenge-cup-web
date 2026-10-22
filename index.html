@@ -24,6 +24,13 @@
   </nav>
   <div class="nav-right">
     <span class="nav-major" id="navMajor" hidden></span>
+    <button class="theme-btn" id="themeBtn" type="button" title="切换主题">
+      <span class="theme-ico" id="themeIco">🌙</span><span id="themeText">夜猫</span>
+    </button>
+    <a class="nav-me" href="#" data-go="profile" id="navMe">
+      <span class="nav-me-avatar" id="navMeAvatar">👤</span>
+      <span class="nav-me-name" id="navMeName">登录</span>
+    </a>
     <a class="btn btn-primary btn-sm" href="#" data-go="browse" id="navPick">选专业</a>
     <button class="btn btn-ghost btn-sm" id="reselectBtn" hidden>重新选择</button>
   </div>
@@ -51,29 +58,37 @@
           <li>每关先看讲解（视频 / 文字），再动手做题</li>
         </ul>
       </div>
-      <div class="hero-card">
-        <div class="hero-card-head">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="hero-card-title">你的学习路径 · 预览</span>
+      <div class="hero-side">
+        <div class="hero-card">
+          <div class="hero-card-head">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="hero-card-title">继续上次</span>
+          </div>
+          <div id="resumeCard" class="resume-card"></div>
         </div>
-        <div class="preview-stage">
-          <span class="preview-tag">大一</span>
-          <div class="preview-lines"><div class="preview-line"><b>打地基</b><em>高数 · 大学物理 · 工程导论</em></div></div>
+        <div class="quote-card">
+          <p class="quote-text" id="homeQuote">慢慢来，比较快。</p>
+          <button class="quote-next" type="button" id="quoteNext">换一句 ↻</button>
         </div>
-        <div class="preview-stage">
-          <span class="preview-tag">大二</span>
-          <div class="preview-lines"><div class="preview-line"><b>专业基础</b><em>专业基础课 · 上机实验</em></div></div>
-        </div>
-        <div class="preview-stage">
-          <span class="preview-tag">大三</span>
-          <div class="preview-lines"><div class="preview-line"><b>核心专业课</b><em>核心课 · 课程设计</em></div></div>
-        </div>
-        <div class="preview-stage">
-          <span class="preview-tag">大四</span>
-          <div class="preview-lines"><div class="preview-line"><b>实践与出口</b><em>实习 · 毕设 · 考研/求职</em></div></div>
-        </div>
-        <div class="preview-foot">↓ 每个模块下面，还有 3 个小关卡</div>
       </div>
+    </div>
+
+    <!-- 公告轮播 -->
+    <div class="section caro-section">
+      <div class="section-row">
+        <div>
+          <h2 class="section-title">最近更新 · 说明</h2>
+          <p class="section-sub">内容还在持续补，这里放更新记录和使用说明。</p>
+        </div>
+        <div class="caro-ctrl">
+          <button class="caro-arrow" type="button" id="caroPrev" aria-label="上一条">‹</button>
+          <button class="caro-arrow" type="button" id="caroNext" aria-label="下一条">›</button>
+        </div>
+      </div>
+      <div class="carousel" id="carousel">
+        <div class="caro-track" id="caroTrack"></div>
+      </div>
+      <div class="caro-dots" id="caroDots"></div>
     </div>
 
     <div class="section" id="how">
@@ -114,12 +129,12 @@
       </div>
     </div>
 
-    <div class="cta-band">
-      <div>
-        <h3>不知道自己的专业以后干什么？</h3>
-        <p>先看路径，再看每个模块在整条路线里的位置——比听别人讲十遍有用。</p>
-      </div>
-      <a class="btn btn-primary btn-lg" href="#" data-go="pickFirst">现在开始 →</a>
+    <div class="stat-band">
+      <div class="stat-band-item"><b>13</b><span>学科门类</span></div>
+      <div class="stat-band-item"><b>49</b><span>常见专业</span></div>
+      <div class="stat-band-item"><b>165</b><span>集课程视频</span></div>
+      <div class="stat-band-item"><b>7</b><span>关真实真题</span></div>
+      <div class="stat-band-item"><b>∞</b><span>可以慢慢走</span></div>
     </div>
   </section>
 
@@ -302,7 +317,8 @@
           <button class="btn btn-ghost" type="button" data-switch-style="text">📄 换成文字说明</button>
           <button class="btn btn-primary" id="videoStartQuiz">看完，开始做题 →</button>
         </div>
-      </main>
+
+</main>
     </div>
   </section>
 
@@ -348,6 +364,86 @@
     <div class="btn-row">
       <a class="btn btn-ghost" href="#" data-go="map">回闯关地图</a>
       <button class="btn btn-danger" id="resetBtn">重置全部进度</button>
+    </div>
+  </section>
+      <!-- ==================== 8. 个人中心 ==================== -->
+  <section id="view-profile" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="home">← 返回首页</a>
+      <h1>个人中心</h1>
+      <p>游客模式只存在这台设备；用学号注册后，昵称、头像、学习时长都会长期保存。</p>
+    </div>
+
+    <!-- 8a. 游客：注册入口 -->
+    <div id="guestPanel">
+      <div class="card guest-card">
+        <div class="guest-head">
+          <span class="guest-avatar">👤</span>
+          <div>
+            <h3>你现在是游客模式</h3>
+            <p class="muted">可以正常选专业、闯关、记时长，只是换台设备或清了浏览器就没了。</p>
+          </div>
+        </div>
+        <div class="guest-form">
+          <label class="field">
+            <span class="field-label">学号</span>
+            <input id="sidInput" class="field-input" type="text" inputmode="numeric" maxlength="20" placeholder="例如 9110126060" />
+          </label>
+          <label class="field">
+            <span class="field-label">昵称（可留空）</span>
+            <input id="nickInput" class="field-input" type="text" maxlength="16" placeholder="不填就用「同学 + 学号后四位」" />
+          </label>
+          <label class="field">
+            <span class="field-label">挑个头像</span>
+            <div class="avatar-pick" id="avatarPick"></div>
+          </label>
+          <button class="btn btn-primary btn-lg" id="registerBtn" type="button">用学号注册 · 开启常驻模式</button>
+          <p class="field-hint">不需要密码，学号只存在你自己的浏览器里，不会上传。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8b. 常驻：我的资料 -->
+    <div id="memberPanel" hidden>
+      <div class="card profile-card">
+        <div class="profile-head">
+          <span class="profile-avatar" id="pfAvatar">🐱</span>
+          <div class="profile-id">
+            <h2 id="pfName">同学</h2>
+            <p class="muted" id="pfSid">学号 —</p>
+            <div class="profile-tags">
+              <span class="tag tag-ok" id="pfMode">常驻模式</span>
+              <span class="tag" id="pfSince">加入于 —</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="editAvatarBtn" type="button">换个头像</button>
+        </div>
+        <div class="profile-stats" id="pfStats"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">坚持记录</h3>
+        <div class="study-bars" id="studyBars"></div>
+        <p class="muted small" id="studyHint">每天的学习时长会自动统计，离开页面就暂停。</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">设置</h3>
+        <div class="setting-row">
+          <div>
+            <b>主题</b>
+            <p class="muted small">晨雀＝白底，夜猫＝黑底，晚上看不刺眼。</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="themeBtn2" type="button">切换主题</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <b>退出常驻模式</b>
+            <p class="muted small">退出后会回到游客模式，学习进度仍保留在这台设备上。</p>
+          </div>
+          <button class="btn btn-danger btn-sm" id="logoutBtn" type="button">退出登录</button>
+        </div>
+      </div>
     </div>
   </section>
 
