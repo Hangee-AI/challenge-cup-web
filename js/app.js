@@ -2042,7 +2042,10 @@
     if (guest) {
       renderAvatarPick();
       // 记住上次选的学校简称，下次注册不用重选
-      if ($('sidPrefix') && p && p.prefix) $('sidPrefix').value = p.prefix;
+      if ($('sidPrefix') && p && p.prefix) {
+        if (window.SchoolPick) window.SchoolPick.set(p.prefix);
+        else $('sidPrefix').value = p.prefix;
+      }
       var hint = $('staleHint');
       if (hint) {
         if (hasStaleProfile()) {
@@ -2078,10 +2081,18 @@
       var given = m[1].replace(/[.\-\s]/g, '');
       if (sel) {
         var hit = false;
-        for (var i = 0; i < sel.options.length; i++) {
-          if (sel.options[i].value === given) { hit = true; break; }
+        if (window.SchoolPick) {
+          hit = !!window.SchoolPick.find(given);
+        } else if (sel.options) {
+          for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === given) { hit = true; break; }
+          }
         }
-        if (hit) { prefix = given; sel.value = given; }
+        if (hit) {
+          prefix = given;
+          if (window.SchoolPick) window.SchoolPick.set(given);
+          else sel.value = given;
+        }
       }
       raw = m[2];
     }

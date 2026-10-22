@@ -523,24 +523,19 @@
           <button type="button" class="auth-tab" data-auth="forgot">忘记密码</button>
         </div>
         <div class="guest-form">
-          <label class="field">
-            <span class="field-label">学号（先选学校简称，再填学号）</span>
-            <span class="sid-input-wrap">
-              <select id="sidPrefix" class="sid-select" aria-label="学校简称">
-                <option value="NCU">NCU</option>
-                <option value="NCHU">NCHU</option>
-                <option value="JXNU">JXNU</option>
-                <option value="ECJTU">ECJTU</option>
-                <option value="JUFE">JUFE</option>
-                <option value="JXUST">JXUST</option>
-                <option value="NIT">NIT</option>
-                <option value="JXUT">JXUT</option>
-                <option value="NCPU">NCPU</option>
-                <option value="NCZU">NCZU</option>
-              </select>
+          <div class="field">
+            <span class="field-label">学号（先搜学校，再填学号）</span>
+            <div class="school-pick" id="schoolPick">
+              <input id="schoolSearch" class="field-input school-search" type="text" autocomplete="off"
+                     placeholder="输入学校简称或校名，如 NCU / 南昌大学" aria-label="搜索学校简称" />
+              <input id="sidPrefix" type="hidden" value="NCU" />
+              <div class="school-menu" id="schoolMenu" hidden></div>
+            </div>
+            <p class="school-picked" id="schoolPicked">已选：NCU · 南昌大学</p>
+            <span class="sid-input-wrap sid-standalone">
               <input id="sidInput" class="field-input sid-input" type="text" inputmode="numeric" maxlength="20" placeholder="例如 9110126060" />
             </span>
-          </label>
+          </div>
           <label class="field" id="nickField">
             <span class="field-label">昵称（可留空）</span>
             <input id="nickInput" class="field-input" type="text" maxlength="16" placeholder="不填就用「同学 + 学号后四位」" />
@@ -706,6 +701,8 @@
 <script src="js/videos.js"></script>
 <script src="js/code-offline.js"></script>
 <script src="js/config.js"></script>
+<script src="js/universities.js"></script>
+<script src="js/school-pick.js"></script>
 <script src="js/app.js"></script>
 <script src="js/cloud.js"></script>
 <script src="js/pet.js"></script>

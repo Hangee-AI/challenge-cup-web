@@ -1568,15 +1568,33 @@ html[data-theme="night"] img { opacity: .94; }
   border: 0 !important; border-radius: 0 !important; background: transparent !important;
   padding-left: 12px;
 }
-.sid-input:focus { background: transparent !important; }/* 学号输入：可选学校简称 + 学号 */
-.sid-select {
-  appearance: none; -webkit-appearance: none;
-  border: 0; border-right: 1px solid var(--line);
-  background: var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238b93a8'/></svg>") no-repeat right 9px center;
-  color: var(--text); font: inherit; font-size: 13px; font-weight: 700; letter-spacing: .04em;
-  padding: 0 24px 0 12px; cursor: pointer; outline: none;
+.sid-input:focus { background: transparent !important; }
+
+/* 学校搜索选择（替代原来的下拉框） */
+.school-pick { position: relative; }
+.school-search { width: 100%; }
+.school-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60;
+  max-height: 268px; overflow-y: auto; padding: 6px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(16, 24, 40, .16);
 }
-.sid-select:focus { background-color: var(--surface-2); }
+.school-opt {
+  display: flex; align-items: baseline; gap: 10px; width: 100%;
+  padding: 8px 10px; border: 0; border-radius: 8px; background: transparent;
+  text-align: left; cursor: pointer; font: inherit;
+}
+.school-opt b {
+  flex: 0 0 auto; min-width: 66px;
+  color: var(--brand); font-size: 12.5px; letter-spacing: .04em;
+}
+.school-opt span { font-size: 13.5px; color: var(--text-2); }
+.school-opt:hover, .school-opt.is-active { background: var(--surface-2); }
+.school-opt-custom b { color: var(--text-3); }
+.school-empty { padding: 10px; font-size: 12.5px; line-height: 1.6; color: var(--text-3); }
+.school-picked { margin: 6px 0 8px; font-size: 12.5px; color: var(--text-3); }
+.school-picked.is-empty { visibility: hidden; }
+.sid-standalone { width: 100%; }
 /* ============================================================
  * 打卡 / 照明看板 · 云端账号 · 点亮动画
  * ============================================================ */
