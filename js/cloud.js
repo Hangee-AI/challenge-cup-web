@@ -161,6 +161,8 @@
       if (window.__YL) { window.__YL.renderProfile(); window.__YL.updateNav(); }
       var mode = $('pfMode');
       if (mode) mode.textContent = '云端账号';
+      var nh = $('memberNickHint');
+      if (nh) nh.textContent = '当前昵称：' + (user.nickname || '同学') + ' · 最多 16 个字';
     }
   }
 
@@ -432,6 +434,27 @@
       .catch(function (err) { toast(err.message || '修改失败'); });
   }
 
+  /* ---------------- 修改昵称 ---------------- */
+
+  function changeNickname() {
+    if (!hasSession()) { toast('先登录'); return; }
+    var input = $('nickNewInput');
+    var nick = input ? String(input.value || '').replace(/\s+/g, ' ').trim() : '';
+    if (!nick) { toast('昵称不能为空'); if (input) input.focus(); return; }
+    if (nick.length > 16) { toast('昵称最多 16 个字'); return; }
+
+    request('/api/auth/nickname', { method: 'POST', body: { nickname: nick }, timeout: 8000 })
+      .then(function (data) {
+        me = data.user || me;
+        writeStorage(K_USER, JSON.stringify(me));
+        syncLocalProfile(me);
+        toast('昵称已更新为「' + (me && me.nickname) + '」');
+        if (input) input.value = '';
+        var f = $('nickForm'); if (f) f.hidden = true;
+      })
+      .catch(function (err) { toast(err.message || '修改失败'); });
+  }
+
   /* ---------------- UI 绑定 ---------------- */
 
   function bindUI() {
@@ -458,6 +481,18 @@
     });
     var sp = $('savePwdBtn');
     if (sp) sp.addEventListener('click', changePassword);
+
+    var tn = $('toggleNickBtn');
+    if (tn) tn.addEventListener('click', function () {
+      var f = $('nickForm');
+      if (f) f.hidden = !f.hidden;
+      var input = $('nickNewInput');
+      if (input && !f.hidden) input.focus();
+    });
+    var sn = $('saveNickBtn');
+    if (sn) sn.addEventListener('click', changeNickname);
+    var ni = $('nickNewInput');
+    if (ni) ni.addEventListener('keydown', function (e) { if (e.key === 'Enter') changeNickname(); });
   }
 
   function revealCloudUI() {

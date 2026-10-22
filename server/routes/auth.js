@@ -4,6 +4,7 @@
    POST /api/auth/login      登录 { prefix, sid, password }
    POST /api/auth/reset      忘记密码：{ prefix, sid, password } 直接用简称+学号重置
    POST /api/auth/change     修改密码（需登录）：{ oldPassword, newPassword }
+   POST /api/auth/nickname   修改昵称（需登录）：{ nickname }
    GET  /api/auth/me         当前登录用户
    POST /api/auth/logout     退出
    ========================================================== */
@@ -120,6 +121,19 @@ router.post('/change', (req, res) => {
   if (b.oldPassword === b.newPassword) return res.status(400).json({ error: '新密码和原密码一样' });
   db.updateUser(me.user.id, { pwd: auth.hashPassword(b.newPassword) });
   res.json({ ok: true, message: '密码已更新' });
+});
+
+/* ---------------- 修改昵称（需要登录） ---------------- */
+router.post('/nickname', (req, res) => {
+  const me = currentUser(req);
+  if (!me) return res.status(401).json({ error: '请先登录' });
+  if (!auth.rateLimit('nick:' + ipOf(req), 10)) return res.status(429).json({ error: '操作太频繁，稍后再试' });
+  const b = req.body || {};
+  const nickname = String(b.nickname || '').trim().replace(/\s+/g, ' ').slice(0, 16);
+  if (!nickname) return res.status(400).json({ error: '昵称不能为空' });
+  if (nickname === me.user.nickname) return res.status(400).json({ error: '昵称没有变化' });
+  const user = db.updateUser(me.user.id, { nickname: nickname });
+  res.json({ ok: true, message: '昵称已更新', user: auth.publicUser(user) });
 });
 
 /* ---------------- 当前用户 ---------------- */

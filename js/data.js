@@ -502,48 +502,518 @@ const CS_INTRO_LEVELS = [
         explain: 'fopen 第一个参数是文件名，第二个是模式字符串："r" 只读、"w" 写（会清空文件）、"a" 追加。返回 NULL 表示打开失败。'
       }
     ]
+  },
+
+  /* ---------- 第 8 关 · 输入输出与格式化 ---------- */
+  {
+    id: 'c-l8',
+    name: '第 8 关 · 和程序对话：输入输出',
+    brief: 'printf 负责输出，scanf 负责读入。scanf 的变量参数前要加 &（取地址）；格式占位符要和变量类型一一对应；%.2f 表示保留两位小数。',
+    questions: [
+      {
+        stem: 'scanf("%d", &n); 里的 & 有什么作用？',
+        options: ['把 n 的地址交给 scanf，让它能把值写回去', '表示取余运算', '只是固定写法，可以省略', '表示 n 是常量'],
+        answer: 0,
+        explain: 'scanf 需要知道「把读到的值存到哪里」，所以传的是变量地址。漏掉 & 是新手最常见的崩溃原因之一。'
+      },
+      {
+        stem: 'printf("%.2f", 3.14159); 会输出什么？',
+        options: ['3.14', '3.14159', '3.1', '3'],
+        answer: 0,
+        explain: '%.2f 表示按浮点数输出并保留 2 位小数，第三位会四舍五入，所以是 3.14。'
+      },
+      {
+        stem: '要读入一个整数存进 int n，正确写法是？',
+        options: ['scanf("%d", &n);', 'scanf("%d", n);', 'scanf("%f", &n);', 'scanf("%s", &n);'],
+        answer: 0,
+        explain: '整数用 %d，变量前要加 &。%f 对应 float，%s 对应字符串，类型不匹配会读错。'
+      }
+    ]
+  },
+
+  /* ---------- 第 9 关 · 运算符与表达式 ---------- */
+  {
+    id: 'c-l9',
+    name: '第 9 关 · 运算符与表达式',
+    brief: '算术运算符 + - * / %，其中 / 做整数除法会丢掉小数；% 只能用于整数。++ / -- 有前置后置之分，优先级决定先算谁。',
+    questions: [
+      {
+        stem: 'int a = 5; printf("%d", a++); 输出什么？',
+        options: ['5', '6', '4', '编译报错'],
+        answer: 0,
+        explain: 'a++ 是后置自增：先使用 a 当前的值 5 输出，然后 a 才变成 6。'
+      },
+      {
+        stem: 'int a = 7, b = 2; 那么 a / b 和 a % b 分别是？',
+        options: ['3 和 1', '3.5 和 1', '3 和 0', '2 和 3'],
+        answer: 0,
+        explain: '两个整数相除，结果仍是整数，小数部分被丢掉，所以 7 / 2 = 3；7 % 2 是余数 1。'
+      },
+      {
+        stem: '表达式 2 + 3 * 4 的值是多少？',
+        options: ['14', '20', '24', '9'],
+        answer: 0,
+        explain: '乘法优先级高于加法，先算 3 * 4 = 12，再加 2，结果是 14。'
+      }
+    ]
+  },
+
+  /* ---------- 第 10 关 · 分支逻辑实战 ---------- */
+  {
+    id: 'c-l10',
+    name: '第 10 关 · 分支逻辑实战',
+    brief: '多个条件要用 &&（并且）、||（或者）连起来；C 里不能写 90 <= score < 100。if (x = 5) 是赋值，不是比较。',
+    questions: [
+      {
+        stem: '要判断 score 在 90 到 99 之间，正确写法是？',
+        options: ['score >= 90 && score < 100', '90 <= score < 100', 'score >= 90 || score < 100', 'score => 90 && score =< 100'],
+        answer: 0,
+        explain: 'C 的关系运算符不能连写，必须拆成两个条件用 && 连接。|| 只要一边成立就为真，范围会失效。'
+      },
+      {
+        stem: 'if (x = 5) { ... } 这段代码的问题是什么？',
+        options: ['把比较写成了赋值，条件永远为真', '5 不能赋给 x', 'if 后面不能加括号', '没有问题'],
+        answer: 0,
+        explain: '= 是赋值，== 才是比较。x = 5 会把 5 赋给 x，表达式的值非零，条件永远成立。'
+      },
+      {
+        stem: '逻辑或 a || b 中，如果 a 已经为真，会怎样？',
+        options: ['不再计算 b（短路）', '仍然计算 b', '程序报错', '把 b 的值赋给 a'],
+        answer: 0,
+        explain: '|| 具有短路特性：左边已经能确定结果为真，右边就不会再执行。常用来避免不必要的计算或越界访问。'
+      }
+    ]
+  },
+
+  /* ---------- 第 11 关 · 循环嵌套与图形打印 ---------- */
+  {
+    id: 'c-l11',
+    name: '第 11 关 · 循环嵌套与图案',
+    brief: '外层循环控制行，内层循环控制每一行打印几个字符，这是打印图形的通用套路。break 只跳出当前这一层循环。',
+    questions: [
+      {
+        stem: '外层循环执行 3 次、内层循环每次执行 4 次，循环体一共执行多少次？',
+        options: ['7 次', '12 次', '3 次', '4 次'],
+        answer: 1,
+        explain: '嵌套循环的总次数是相乘：3 × 4 = 12 次。'
+      },
+      {
+        stem: '在两层嵌套循环里执行 break，会跳出几层？',
+        options: ['只跳出当前所在的那一层', '同时跳出两层', '跳出整个程序', '一层都不跳'],
+        answer: 0,
+        explain: 'break 只作用于它所在的那一层循环。要一次跳出多层，可以用标志变量或 goto。'
+      },
+      {
+        stem: 'continue 的作用是？',
+        options: ['跳过本轮剩下的语句，直接进入下一轮', '结束整个循环', '重新从第一轮开始', '跳出函数'],
+        answer: 0,
+        explain: 'continue 不结束循环，只是放弃本轮剩余部分，接着判断下一轮条件。'
+      }
+    ]
+  },
+
+  /* ---------- 第 12 关 · 数组统计 ---------- */
+  {
+    id: 'c-l12',
+    name: '第 12 关 · 数组遍历与统计',
+    brief: '数组下标从 0 开始，n 个元素的下标是 0 ~ n-1。求和先设 0，求最大值先把第一个元素当作最大值，再逐个比较。',
+    questions: [
+      {
+        stem: 'int a[5] = {3, 1, 4}; 此时 a[3] 的值是多少？',
+        options: ['0', '4', '随机值', '编译报错'],
+        answer: 0,
+        explain: '只初始化了前 3 个元素，剩下的元素会被自动初始化为 0。'
+      },
+      {
+        stem: '遍历一个长度为 5 的数组，下面哪个循环条件正确？',
+        options: ['for (int i = 0; i < 5; i++)', 'for (int i = 1; i <= 5; i++)', 'for (int i = 0; i <= 5; i++)', 'for (int i = 5; i > 0; i--)'],
+        answer: 0,
+        explain: '合法下标是 0 ~ 4，所以 i < 5。i <= 5 会访问 a[5]，越界。'
+      },
+      {
+        stem: '把数组传给函数时，实际传递的是什么？',
+        options: ['首元素的地址', '整个数组的拷贝', '数组的长度', '最后一个元素的值'],
+        answer: 0,
+        explain: '数组名在表达式中会退化成首元素地址，所以函数里通过指针访问原数组，修改会影响原数据。'
+      }
+    ]
+  },
+
+  /* ---------- 第 13 关 · 字符串处理 ---------- */
+  {
+    id: 'c-l13',
+    name: '第 13 关 · 字符串处理',
+    brief: 'C 没有字符串类型，字符串是以 \\0 结尾的字符数组。strlen 数到 \\0 为止，sizeof 数整个数组占的字节，两者可能不同。比较字符串用 strcmp。',
+    questions: [
+      {
+        stem: 'char s[] = "hello"; 那么 sizeof(s) 和 strlen(s) 分别是？',
+        options: ['6 和 5', '5 和 5', '6 和 6', '5 和 6'],
+        answer: 0,
+        explain: 'sizeof 包含结尾的 \\0，共 6 个字节；strlen 遇到 \\0 停止，不算 \\0，所以是 5。'
+      },
+      {
+        stem: 'C 字符串的结束标志是哪个字符？',
+        options: ['\\0', '\\n', '空格', 'EOF'],
+        answer: 0,
+        explain: '字符串以空字符 \\0 结尾，strlen、printf("%s") 等函数都靠它判断字符串到哪里结束。'
+      },
+      {
+        stem: '要判断两个字符串内容是否相同，应该用？',
+        options: ['strcmp(a, b) == 0', 'a == b', 'strlen(a) == strlen(b)', 'a = b'],
+        answer: 0,
+        explain: '数组名比较的是地址，a == b 判断的是不是同一个数组。strcmp 返回 0 才表示内容相同。'
+      }
+    ]
+  },
+
+  /* ---------- 第 14 关 · 递归与函数进阶 ---------- */
+  {
+    id: 'c-l14',
+    name: '第 14 关 · 递归与函数进阶',
+    brief: '递归就是函数自己调用自己：先写基准条件（什么时候停），再写向基准条件靠近的递推。每次调用都有自己独立的局部变量。',
+    questions: [
+      {
+        stem: '写递归函数时，最不能少的是什么？',
+        options: ['基准条件（递归出口）', '全局变量', '循环语句', 'printf 输出'],
+        answer: 0,
+        explain: '没有基准条件，递归会一直调用自己，直到栈溢出。'
+      },
+      {
+        stem: 'fact(n) = n * fact(n - 1)，fact(0) = 1，那么 fact(4) 是多少？',
+        options: ['24', '12', '4', '120'],
+        answer: 0,
+        explain: '4 × 3 × 2 × 1 = 24。'
+      },
+      {
+        stem: '递归函数每一层的局部变量之间是什么关系？',
+        options: ['各自独立，互不影响', '共用同一份', '只有最后一层有效', '会被自动清零'],
+        answer: 0,
+        explain: '每次函数调用都会在调用栈上新建一份栈帧，局部变量属于各自的那一层。'
+      }
+    ]
+  },
+
+  /* ---------- 第 15 关 · 综合挑战：结构体数组 ---------- */
+  {
+    id: 'c-l15',
+    name: '第 15 关 · 综合挑战：成绩榜',
+    brief: '把结构体和数组结合起来，就能存一组学生。遍历、比较、找最大值都是之前学过的套路，只是这次比较的是结构体里的成员。',
+    questions: [
+      {
+        stem: 'struct Student list[3]; 表示什么？',
+        options: ['3 个 Student 结构体组成的数组', '1 个有 3 个成员的结构体', '3 个指向结构体的指针', '非法写法'],
+        answer: 0,
+        explain: '和普通数组一样，方括号里是元素个数，每个元素都是一个完整的 Student。'
+      },
+      {
+        stem: 'scanf("%s", s.name); 读入 "Tom Smith" 时，s.name 里会是什么？',
+        options: ['"Tom"', '"Tom Smith"', '空字符串', '编译报错'],
+        answer: 0,
+        explain: '%s 遇到空格就停止，只会读入 Tom。要读整行可以用 fgets。'
+      },
+      {
+        stem: '在数组里找最高分，max 应该先初始化成什么？',
+        options: ['第一个元素的分数', '0', '-1', '100'],
+        answer: 0,
+        explain: '先把第一个元素当作当前最大，再和后面的逐个比较。初始化为 0 在全是负分时会出错。'
+      }
+    ]
   }
 ];
 
-/* 计算机专业四年完整路径：参考南昌大学计算机科学与技术专业培养方案
-   （依据国际 CC2001 / 国家 CCC2002 课程体系），大一到大四全部换成真实课程名。
-   只有「C 语言入门」带真题关卡，其余模块按占位关卡生成，后续逐步补充。 */
+/* ---------------- 5.1 代码任务：每关一道可运行、可判题的 C 程序 ----------------
+   字段说明：
+   - task   题目要求（显示在关卡页）
+   - starter 初始代码（编辑器里的骨架）
+   - hint   提示，卡住时展开
+   - tests  测试用例：stdin 输入、stdout 期望输出（逐行精确比对，忽略首尾空白）
+*/
+const CS_CODE_TASKS = {
+  'c-l1': {
+    task: '用 printf 在屏幕上输出一行：Hello, C!',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    // TODO: 在这里写 printf
+    return 0;
+}`,
+    hint: 'printf("Hello, C!\\n"); 注意用英文双引号，语句结尾有分号。',
+    tests: [{ name: '样例', stdin: '', stdout: 'Hello, C!' }]
+  },
+  'c-l2': {
+    task: '读入一个整数成绩 score，及格（>= 60）输出 pass，否则输出 fail。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int score;
+    scanf("%d", &score);
+    // TODO: 用 if / else 判断并输出 pass 或 fail
+    return 0;
+}`,
+    hint: 'if (score >= 60) { printf("pass\\n"); } else { printf("fail\\n"); }',
+    tests: [
+      { name: '样例 1', stdin: '60', stdout: 'pass' },
+      { name: '样例 2', stdin: '59', stdout: 'fail' },
+      { name: '隐藏用例', stdin: '100', stdout: 'pass' }
+    ]
+  },
+  'c-l3': {
+    task: '读入正整数 n，输出 1 + 2 + ... + n 的和。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int n, sum = 0;
+    scanf("%d", &n);
+    // TODO: 用循环把 1 到 n 累加到 sum
+    printf("%d\\n", sum);
+    return 0;
+}`,
+    hint: 'for (int i = 1; i <= n; i++) sum += i;',
+    tests: [
+      { name: '样例 1', stdin: '5', stdout: '15' },
+      { name: '样例 2', stdin: '1', stdout: '1' },
+      { name: '隐藏用例', stdin: '100', stdout: '5050' }
+    ]
+  },
+  'c-l4': {
+    task: '先读入整数 n，再读入 n 个整数，输出其中的最大值。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    int x, max;
+    scanf("%d", &max);
+    // TODO: 继续读剩下的 n-1 个数，更新 max
+    printf("%d\\n", max);
+    return 0;
+}`,
+    hint: '先读第一个数作为 max，再从第 2 个数循环到第 n 个数：if (x > max) max = x;',
+    tests: [
+      { name: '样例 1', stdin: '5\n3 9 2 7 4', stdout: '9' },
+      { name: '样例 2（负数）', stdin: '3\n-5 -2 -9', stdout: '-2' }
+    ]
+  },
+  'c-l5': {
+    task: '实现函数 int max(int a, int b) 返回较大值，读入两个整数并输出结果。',
+    starter: `#include <stdio.h>
+
+int max(int a, int b) {
+    // TODO: 返回较大的那个
+    return 0;
+}
+
+int main(void) {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    printf("%d\\n", max(a, b));
+    return 0;
+}`,
+    hint: 'return a > b ? a : b; 或写 if (a > b) return a; return b;',
+    tests: [
+      { name: '样例 1', stdin: '3 8', stdout: '8' },
+      { name: '样例 2', stdin: '-1 -7', stdout: '-1' }
+    ]
+  },
+  'c-l6': {
+    task: '用指针实现交换函数 void swap(int *a, int *b)，读入两个整数，输出交换后的两个数（空格分隔）。',
+    starter: `#include <stdio.h>
+
+void swap(int *a, int *b) {
+    // TODO: 借助临时变量交换 *a 和 *b
+}
+
+int main(void) {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    swap(&a, &b);
+    printf("%d %d\\n", a, b);
+    return 0;
+}`,
+    hint: 'int t = *a; *a = *b; *b = t; 这里必须用 * 解引用，交换的是指针指向的值。',
+    tests: [
+      { name: '样例 1', stdin: '3 5', stdout: '5 3' },
+      { name: '样例 2', stdin: '10 20', stdout: '20 10' }
+    ]
+  },
+  'c-l7': {
+    task: '定义学生结构体（姓名、年龄、分数），读入三个值，按「姓名:.. 年龄:.. 分数:..」输出，分数保留 1 位小数。',
+    starter: `#include <stdio.h>
+
+struct Student {
+    char name[20];
+    int age;
+    double score;
+};
+
+int main(void) {
+    struct Student s;
+    scanf("%s %d %lf", s.name, &s.age, &s.score);
+    // TODO: 按格式输出
+    return 0;
+}`,
+    hint: 'printf("姓名:%s 年龄:%d 分数:%.1f\\n", s.name, s.age, s.score);',
+    tests: [
+      { name: '样例', stdin: 'Tom 19 90.5', stdout: '姓名:Tom 年龄:19 分数:90.5' }
+    ]
+  },
+  'c-l8': {
+    task: '读入一个整数 a 和一个小数 b，按「a=3 b=2.5」的格式输出，小数保留 1 位。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int a;
+    double b;
+    scanf("%d %lf", &a, &b);
+    // TODO: 用 printf 一次输出两个值
+    return 0;
+}`,
+    hint: 'printf("a=%d b=%.1f\\n", a, b);',
+    tests: [
+      { name: '样例', stdin: '3 2.5', stdout: 'a=3 b=2.5' },
+      { name: '隐藏用例', stdin: '-7 10', stdout: 'a=-7 b=10.0' }
+    ]
+  },
+  'c-l9': {
+    task: '读入两个整数 a、b，依次输出它们的和、差、积、商、余数，每个结果占一行。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    // TODO: 输出 5 行：a+b、a-b、a*b、a/b、a%b
+    return 0;
+}`,
+    hint: '整数除法会丢掉小数：7 / 2 输出 3，7 % 2 输出 1。',
+    tests: [
+      { name: '样例 1', stdin: '7 2', stdout: '9\n5\n14\n3\n1' },
+      { name: '样例 2', stdin: '8 3', stdout: '11\n5\n24\n2\n2' }
+    ]
+  },
+  'c-l10': {
+    task: '读入成绩 score，按规则输出等级：>=90 输出 A，>=80 输出 B，>=70 输出 C，>=60 输出 D，其余输出 E。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int score;
+    scanf("%d", &score);
+    // TODO: 用 if / else if 判断等级
+    return 0;
+}`,
+    hint: '从高到低判断：if (score >= 90) ... else if (score >= 80) ...',
+    tests: [
+      { name: '样例 1', stdin: '95', stdout: 'A' },
+      { name: '样例 2', stdin: '82', stdout: 'B' },
+      { name: '边界', stdin: '60', stdout: 'D' },
+      { name: '隐藏用例', stdin: '59', stdout: 'E' }
+    ]
+  },
+  'c-l11': {
+    task: '读入正整数 n，输出 n 行星号三角形：第 1 行 1 个 *，第 2 行 2 个……以此类推。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    // TODO: 外层控制行，内层控制每行打印几个 *
+    return 0;
+}`,
+    hint: 'for (int i = 1; i <= n; i++) { for (int j = 0; j < i; j++) printf("*"); printf("\\n"); }',
+    tests: [
+      { name: '样例', stdin: '3', stdout: '*\n**\n***' },
+      { name: '隐藏用例', stdin: '1', stdout: '*' }
+    ]
+  },
+  'c-l12': {
+    task: '读入 n 和 n 个整数，输出它们的和与平均值（保留两位小数），格式：sum=10 avg=2.50。',
+    starter: `#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    int x, sum = 0;
+    // TODO: 读入 n 个数并累加
+    // TODO: 输出 sum 和平均值，保留两位小数
+    return 0;
+}`,
+    hint: '平均值用 double 计算：printf("sum=%d avg=%.2f\\n", sum, (double)sum / n);',
+    tests: [
+      { name: '样例 1', stdin: '4\n1 2 3 4', stdout: 'sum=10 avg=2.50' },
+      { name: '样例 2', stdin: '3\n2 4 9', stdout: 'sum=15 avg=5.00' }
+    ]
+  },
+  'c-l13': {
+    task: '读入一个不含空格的字符串（长度不超过 100），输出它的长度和反转后的字符串，格式：len=5 rev=olleh。',
+    starter: `#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    char s[101];
+    scanf("%s", s);
+    // TODO: 求长度，再倒着输出
+    return 0;
+}`,
+    hint: 'int len = strlen(s); 从 len - 1 循环到 0 逐个 putchar。',
+    tests: [
+      { name: '样例 1', stdin: 'hello', stdout: 'len=5 rev=olleh' },
+      { name: '样例 2', stdin: 'C', stdout: 'len=1 rev=C' }
+    ]
+  },
+  'c-l14': {
+    task: '用递归实现阶乘：读入 n（0 <= n <= 12），输出 n!。',
+    starter: `#include <stdio.h>
+
+long long fact(int n) {
+    // TODO: 先写 n == 0 的出口，再写递推
+    return 0;
+}
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    printf("%lld\\n", fact(n));
+    return 0;
+}`,
+    hint: 'if (n == 0) return 1; return n * fact(n - 1);',
+    tests: [
+      { name: '样例 1', stdin: '5', stdout: '120' },
+      { name: '边界', stdin: '0', stdout: '1' }
+    ]
+  },
+  'c-l15': {
+    task: '读入 n 个学生（每行：姓名 分数），输出分数最高的学生姓名（保证最高分唯一）。',
+    starter: `#include <stdio.h>
+
+struct Student {
+    char name[20];
+    int score;
+};
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    struct Student list[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%s %d", list[i].name, &list[i].score);
+    }
+    // TODO: 找出最高分的学生并输出姓名
+    return 0;
+}`,
+    hint: '用 best = 0 记录下标，从 1 开始比较 list[i].score 和 list[best].score。',
+    tests: [
+      { name: '样例', stdin: '3\nTom 88\nAmy 95\nBob 90', stdout: 'Amy' },
+      { name: '隐藏用例', stdin: '2\nLi 60\nWang 61', stdout: 'Wang' }
+    ]
+  }
+};
+
+/* 计算机专业的大一阶段，把「C 语言入门」换成有真题的模块 */
 const CS_STAGE_OVERRIDE = {
   '大一 · 打地基': {
     modules: [
       { name: 'C 语言入门', levels: CS_INTRO_LEVELS },
       { name: '高等数学（上）', levels: null },
-      { name: '计算机科学导论', levels: null },
-      { name: '线性代数', levels: null },
-      { name: '大学物理', levels: null }
-    ]
-  },
-  '大二 · 专业基础': {
-    modules: [
-      { name: '数据结构', levels: null },
-      { name: '离散数学', levels: null },
-      { name: '计算机组织与结构', levels: null },
-      { name: '面向对象程序设计（Java）', levels: null },
-      { name: '汇编语言程序设计', levels: null },
-      { name: '概率论与数理统计', levels: null }
-    ]
-  },
-  '大三 · 核心专业课': {
-    modules: [
-      { name: '操作系统', levels: null },
-      { name: '计算机网络', levels: null },
-      { name: '数据库原理', levels: null },
-      { name: '编译原理', levels: null },
-      { name: '软件工程', levels: null },
-      { name: '微机原理与接口技术', levels: null }
-    ]
-  },
-  '大四 · 出口': {
-    modules: [
-      { name: '方向选修（Web / 图形学 / 人工智能）', levels: null },
-      { name: '课程设计与生产实习', levels: null },
-      { name: '毕业设计', levels: null },
-      { name: '考研/求职准备', levels: null }
+      { name: '大学计算机导论', levels: null }
     ]
   }
 };
@@ -559,6 +1029,7 @@ function buildLevels(majorId, moduleIndex, realLevels) {
         name: realLevels[r].name,
         brief: realLevels[r].brief,
         questions: realLevels[r].questions,
+        code: CS_CODE_TASKS[realLevels[r].id] || null,
         ready: true
       });
     }
@@ -634,14 +1105,9 @@ function findLevel(path, levelId) {
 /* ---------------- 10. 首页：公告轮播 / 鼓励语 / 头像 ---------------- */
 var ANNOUNCEMENTS = [
   {
-    tag: '更新', emoji: '🏫', tone: 'blue',
-    title: '计科路径换成南大真实培养方案',
-    desc: '计算机专业大一到大四 21 门课全部按南昌大学计科课程体系排好：数据结构、操作系统、计网、数据库、编译原理……C 语言入门 7 关已可做题，其余课程陆续补内容。'
-  },
-  {
     tag: '更新', emoji: '🆕', tone: 'blue',
-    title: 'C 语言入门已扩到 7 关',
-    desc: '从第一行代码、判断、循环、数组，一直到函数、指针、结构体与文件，每关都配了视频分集和文档。'
+    title: 'C 语言入门已扩到 15 关',
+    desc: '从第一行代码、判断、循环、数组，一路到函数、指针、结构体、字符串与递归；每关都配了选择题和可运行的代码任务。'
   },
   {
     tag: '说明', emoji: '🎬', tone: 'violet',
@@ -683,34 +1149,60 @@ var HOME_QUOTES = [
   '没有白走的路，每一步都算数。',
   '开始的勇气比完美的计划重要。',
   '别怕慢，怕的是原地站着想。',
-  '你今天的十分钟，就是四年后的底气。',
-  '怕什么都不会，就怕一直不开始。',
+  '想，全是问题；做，才有答案。',
+  '把「我不会」换成「我可以学」。',
+  '没有横空出世的幸运，只有不为人知的努力。',
+  '所有的奇迹，都来自平凡的坚持。',
   '先完成，再完美。',
-  '这一关听不懂没关系，先把它过完，回头看会突然明白。',
-  '你不需要赢过谁，只要比昨天的自己多懂一点。',
-  '翻开书的那一秒，你已经领先了还在犹豫的人。',
-  '难的部分通常只有前面一小段，走过去就顺了。',
-  '把「我不会」换成「我还没学会」。',
-  '每天前进一点点，一个学期就是一大步。',
-  '现在多懂一个概念，期末就少慌一次。',
-  '焦虑的时候，就去写一行代码、做一道题。',
-  '你不是学不会，你只是还没学够时间。',
-  '慢慢积累的人，最后往往走得最快。',
-  '别等到准备好了才开始，开始本身就是准备。',
-  '路径已经拆好了，剩下的就是每天走一小段。',
-  '大学最值钱的不是分数，是你自己搭起来的学习方法。',
-  '迷茫是正常的，走着走着路就清楚了。',
-  '把大目标拆成今天这一关，就没那么可怕。',
-  '你现在的每一次坚持，都在给未来的自己攒选择权。',
-  '不会就查，查完就用，用过就变成你的了。',
-  '比起聪明，能坚持到最后的人更少。',
-  '今天没学也没关系，别让明天也这样就行。',
-  '别用「没天赋」当借口，大部分差距只是时间差。',
-  '先把这一关做完，再去想四年那么远的事。',
-  '觉得难，说明你正在往上走。',
-  '同一件小事反复做，就会变成别人眼里的天赋。',
-  '今天学的东西也许一学期后才用上，但一定会用上。',
-  '一个人走得快，一群人走得远——找个人一起打卡吧。'
+  '今天多学一点，明天就多一点选择。',
+  '读书，是用最便宜的成本走最远的路。',
+  '你只管向前走，时间会给你答案。',
+  '怕什么真理无穷，进一寸有一寸的欢喜。',
+  '路虽远，行则将至；事虽难，做则必成。',
+  '不积跬步，无以至千里。',
+  '星光不问赶路人，时光不负有心人。',
+  '哪怕走得慢，也别回头。',
+  '别人看到的是结果，你经历的是成长。',
+  '焦虑，往往是因为想得太多、做得太少。',
+  '每天进步一点点，一年后就是另一个自己。',
+  '把大目标拆小，今天只做今天的事。',
+  '现在吃的苦，是以后挑路的底气。',
+  '不必和别人比速度，只和昨天的自己比距离。',
+  '热爱可抵岁月漫长。',
+  '真正的高手，都是把简单的事重复做。',
+  '先别急着否定自己，你只是还没学完。',
+  '今天的坚持，是明天别人追不上的差距。',
+  '把时间花在成长上，而不是焦虑上。',
+  '你现在偷的懒，都会变成以后的坑。',
+  '不必一次看懂，先把这一页翻过去。',
+  '不是等有兴趣才开始，是开始了才有兴趣。',
+  '把手机放远一点，你就赢了一半。',
+  '每天做完三件小事，比想一百件大事有用。',
+  '没有人能替你成长，但你可以自己开始。',
+  '一次只做一件事，做完再抬头。',
+  '别用战术上的勤奋，掩盖思考上的懒惰。',
+  '真正的进步，常常发生在你想放弃的下一次。',
+  '先成为自己的光，再照亮想去的地方。',
+  '不为失败找理由，只为成功找方法。',
+  '书山有路勤为径，学海无涯苦作舟。',
+  '宝剑锋从磨砺出，梅花香自苦寒来。',
+  '长风破浪会有时，直挂云帆济沧海。',
+  '天行健，君子以自强不息。',
+  '纸上得来终觉浅，绝知此事要躬行。',
+  '少壮不努力，老大徒伤悲。',
+  '业精于勤，荒于嬉。',
+  '志不立，天下无可成之事。',
+  '千里之行，始于足下。',
+  '觉得晚了的时候，恰恰是最早的时候。',
+  '不是因为看到希望才坚持，而是坚持了才看到希望。',
+  '慢一点没关系，方向对就好。',
+  '和昨天的自己和解，和明天的自己约定。',
+  '把每一件小事做好，就是了不起。',
+  '你流过的汗，会变成脚下的路。',
+  '认真生活的人，运气都不会太差。',
+  '熬过无人问津的日子，才配得上诗和远方。',
+  '把每一次想放弃，都变成再试一次。',
+  '你已经走在很多人前面了，别停下。'
 ];
 
 var AVATARS = ['🐱', '🐶', '🐼', '🦊', '🐨', '🦉', '🐧', '🐯', '🐸', '🐵', '🌱', '🚀', '⭐', '🍀', '🎯', '📚'];

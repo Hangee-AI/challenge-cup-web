@@ -11,10 +11,61 @@
 
 const express = require('express');
 const store = require('../store');
+const runner = require('../runner');
 
 const router = express.Router();
 
-router.get('/health', (req, res) => { res.json({ ok: true }); });
+router.get('/health', async (req, res) => {
+  let compiler;
+  try {
+    compiler = await runner.detect();
+  } catch (e) {
+    compiler = { ready: false, engine: null, detail: String(e.message || e) };
+  }
+  res.json({ ok: true, compiler: compiler });
+});
+
+/* 运行一次代码：用第一组输入，返回程序的 stdout / stderr */
+router.post('/run', async (req, res) => {
+  const body = req.body || {};
+  try {
+    const out = await runner.run(body.source, [{
+      name: '运行', stdin: body.stdin || '', stdout: ''
+    }]);
+    if (out.compileError) {
+      return res.json({ engine: out.engine, compileError: out.compileError });
+    }
+    const r = out.results[0] || {};
+    res.json({
+      engine: out.engine,
+      ms: out.ms,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      exitCode: r.exitCode
+    });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: e.message || '运行失败' });
+  }
+});
+
+/* 判题：编译一次，跑完所有测试用例 */
+router.post('/judge', async (req, res) => {
+  const body = req.body || {};
+  try {
+    const out = await runner.run(body.source, body.tests || []);
+    if (out.compileError) {
+      return res.json({ engine: out.engine, compileError: out.compileError });
+    }
+    res.json({
+      engine: out.engine,
+      ms: out.ms,
+      results: out.results,
+      passedAll: out.results.every(r => r.passed)
+    });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: e.message || '判题失败' });
+  }
+});
 
 router.get('/categories', (req, res) => {
   const cats = ['philosophy','economics','law','education','literature','history',

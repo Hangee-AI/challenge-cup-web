@@ -582,6 +582,17 @@
         </div>
         <div class="setting-row">
           <div>
+            <b>修改昵称</b>
+            <p class="muted small" id="memberNickHint">最多 16 个字，随时可以改。</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="toggleNickBtn" type="button">修改</button>
+        </div>
+        <div class="pwd-form" id="nickForm" hidden>
+          <input id="nickNewInput" class="field-input" type="text" maxlength="16" placeholder="新的昵称（最多 16 个字）" autocomplete="nickname" />
+          <button class="btn btn-primary btn-sm" id="saveNickBtn" type="button">保存昵称</button>
+        </div>
+        <div class="setting-row">
+          <div>
             <b>修改密码</b>
             <p class="muted small">输入原密码，再输两次新密码。</p>
           </div>
