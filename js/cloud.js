@@ -28,6 +28,16 @@
   /* ---------------- 基础工具 ---------------- */
 
   function apiBase() {
+    var host = location.hostname || '';
+    var isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '';
+    // 本机开发：永远走同源（localhost:3210 那段就是完整后端），不去调公网地址
+    if (isLocal) {
+      try {
+        var localOverride = localStorage.getItem(K_API);
+        if (localOverride) return localOverride.replace(/\/$/, '');
+      } catch (e) { /* 忽略 */ }
+      return location.protocol === 'file:' ? '' : '';
+    }
     try {
       if (window.YL_API_BASE) return String(window.YL_API_BASE).replace(/\/$/, '');
     } catch (e) { /* 忽略 */ }
@@ -35,7 +45,6 @@
       var forced = localStorage.getItem(K_API);
       if (forced) return forced.replace(/\/$/, '');
     } catch (e) { /* 忽略 */ }
-    if (location.protocol === 'file:') return ''; // 本地双击打开 = 一定离线
     return ''; // 同源部署
   }
 

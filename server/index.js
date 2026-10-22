@@ -17,6 +17,18 @@ const PORT = process.env.PORT || 3000;
 app.disable('x-powered-by');
 app.use(express.json({ limit: '64kb' }));
 
+/* 跨域：允许静态站（如 guoguan.surge.sh）调用这个后端的 /api
+   只用 Bearer 令牌，不依赖 cookie，所以不开放 credentials。 */
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '600');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 /* API 不缓存 */
 app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
