@@ -1007,10 +1007,26 @@
   }
 
   /* ---------------- 首页：继续上次 + 鼓励语 + 公告轮播 ---------------- */
+  var lastQuote = -1;
+
+  // 随机取一句，尽量不和上一句重复
+  function pickQuote() {
+    var n = HOME_QUOTES.length;
+    if (!n) return '';
+    var i = Math.floor(Math.random() * n);
+    if (n > 1 && i === lastQuote) i = (i + 1) % n;
+    lastQuote = i;
+    return HOME_QUOTES[i];
+  }
+
+  function showQuote() {
+    var q = pickQuote();
+    if (q) $('homeQuote').textContent = q;
+  }
+
   function renderHomeExtras() {
     if (!HOME_QUOTES.length) return;
-    if (!state.quote && state.quote !== 0) state.quote = 0;
-    $('homeQuote').textContent = HOME_QUOTES[state.quote % HOME_QUOTES.length];
+    showQuote();
 
     var box = $('resumeCard');
     var l = state.last, found = null;
@@ -1231,10 +1247,7 @@
   $('themeBtn').addEventListener('click', toggleTheme);
   $('themeBtn2').addEventListener('click', toggleTheme);
   $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
-  $('quoteNext').addEventListener('click', function () {
-    state.quote = (state.quote + 1) % HOME_QUOTES.length;
-    $('homeQuote').textContent = HOME_QUOTES[state.quote];
-  });
+  $('quoteNext').addEventListener('click', showQuote);
   $('caroPrev').addEventListener('click', function () { caroGo(-1); });
   $('caroNext').addEventListener('click', function () { caroGo(1); });
   $('carousel').addEventListener('mouseenter', function () { caroPaused = true; });
