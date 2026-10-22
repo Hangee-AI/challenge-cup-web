@@ -2002,6 +2002,11 @@ button.stage-head { align-items: center; }
 /* 折叠头是 button，标题/说明改用 span，需要补回块级显示 */
 .stage-title { display: block; }
 .stage-goal { display: block; }
+/* 桌面端保持原来的分隔线与阶段标签底色（button 的 border/background 重置后补回） */
+@media (min-width: 641px) {
+  html:not([data-layout="mobile"]) button.stage-head { border-bottom: 1px solid var(--surface-2); }
+  html:not([data-layout="mobile"]) button.doc-nav-stage { background: var(--surface-2); }
+}
 button.doc-nav-stage { margin-left: -2px; }
 button.doc-nav-label { display: flex; align-items: center; gap: 8px; }
 .doc-nav-label-txt { flex: 1; min-width: 0; }
