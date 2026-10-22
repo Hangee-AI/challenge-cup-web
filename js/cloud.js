@@ -544,6 +544,7 @@
   window.Cloud = {
     isOnline: function () { return online; },
     hasSession: hasSession,
+    apiBase: apiBase,
     submitAuth: submitAuth,
     logout: logout,
     checkin: checkin,

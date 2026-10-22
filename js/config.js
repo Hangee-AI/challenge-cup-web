@@ -16,6 +16,6 @@
  *    （优先级：本文件 > localStorage > 同源）
  * ============================================================ */
 
-window.YL_API_BASE = 'https://naval-vice-schema-markets.trycloudflare.com';
+window.YL_API_BASE = 'https://juan-zinc-newman-lighter.trycloudflare.com';
 
-// ci-marker: 2026-10-22-b
+// ci-marker: 2026-10-22-c
