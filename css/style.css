@@ -1176,6 +1176,82 @@ html[data-theme="night"] .map-node.is-done { background: #12301f; border-color: 
   100% { box-shadow: 0 0 0 20px rgba(255,159,28,0); }
 }
 
+/* ==========================================================
+   手机竖屏优化（≤640px 自动触发；点导航「版式」按钮可强制手机版）
+   依据 2026 移动端通用规范：
+   - 触控目标 ≥ 44px（Apple HIG）/ 48dp（Material），相邻间隔 ≥ 8px
+   - 正文字号 ≥ 16px，输入框 ≥ 16px（防 iOS 聚焦自动放大）
+   - 主按钮全宽，落在拇指可达区；表格/代码块横向滚动不撑破页面
+   - 底部留出 iPhone 安全区（env(safe-area-inset-bottom)）
+   ========================================================== */
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  input, select, textarea { font-size: 16px; }
+  img, video, iframe { max-width: 100%; }
+
+  .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .btn-sm { min-height: 38px; }
+
+  .hero h1 { font-size: clamp(28px, 8.5vw, 34px); }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; }
+
+  .view { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+
+  .level-list { gap: 8px; }
+  .level-item { min-height: 48px; align-items: center; }
+  .options { gap: 10px; }
+  .option { min-height: 48px; align-items: center; padding: 13px 16px; }
+
+  .doc-body table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .doc-body pre { overflow-x: auto; font-size: 13px; -webkit-overflow-scrolling: touch; }
+
+  #caroPrev, #caroNext { min-width: 44px; min-height: 44px; }
+  .quote-next { min-height: 40px; }
+}
+
+/* 强制手机版（桌面浏览器上把内容收窄成手机宽度，便于演示/调试） */
+html[data-layout="mobile"] { background: #e8ecf7; }
+html[data-layout="mobile"][data-theme="night"] { background: #0a0e1c; }
+html[data-layout="mobile"] body {
+  max-width: 480px; margin: 0 auto;
+  box-shadow: 0 0 0 1px var(--line), 0 24px 70px rgba(20, 28, 60, .14);
+}
+html[data-layout="mobile"] body { font-size: 16px; }
+html[data-layout="mobile"] input,
+html[data-layout="mobile"] select,
+html[data-layout="mobile"] textarea { font-size: 16px; }
+html[data-layout="mobile"] .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+html[data-layout="mobile"] .btn-sm { min-height: 38px; }
+html[data-layout="mobile"] .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 30px; }
+html[data-layout="mobile"] .hero h1 { font-size: clamp(28px, 8.5vw, 34px); }
+html[data-layout="mobile"] .hero-card { transform: none; }
+html[data-layout="mobile"] .hero-actions { flex-direction: column; align-items: stretch; }
+html[data-layout="mobile"] .hero-actions .btn { width: 100%; }
+html[data-layout="mobile"] .view { padding: 18px 16px calc(48px + env(safe-area-inset-bottom, 0px)); }
+html[data-layout="mobile"] .brand-sub { display: none; }
+html[data-layout="mobile"] .cat-grid { grid-template-columns: repeat(2, 1fr); }
+html[data-layout="mobile"] .major-grid,
+html[data-layout="mobile"] .modules { grid-template-columns: 1fr; }
+html[data-layout="mobile"] .feature-grid,
+html[data-layout="mobile"] .steps { grid-template-columns: 1fr; }
+html[data-layout="mobile"] .stat-grid { grid-template-columns: repeat(2, 1fr); }
+html[data-layout="mobile"] .stat-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html[data-layout="mobile"] .pulse-grid { grid-template-columns: 1fr; }
+html[data-layout="mobile"] .doc-wrap { grid-template-columns: 1fr; gap: 18px; }
+html[data-layout="mobile"] .doc-toc { display: none; }
+html[data-layout="mobile"] .doc-side,
+html[data-layout="mobile"] .video-side { position: static; max-height: none; }
+html[data-layout="mobile"] .video-wrap { grid-template-columns: 1fr; gap: 18px; }
+html[data-layout="mobile"] .level-list { gap: 8px; }
+html[data-layout="mobile"] .level-item { min-height: 48px; align-items: center; }
+html[data-layout="mobile"] .options { gap: 10px; }
+html[data-layout="mobile"] .option { min-height: 48px; align-items: center; padding: 13px 16px; }
+html[data-layout="mobile"] .doc-body table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+html[data-layout="mobile"] .doc-body pre { overflow-x: auto; font-size: 13px; -webkit-overflow-scrolling: touch; }
+html[data-layout="mobile"] #caroPrev,
+html[data-layout="mobile"] #caroNext { min-width: 44px; min-height: 44px; }
+
 /* ---------- 账号切换 tab ---------- */
 .auth-tabs {
   display: inline-flex;

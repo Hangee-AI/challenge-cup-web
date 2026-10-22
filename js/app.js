@@ -24,6 +24,7 @@
     study: {},            // 'YYYY-MM-DD' -> 秒
     last: null,           // { majorId, levelId, mode, page, docY, ts } 上次学到哪
     theme: 'morning',     // 'morning' | 'night'
+    layout: 'auto',       // 'auto' | 'mobile' | 'desktop' 版式切换
     caro: 0,
     quote: 0,
     lastQuote: -1         // 上次显示的鼓励语下标（用来避免刷新后重复）
@@ -50,6 +51,7 @@
       state.study = data.study || {};
       state.last = data.last || null;
       state.theme = data.theme === 'night' ? 'night' : 'morning';
+      state.layout = (data.layout === 'mobile' || data.layout === 'desktop') ? data.layout : 'auto';
       state.lastQuote = (typeof data.lastQuote === 'number') ? data.lastQuote : -1;
     } catch (e) { /* 忽略损坏数据 */ }
   }
@@ -58,7 +60,7 @@
       localStorage.setItem(STORE_KEY, JSON.stringify({
         majorId: state.majorId, style: state.style, done: state.done,
         profile: state.profile, study: state.study, last: state.last,
-        theme: state.theme, lastQuote: state.lastQuote
+        theme: state.theme, lastQuote: state.lastQuote, layout: state.layout
       }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
@@ -939,6 +941,32 @@
     toast(state.theme === 'night' ? '已切换到夜猫模式' : '已切换到晨雀模式');
   }
 
+  /* ---------------- 版式：自动 / 手机版 / 电脑版 ----------------
+     - 手机版：套用手机竖屏样式（桌面上内容收窄到 480px 模拟手机）
+     - 电脑版：把 viewport 伪装成 1080px，手机上也能看完整桌面布局 */
+  function applyLayout() {
+    var html = document.documentElement;
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (state.layout === 'mobile') {
+      html.setAttribute('data-layout', 'mobile');
+      if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1');
+    } else if (state.layout === 'desktop') {
+      html.setAttribute('data-layout', 'desktop');
+      if (meta) meta.setAttribute('content', 'width=1080');
+    } else {
+      html.removeAttribute('data-layout');
+      if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1');
+    }
+    var ico = $('layoutIco'), txt = $('layoutText');
+    if (ico) ico.textContent = state.layout === 'mobile' ? '📱' : state.layout === 'desktop' ? '💻' : '🖥️';
+    if (txt) txt.textContent = state.layout === 'mobile' ? '手机版' : state.layout === 'desktop' ? '电脑版' : '版式';
+  }
+  function cycleLayout() {
+    state.layout = state.layout === 'auto' ? 'mobile' : state.layout === 'mobile' ? 'desktop' : 'auto';
+    save(); applyLayout();
+    toast(state.layout === 'mobile' ? '已切换到手机版' : state.layout === 'desktop' ? '已切换到电脑版' : '已恢复自动版式');
+  }
+
   /* ---------------- 学习时长 ---------------- */
   function dateKey(d) {
     var m = d.getMonth() + 1, day = d.getDate();
@@ -1246,6 +1274,7 @@
   /* ---------------- 启动 ---------------- */
   load();
   applyTheme();
+  applyLayout();
   renderHomeCats();
   renderHomeCommon();
   renderCarousel();
@@ -1255,6 +1284,7 @@
 
   $('themeBtn').addEventListener('click', toggleTheme);
   $('themeBtn2').addEventListener('click', toggleTheme);
+  if ($('layoutBtn')) $('layoutBtn').addEventListener('click', cycleLayout);
   $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
   $('quoteNext').addEventListener('click', showQuote);
   $('caroPrev').addEventListener('click', function () { caroGo(-1); });
