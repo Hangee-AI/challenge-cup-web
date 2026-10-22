@@ -261,7 +261,7 @@ const STYLES = [
     id: 'video',
     name: '视频讲解',
     emoji: '🎬',
-    desc: '每个专业配套一门零基础视频课，边看边学',
+    desc: '左边整门课的章节目录，右边播放本关对应的分集',
     tag: '适合看不进文字的人'
   },
   {
@@ -280,65 +280,80 @@ const LEVEL_TEMPLATE = [
   { key: 'c', name: '第 3 关 · 综合题',   tip: '自己独立做出来' }
 ];
 
-/* ---------------- 5. 示例内容：计算机专业 · C 语言入门（唯一有真题的模块） ---------------- */
+/* ---------------- 5. 示例内容：计算机专业 · C 语言入门（唯一有真题的模块）
+   覆盖 runoob C 教程 7 大主题：
+   1. 基础（变量、数据类型、运算符、输入输出）
+   2. 流程控制（if、switch）
+   3. 循环（for、while、do-while）
+   4. 数组（一维、二维、字符数组 / 字符串）
+   5. 函数（自定义、形参实参、递归）
+   6. 指针（基础、指针和数组）
+   7. 结构体、共用体、文件读写
+   参考：https://www.runoob.com/cprogramming/c-tutorial.html
+*/
 const CS_INTRO_LEVELS = [
+  /* ---------- 第 1 关 · 基础：变量、类型、运算符、输入输出 ---------- */
   {
     id: 'c-l1',
     name: '第 1 关 · 认识你的第一行代码',
-    brief: 'C 程序从 main 函数开始执行。printf 负责把内容打印到屏幕上；变量是给数据起的名字，类型写在变量名前面。',
+    brief: 'C 程序从 main 函数开始执行。变量 = 类型 + 名字 + 初值；运算符 + - * / % 做计算；scanf 读入、printf 输出。分号是语句结尾。',
     questions: [
       {
         stem: '想让程序在屏幕上输出 Hello, C! —— 下面哪种写法是正确的？',
         options: ['printf("Hello, C!");', 'print("Hello, C!");', 'console.log("Hello, C!");', 'echo "Hello, C!";'],
         answer: 0,
-        explain: 'C 语言用 printf 输出，字符串要放在双引号里，语句结尾要有分号。print 是 Python 的写法，console.log 是 JavaScript 的。'
+        explain: 'C 语言用 printf 输出，字符串放双引号，语句结尾有分号。print 是 Python 的，console.log 是 JS 的，echo 是 shell 的。'
       },
       {
-        stem: '在 C 语言里，定义一个整数变量 age 并赋值为 18，写法正确的是？',
+        stem: '定义一个整数变量 age 并赋值 18，正确写法是？',
         options: ['int age = 18;', 'age = int 18;', 'var age = 18;', 'integer age := 18;'],
         answer: 0,
-        explain: '格式是「类型 变量名 = 值;」。int 表示整数，写在变量名前面。var 是别的语言的写法。'
+        explain: '格式是「类型 变量名 = 值;」。int 是整数类型，写在变量名前面。'
       },
       {
-        stem: '执行下面两行代码后，a 的值是？\n\nint a = 3;\na = a + 1;',
-        options: ['3', '4', '5', '程序报错'],
+        stem: '下面的运算结果是？\n\nint a = 10;\nprintf("%d", a % 3);',
+        options: ['3', '1', '0', '程序报错'],
         answer: 1,
-        explain: '先算等号右边的 a + 1（3 + 1 = 4），再把 4 赋值给 a，所以 a 变成 4。'
+        explain: '% 是取余运算符：10 除以 3 商 3 余 1，所以 10 % 3 = 1。注意 % 只能用于整数。'
       }
     ]
   },
+
+  /* ---------- 第 2 关 · 流程控制：if / switch ---------- */
   {
     id: 'c-l2',
     name: '第 2 关 · 让程序学会判断',
-    brief: 'if 让程序做选择：条件成立走一条路，不成立走另一条。注意单个 = 是赋值，两个 == 才是比较。',
+    brief: 'if 条件成立走一条路、不成立走另一条；switch 根据整数表达式的值跳到对应 case；每个 case 记得加 break 才不会一路往下跑。',
     questions: [
       {
-        stem: 'score 是已经定义好的变量。要判断「成绩及格（60 分及以上）」，哪个写法正确？',
+        stem: '判断「成绩及格（60 分及以上）」，哪个写法正确？',
         options: ['if (score >= 60)', 'if score >= 60', 'if (score => 60)', 'while (score >= 60)'],
         answer: 0,
-        explain: 'if 的条件必须写在圆括号里；「大于等于」是 >=，=> 不是 C 语言里的运算符；while 是循环不是判断。'
+        explain: 'if 的条件必须写在圆括号里；「大于等于」是 >=；while 是循环不是判断。'
       },
       {
-        stem: '下面这段程序会输出什么？\n\nint a = 5, b = 8;\nif (a > b) printf("A");\nelse printf("B");',
-        options: ['A', 'B', 'AB', '什么都不输出'],
+        stem: '下面这段 switch 会输出什么？\n\nchar g = \'B\';\nswitch (g) {\n  case \'A\': printf("优"); break;\n  case \'B\': printf("良");\n  case \'C\': printf("中"); break;\n  default: printf("差");\n}',
+        options: ['良', '良中', '良中差', '编译报错'],
         answer: 1,
-        explain: '5 > 8 不成立，所以跳过 if 分支，执行 else 分支，输出 B。'
+        explain: 'case B 后面没写 break，匹配到之后会「穿透」往下跑，依次执行 B 和 C，输出「良中」。这是 switch 最经典的坑。'
       },
       {
-        stem: '下面哪个符号用来判断「两个数是否相等」？',
-        options: ['=（单个等号）', '==（两个等号）', '>=', '!='],
+        stem: 'switch 后面的表达式可以是下面哪种类型？',
+        options: ['字符串', '整数或字符', '浮点数', '任意类型'],
         answer: 1,
-        explain: '单个 = 是赋值（把右边放进左边），两个 == 才是比较是否相等；!= 表示「不等于」。'
+        explain: 'switch 表达式必须是整数类型（int / char / short / 枚举），case 标签必须是常量。浮点数和字符串都不能用。'
       }
     ]
   },
+
+  /* ---------- 第 3 关 · 循环：for / while / do-while ---------- */
   {
     id: 'c-l3',
     name: '第 3 关 · 重复的力量',
-    brief: 'for 循环把同一段代码重复执行。要看清三件事：从哪开始、什么时候停、每次怎么变。',
+    brief: '把同一段代码重复执行。for 写死次数、while 写到条件不成立为止、do-while 至少跑一遍才判断。break 跳出循环，continue 跳过本轮。',
     questions: [
       {
-        stem: '下面这段程序会输出什么？\n\nfor (int i = 1; i <= 3; i++) printf("%d", i);',
+        stem: 'for (int i = 1; i <= 3; i++) printf("%d", i); 会输出什么？',
         options: ['123', '012', '1234', '321'],
         answer: 0,
         explain: 'i 依次取 1、2、3 并打印；当 i 变成 4 时，4 <= 3 不成立，循环结束。'
@@ -350,35 +365,128 @@ const CS_INTRO_LEVELS = [
         explain: 'i 取 0、1、2、3、4 共 5 个值；当 i = 5 时 5 < 5 不成立，循环退出。'
       },
       {
-        stem: '循环结束时，i 的值是多少？\n\nint i = 0;\nwhile (i < 3) { i++; }',
+        stem: '循环结束时 i 的值是多少？\n\nint i = 0;\nwhile (i < 3) { i++; }',
         options: ['0', '2', '3', '死循环'],
         answer: 2,
         explain: 'i 从 0 开始，每轮加 1：0 → 1 → 2 → 3。当 i = 3 时 3 < 3 不成立，循环退出，此时 i 就是 3。'
       }
     ]
   },
+
+  /* ---------- 第 4 关 · 数组：一维、二维、字符数组/字符串 ---------- */
   {
     id: 'c-l4',
     name: '第 4 关 · 把一组数存起来',
-    brief: '数组是连续存放的一排变量。C 语言的数组下标从 0 开始，所以长度为 5 的数组，最后一个元素是 nums[4]。',
+    brief: '数组是连续存放的一排变量，下标从 0 开始。二维数组是"数组的数组"。C 没有字符串类型，字符串就是以 \\0 结尾的字符数组。C 不检查越界，自己看好下标。',
     questions: [
       {
-        stem: 'int nums[5]; 这行代码定义了一个数组，它最多能放几个整数？',
-        options: ['4 个', '5 个', '6 个', '不确定'],
+        stem: 'int nums[5]; 这个数组最多能放几个整数？合法下标是？',
+        options: ['4 个，0~3', '5 个，0~4', '5 个，1~5', '6 个，0~5'],
         answer: 1,
-        explain: '方括号里的数字就是元素个数，int nums[5] 表示能放 5 个整数，下标范围是 0 ~ 4。'
+        explain: '方括号里的数字就是元素个数，下标从 0 开始。int nums[5] 有 5 个元素，下标 0 ~ 4。'
       },
       {
-        stem: 'C 语言里，数组的下标是从几开始的？',
-        options: ['0', '1', '-1', '没有规定'],
+        stem: '定义一个 3 行 4 列的整数矩阵，正确写法是？',
+        options: ['int m[3][4];', 'int m[4][3];', 'int m[12];', 'int m = matrix(3,4);'],
         answer: 0,
-        explain: '从 0 开始。所以第一个元素是 nums[0]，第二个是 nums[1]，以此类推。'
+        explain: '二维数组声明是 int 数组名[行数][列数]。int m[3][4] 表示 3 行 4 列共 12 个整数。'
       },
       {
-        stem: '下面这段程序会输出什么？\n\nint nums[3] = {10, 20, 30};\nprintf("%d", nums[1]);',
-        options: ['10', '20', '30', '1'],
+        stem: 'char s[] = "hello"; printf("%d", strlen(s)); 输出多少？（已知 string.h 已包含）',
+        options: ['4', '5', '6', '不确定'],
         answer: 1,
-        explain: 'nums[0] 是 10，nums[1] 是 20，nums[2] 是 30，所以输出 20。'
+        explain: '"hello" 实际占 6 个字节（h e l l o \\0），但 strlen 遇到 \\0 就停，返回的是不含 \\0 的长度 5。'
+      }
+    ]
+  },
+
+  /* ---------- 第 5 关 · 函数：自定义、形参实参、递归 ---------- */
+  {
+    id: 'c-l5',
+    name: '第 5 关 · 把代码块打包成函数',
+    brief: '函数 = 返回类型 + 函数名 + 参数。调用者传实参给形参；默认是传值（函数内改形参不影响实参）。函数可以自己调自己——这就是递归。',
+    questions: [
+      {
+        stem: '写一个函数返回两个整数中较大的那个，正确的函数头是？',
+        options: ['int max(int a, int b)', 'max(int a, int b)', 'void max(int a, int b)', 'int max(a, b)'],
+        answer: 0,
+        explain: '函数头格式是「返回类型 函数名(参数类型 参数名, ...)」。max 要返回 int，参数也要写清楚类型。'
+      },
+      {
+        stem: '执行完下面代码后 main 里的 a 和 b 分别是？\n\nvoid swap(int x, int y) { int t = x; x = y; y = t; }\nint main() {\n  int a = 3, b = 5;\n  swap(a, b);\n}',
+        options: ['a=3, b=5（没变）', 'a=5, b=3（交换了）', 'a=3, b=3', '程序报错'],
+        answer: 0,
+        explain: 'C 默认传值调用：swap 的形参 x、y 拿到的是 a、b 的拷贝，函数内交换的是拷贝，main 里的 a、b 不受影响。要交换实参得传指针。'
+      },
+      {
+        stem: '递归算阶乘的基准条件（n == 0 时返回什么）才不会无限递归？\n\nint fact(int n) {\n  if (n == 0) return ???;\n  return n * fact(n - 1);\n}',
+        options: ['0', '1', 'n', '-1'],
+        answer: 1,
+        explain: '数学上 0! = 1，基准条件返回 1 才能让递归正确收敛；返回 0 会让所有结果都是 0，不写基准条件会死递归直到栈溢出。'
+      }
+    ]
+  },
+
+  /* ---------- 第 6 关 · 指针：基础、指针和数组 ---------- */
+  {
+    id: 'c-l6',
+    name: '第 6 关 · 地址与指针',
+    brief: '每个变量都有地址，& 取地址、* 解引用。指针变量存的是地址。数组名在表达式里常退化成首元素的地址，所以指针和数组关系非常近。',
+    questions: [
+      {
+        stem: 'int a = 10; int *p = &a; printf("%d", *p); 输出什么？',
+        options: ['10', 'a', '0x...（一个地址）', '程序报错'],
+        answer: 0,
+        explain: 'p 存的是 a 的地址，*p 是「p 指向的那个变量」也就是 a 本身，所以输出 10。注意 %d 对应整数，打印地址要用 %p。'
+      },
+      {
+        stem: 'int a[3] = {1, 2, 3}; int *p = a; p++; printf("%d", *p); 输出什么？',
+        options: ['1', '2', '3', '地址值'],
+        answer: 1,
+        explain: '数组名 a 就是首元素地址，p 指向 a[0]。p++ 让指针往后移动一个 int 的位置，所以 *p 就是 a[1] = 2。'
+      },
+      {
+        stem: '关于 NULL 指针，下面说法正确的是？',
+        options: ['可以安全解引用', '表示指针不指向任何有效内存位置', '等于 1', '所有指针初始值都是 NULL'],
+        answer: 1,
+        explain: 'NULL 是标准库里定义为 0 的常量，表示"空指针"。访问 NULL 指向的内存会导致程序崩溃（段错误）。'
+      }
+    ]
+  },
+
+  /* ---------- 第 7 关 · 结构体、共用体、文件读写 ---------- */
+  {
+    id: 'c-l7',
+    name: '第 7 关 · 打包数据与读写文件',
+    brief: 'struct 把不同类型的数据打包成一个新类型，用 . 访问成员；union 所有成员共用同一块内存；fopen / fclose / fread / fwrite 做文件 I/O。',
+    questions: [
+      {
+        stem: '定义一个表示学生的结构体（名字、年龄、平均分），下面哪个是合法的？',
+        options: [
+          'struct Student { char name[20]; int age; double score; };',
+          'struct Student { string name; int age; double score; };',
+          'Student { char name[20]; int age; double score; }',
+          'struct Student: { char name[20]; int age; double score; };'
+        ],
+        answer: 0,
+        explain: 'struct 后面跟标签名 { 成员列表 }; 结尾必须有分号。string 不是 C 内置类型（得用 char 数组），成员之间没有逗号分隔。'
+      },
+      {
+        stem: '关于 union（共用体），正确的说法是？',
+        options: [
+          '每个成员独占一块独立内存',
+          '所有成员共用同一块内存，同一时刻只有一个成员有意义',
+          '只能有两个成员',
+          '和 struct 完全一样'
+        ],
+        answer: 1,
+        explain: 'union 的所有成员共用同一块起始地址的内存，大小取最大成员的大小。写了一个成员之后，其他成员的值就变成未定义的了。'
+      },
+      {
+        stem: '打开文件并以只读方式读取，正确的调用是？',
+        options: ['fopen("data.txt", "r")', 'open("data.txt")', 'read("data.txt")', 'fopen("data.txt", "w")'],
+        answer: 0,
+        explain: 'fopen 第一个参数是文件名，第二个是模式字符串："r" 只读、"w" 写（会清空文件）、"a" 追加。返回 NULL 表示打开失败。'
       }
     ]
   }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>引路 · 大学新生专业学习导航</title>
   <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
-  <link rel="stylesheet" href="css/style.css?v=49videos" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
@@ -174,7 +174,7 @@
     <div class="page-head">
       <a class="back" href="#" data-go="browse">← 换个专业</a>
       <h1>你更喜欢哪种讲解方式？</h1>
-      <p>文字说明 = 左边目录 + 右边正文的文档式讲解，读完直接做题；视频讲解之后再开放。之后可以随时切换。</p>
+      <p>文字说明是「左边目录 + 右边正文」的文档站；视频讲解是「左边整门课的章节目录 + 右边播放本关对应的分集」。之后可以随时切换。</p>
     </div>
     <div class="style-grid" id="styleList"></div>
     <p class="muted style-note">选好之后进入你的学习路径。</p>
@@ -246,23 +246,41 @@
     </div>
   </section>
 
-  <!-- ==================== 7. 视频讲解：本专业推荐课程 ==================== -->
-  <section id="view-video" class="view" hidden>
-    <div class="video-page">
-      <div class="video-player-card">
-        <div class="video-frame" id="videoFrame"></div>
-        <div class="video-info">
-          <span class="video-kicker" id="videoMajorName"></span>
-          <h1 id="videoTitle">本专业推荐视频</h1>
-          <p class="muted" id="videoDesc"></p>
-          <span class="video-level" id="videoLevelName"></span>
-          <div class="video-actions">
-            <a class="btn btn-primary" id="videoOpen" href="#" target="_blank" rel="noopener">在 B 站打开完整课程 ↗</a>
-            <button class="btn btn-ghost" id="videoToText">改用文字版学习 →</button>
-            <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
-          </div>
+  <!-- ==================== 7. 视频讲解：B 站课程 + 左侧全集目录 ==================== -->
+  <section id="view-video" class="view view-video" hidden>
+    <div class="video-wrap">
+
+      <aside class="video-side">
+        <a class="back" href="#" id="videoBack">← 返回地图</a>
+        <div class="doc-side-title" id="vSideTitle">视频讲解</div>
+        <div class="doc-side-sub" id="vSideSub"></div>
+        <nav class="video-nav" id="videoNav"></nav>
+      </aside>
+
+      <main class="video-main">
+        <div class="doc-crumb" id="vCrumb"></div>
+        <h1 class="doc-title" id="vTitle"></h1>
+        <p class="doc-lead" id="vLead"></p>
+
+        <div class="player-box">
+          <iframe id="vPlayer" src="" allowfullscreen frameborder="0" scrolling="no"
+                  allow="autoplay; fullscreen; picture-in-picture"></iframe>
         </div>
-      </div>
+        <div class="player-foot">
+          <span class="muted" id="vNow"></span>
+          <a class="link" id="vOpen" href="#" target="_blank" rel="noopener">在 B 站打开这一集 ↗</a>
+        </div>
+        <p class="player-hint">
+          💡 如果播放器一直黑屏或加载不出来（校园网/广告拦截插件经常拦跨站播放），直接点右边的「在 B 站打开这一集」就行，目录、进度和做题都不受影响。
+        </p>
+
+        <div class="ep-list" id="vEpList"></div>
+
+        <div class="doc-foot">
+          <a class="btn btn-ghost" href="#" data-go="map">返回地图</a>
+          <button class="btn btn-primary" id="videoStartQuiz">看完，开始做题 →</button>
+        </div>
+      </main>
     </div>
   </section>
 
@@ -318,8 +336,9 @@
   <div class="footer-sub">第二十届"挑战杯"南昌大学大学生课外学术科技作品竞赛 · 院赛作品原型</div>
 </footer>
 
-<script src="js/data.js?v=49videos"></script>
-<script src="js/docs.js?v=49videos"></script>
-<script src="js/app.js?v=49videos"></script>
+<script src="js/data.js"></script>
+<script src="js/docs.js"></script>
+<script src="js/videos.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
