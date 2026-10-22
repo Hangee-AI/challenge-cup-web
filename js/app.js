@@ -18,6 +18,7 @@
     levelCorrect: 0,
     answered: false,
     fromMap: true,
+    videoPage: null,      // 视频页当前播放第几集
     done: {}              // levelId -> { ok, total, stars, name, majorId, ts }
   };
 
@@ -401,18 +402,116 @@
     state.fromMap = fromMap !== false;
     state.levelMeta = found;
 
-    // 视频讲解暂未开放：先给一个说明页
-    if (state.style === 'video') { show('video'); return; }
+    // 视频讲解：进 B 站课程页（左侧是整门课的目录）
+    if (state.style === 'video') {
+      state.videoPage = null;   // 每次进关卡重新定位到本关第一集
+      show('video');
+      return;
+    }
 
     show('doc');
   }
 
-  /* 视频页 */
+  /* ---------------- 视频讲解页 ---------------- */
+  function videoPagesOf(levelId) {
+    var v = getVideo(levelId);
+    var pages = [];
+    (v.main || []).forEach(function (r) {
+      for (var p = r[0]; p <= r[1]; p++) pages.push({ page: p, kind: 'main' });
+    });
+    (v.extra || []).forEach(function (r) {
+      for (var q = r[0]; q <= r[1]; q++) pages.push({ page: q, kind: 'extra' });
+    });
+    return pages;
+  }
+
+  function firstVideoPage(levelId) {
+    var v = getVideo(levelId);
+    var first = (v.main && v.main[0]) ? v.main[0][0] : 1;
+    return first;
+  }
+
+  function renderVideoNav(levelId, curPage) {
+    var nav = $('videoNav');
+    nav.innerHTML = '';
+    var mine = {};
+    videoPagesOf(levelId).forEach(function (x) { mine[x.page] = x.kind; });
+
+    bvSections().forEach(function (sec) {
+      var head = el('div', 'video-sec' + (mine[sec.from] || (curPage >= sec.from && curPage <= sec.to) ? ' is-open' : ''));
+      head.innerHTML =
+        '<span class="video-sec-name">' + esc(sec.name) + '</span>' +
+        '<span class="video-sec-range">P' + sec.from + '–P' + sec.to + '</span>';
+      nav.appendChild(head);
+
+      for (var p = sec.from; p <= sec.to; p++) {
+        var kind = mine[p];
+        var a = el('a',
+          'video-ep' +
+          (p === curPage ? ' is-on' : '') +
+          (kind === 'main' ? ' is-mine' : '') +
+          (kind === 'extra' ? ' is-extra' : ''));
+        a.href = '#';
+        a.setAttribute('data-page', p);
+        a.innerHTML =
+          '<span class="video-ep-no">P' + p + '</span>' +
+          '<span class="video-ep-title">' + esc(bvTitle(p).replace(/^[^-]+-\d+-/, '')) + '</span>' +
+          '<span class="video-ep-dur">' + bvDuration(p) + '</span>';
+        nav.appendChild(a);
+      }
+    });
+  }
+
   function renderVideo() {
     var found = currentLevel();
-    $('videoLevelName').textContent = found
-      ? found.level.name + ' · ' + found.module.name
-      : '';
+    if (!found) { show('map'); return; }
+    var level = found.level;
+    var v = getVideo(level.id);
+    var pages = videoPagesOf(level.id);
+    var page = state.videoPage || firstVideoPage(level.id);
+    state.videoPage = page;
+
+    $('vSideTitle').textContent = '🎬 ' + BV_TITLE;
+    $('vSideSub').textContent = '共 ' + BV_TOTAL + ' 集 · 约 26.5 小时';
+    renderVideoNav(level.id, page);
+
+    $('vCrumb').textContent = found.stage.title + ' / ' + found.module.name;
+    $('vTitle').textContent = level.name;
+    $('vLead').textContent = v.note || '';
+
+    $('vPlayer').src = bvPlayerUrl(page);
+    $('vNow').textContent = '正在播放 P' + page + ' · ' + bvTitle(page).replace(/^[^-]+-\d+-/, '') + '（' + bvDuration(page) + '）';
+    $('vOpen').href = bvPageUrl(page);
+
+    // 本关推荐分集
+    var list = $('vEpList');
+    list.innerHTML = '';
+    ['main', 'extra'].forEach(function (kind) {
+      var group = pages.filter(function (x) { return x.kind === kind; });
+      if (!group.length) return;
+      var label = el('div', 'ep-group-label', kind === 'main' ? '本关必看' : '想深挖再看（可选）');
+      list.appendChild(label);
+      group.forEach(function (x) {
+        var card = el('a', 'ep-card' + (x.page === page ? ' is-playing' : ''));
+        card.href = '#';
+        card.setAttribute('data-page', x.page);
+        card.innerHTML =
+          '<span class="ep-no">P' + x.page + '</span>' +
+          '<span class="ep-name">' + esc(bvTitle(x.page).replace(/^[^-]+-\d+-/, '')) + '</span>' +
+          '<span class="ep-dur">' + bvDuration(x.page) + '</span>' +
+          '<span class="ep-play">' + (x.page === page ? '播放中' : '播放 ▶') + '</span>';
+        list.appendChild(card);
+      });
+    });
+  }
+
+  /* 点目录/推荐分集：只换播放器，不整页重绘 */
+  function playVideo(page) {
+    state.videoPage = page;
+    $('vPlayer').src = bvPlayerUrl(page);
+    $('vNow').textContent = '正在播放 P' + page + ' · ' + bvTitle(page).replace(/^[^-]+-\d+-/, '') + '（' + bvDuration(page) + '）';
+    $('vOpen').href = bvPageUrl(page);
+    renderVideo();
   }
 
   /* ---------------- 文字说明：文档页 ---------------- */
@@ -428,21 +527,27 @@
     $('docSideTitle').textContent = major.emoji + ' ' + major.name;
     $('docSideSub').textContent = found.stage.title + ' · ' + found.module.name;
 
-    // 左侧：本模块的关卡目录
+    // 左侧：整个专业路径的目录（阶段 → 模块 → 关卡），可滚动
     var nav = $('docNav');
     nav.innerHTML = '';
-    var groupLabel = el('div', 'doc-nav-label', found.module.name);
-    nav.appendChild(groupLabel);
-    found.module.levels.forEach(function (lv) {
-      var rec = state.done[lv.id];
-      var a = el('a', 'doc-nav-item' + (lv.id === level.id ? ' is-on' : ''));
-      a.href = '#';
-      a.setAttribute('data-level', lv.id);
-      a.innerHTML =
-        '<span class="doc-nav-dot">' + (rec ? '✓' : '·') + '</span>' +
-        '<span class="doc-nav-txt">' + lv.name + '</span>' +
-        (lv.ready ? '' : '<span class="doc-nav-soon">建设中</span>');
-      nav.appendChild(a);
+    path.stages.forEach(function (stage) {
+      var stageHead = el('div', 'doc-nav-stage', stage.title);
+      nav.appendChild(stageHead);
+      stage.modules.forEach(function (mod) {
+        var modHead = el('div', 'doc-nav-label', mod.name);
+        nav.appendChild(modHead);
+        mod.levels.forEach(function (lv) {
+          var rec = state.done[lv.id];
+          var a = el('a', 'doc-nav-item' + (lv.id === level.id ? ' is-on' : ''));
+          a.href = '#';
+          a.setAttribute('data-level', lv.id);
+          a.innerHTML =
+            '<span class="doc-nav-dot">' + (rec ? '✓' : '·') + '</span>' +
+            '<span class="doc-nav-txt">' + lv.name + '</span>' +
+            (lv.ready ? '' : '<span class="doc-nav-soon">建设中</span>');
+          nav.appendChild(a);
+        });
+      });
     });
 
     // 正文
@@ -683,6 +788,12 @@
       openLevel(lv.getAttribute('data-level'), keepFrom);
       return;
     }
+    var vp = e.target.closest('[data-page]');
+    if (vp) {
+      e.preventDefault();
+      playVideo(Number(vp.getAttribute('data-page')));
+      return;
+    }
     var opt = e.target.closest('.option');
     if (opt && !opt.disabled) { chooseOption(Number(opt.getAttribute('data-i'))); }
   });
@@ -692,12 +803,8 @@
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
   $('docStartQuiz').addEventListener('click', startQuiz);
   $('docBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
-  $('videoToText').addEventListener('click', function () {
-    state.style = 'text';
-    save();
-    show('doc');
-    toast('已切换为文字说明');
-  });
+  $('videoStartQuiz').addEventListener('click', startQuiz);
+  $('videoBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
   $('reselectBtn').addEventListener('click', reselect);
   $('reselectBtn2').addEventListener('click', reselect);
   $('changeStyle').addEventListener('click', function (e) { e.preventDefault(); show('style'); });

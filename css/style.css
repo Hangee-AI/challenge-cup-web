@@ -500,20 +500,34 @@ button { font: inherit; cursor: pointer; }
   align-items: start;
 }
 
-.doc-side { position: sticky; top: 84px; }
-.doc-side .back { font-size: 13px; color: var(--text-3); }
+.doc-side, .video-side {
+  position: sticky; top: 84px;
+  max-height: calc(100vh - 104px);
+  display: flex; flex-direction: column;
+}
+.doc-side .back, .video-side .back { font-size: 13px; color: var(--text-3); flex: none; }
 .doc-side-title {
   margin-top: 14px; font-size: 14.5px; font-weight: 800; color: var(--text);
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 6px; flex: none;
 }
-.doc-side-sub { margin-top: 2px; font-size: 12.5px; color: var(--text-3); }
-.doc-nav {
+.doc-side-sub { margin-top: 2px; font-size: 12.5px; color: var(--text-3); flex: none; }
+.doc-nav, .video-nav {
   margin-top: 14px; display: flex; flex-direction: column; gap: 2px;
   border-left: 2px solid var(--line); padding-left: 0;
+  overflow-y: auto; flex: 1; min-height: 0;
+  scrollbar-width: thin;
 }
+.doc-nav::-webkit-scrollbar, .video-nav::-webkit-scrollbar { width: 6px; }
+.doc-nav::-webkit-scrollbar-thumb, .video-nav::-webkit-scrollbar-thumb { background: #dfe3ef; border-radius: 999px; }
+.doc-nav-stage {
+  margin-top: 14px; font-size: 12px; font-weight: 800; color: var(--text);
+  padding: 6px 0 4px 12px; letter-spacing: .02em;
+  background: #f7f8fc; border-radius: 0 8px 8px 0; margin-left: -2px;
+}
+.doc-nav-stage:first-child { margin-top: 0; }
 .doc-nav-label {
   font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--text-3); padding: 0 0 8px 12px;
+  color: var(--text-3); padding: 8px 0 6px 12px;
 }
 .doc-nav-item {
   display: flex; align-items: center; gap: 8px;
@@ -596,21 +610,84 @@ button { font: inherit; cursor: pointer; }
 }
 .doc-toc-link:hover { color: var(--brand); border-left-color: var(--brand); }
 
-/* ---- 视频讲解：暂未开放 ---- */
-.video-page { max-width: 640px; margin: 40px auto; }
-.video-coming {
-  background: #fff; border: 1px solid var(--line); border-radius: 20px;
-  padding: 40px 36px; text-align: center; box-shadow: var(--shadow);
+/* ---- 视频讲解：B 站播放器 + 左侧全集目录 ---- */
+.view-video { padding-top: 6px; }
+.video-wrap {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 34px;
+  max-width: 1240px;
+  margin: 0 auto;
+  align-items: start;
 }
-.video-coming-icon {
-  width: 66px; height: 66px; margin: 0 auto 16px; border-radius: 18px;
-  background: linear-gradient(135deg, #4f6ef7, #7a5bf7);
-  display: grid; place-items: center; font-size: 28px;
-  box-shadow: 0 10px 24px rgba(79, 110, 247, .3);
+.video-main {
+  background: #fff; border: 1px solid var(--line); border-radius: 18px;
+  padding: 26px 30px 26px; box-shadow: var(--shadow-sm); min-width: 0;
 }
-.video-coming h1 { font-size: 23px; letter-spacing: -.3px; }
-.video-coming p { margin: 12px auto 0; max-width: 430px; font-size: 14.5px; line-height: 1.85; color: var(--text-2); }
-.video-coming .btn-row { margin-top: 24px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.player-box {
+  margin-top: 16px; width: 100%; aspect-ratio: 16 / 9;
+  background: #0f1117; border-radius: 14px; overflow: hidden;
+  border: 1px solid #1d2233;
+}
+.player-box iframe { width: 100%; height: 100%; border: 0; display: block; }
+.player-foot {
+  margin-top: 10px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  font-size: 13px;
+}
+.player-foot .link { color: var(--brand); text-decoration: none; }
+.player-foot .link:hover { text-decoration: underline; }
+.player-hint { margin: 6px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--text-3); }
+
+.ep-group-label {
+  margin: 20px 0 8px; font-size: 12.5px; font-weight: 800;
+  color: var(--text-3); letter-spacing: .04em;
+}
+.ep-list { margin-top: 4px; }
+.ep-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--line); border-radius: 10px;
+  font-size: 13.5px; color: var(--text-2);
+  transition: .15s;
+}
+.ep-card:hover { border-color: #c3cdf8; background: #fbfcff; }
+.ep-card.is-playing { border-color: #c3cdf8; background: var(--brand-soft); color: var(--brand); }
+.ep-card .ep-no {
+  flex: none; font-size: 11.5px; font-weight: 700; color: var(--brand);
+  background: var(--brand-soft); border-radius: 6px; padding: 2px 7px;
+}
+.ep-card.is-playing .ep-no { background: #fff; }
+.ep-card .ep-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-card .ep-dur { flex: none; color: var(--text-3); font-size: 12px; }
+.ep-card .ep-play { flex: none; font-size: 12px; color: var(--brand); }
+
+.video-sec {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 12px; padding: 8px 10px 8px 12px; margin-left: -2px;
+  background: #f7f8fc; border-radius: 0 8px 8px 0;
+  font-size: 12.5px; font-weight: 800; color: var(--text);
+}
+.video-sec:first-child { margin-top: 0; }
+.video-sec-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.video-sec-range { flex: none; font-size: 10.5px; font-weight: 600; color: var(--text-3); }
+.video-ep {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px 7px 12px; margin-left: -2px;
+  border-left: 2px solid transparent; border-radius: 0 8px 8px 0;
+  font-size: 12.5px; color: var(--text-2); transition: .15s;
+}
+.video-ep:hover { background: #f1f3fb; color: var(--text); }
+.video-ep.is-mine { color: var(--text); font-weight: 600; }
+.video-ep.is-mine .video-ep-no { color: var(--brand); }
+.video-ep.is-extra { opacity: .72; }
+.video-ep.is-on {
+  border-left-color: var(--brand); background: var(--brand-soft);
+  color: var(--brand); font-weight: 700;
+}
+.video-ep-no { flex: none; width: 32px; font-size: 11px; color: var(--text-3); }
+.video-ep-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.video-ep-dur { flex: none; font-size: 10.5px; color: var(--text-3); }
 
 /* ---- 学习方式卡片：即将开放角标 ---- */
 .style-badge {
@@ -627,6 +704,7 @@ button { font: inherit; cursor: pointer; }
 @media (max-width: 1100px) {
   .doc-wrap { grid-template-columns: 210px minmax(0, 1fr); gap: 26px; }
   .doc-toc { display: none; }
+  .video-wrap { grid-template-columns: 250px minmax(0, 1fr); gap: 26px; }
 }
 
 @media (max-width: 980px) {
@@ -656,11 +734,16 @@ button { font: inherit; cursor: pointer; }
   .cta-band { padding: 20px; }
   .cta-band h3 { font-size: 17px; }
   .doc-wrap { grid-template-columns: 1fr; gap: 18px; }
-  .doc-side { position: static; }
-  .doc-nav { flex-direction: row; flex-wrap: wrap; border-left: 0; border-top: 1px solid var(--line); padding-top: 10px; }
-  .doc-nav-label { display: none; }
+  .doc-side, .video-side { position: static; max-height: none; }
+  .doc-nav, .video-nav {
+    flex-direction: row; flex-wrap: wrap; border-left: 0;
+    border-top: 1px solid var(--line); padding-top: 10px;
+    max-height: 240px;
+  }
+  .doc-nav-label, .doc-nav-stage { display: none; }
   .doc-nav-item { margin-left: 0; border-left: 0; border-radius: 8px; }
-  .doc-main { padding: 22px 18px; }
+  .doc-main, .video-main { padding: 22px 18px; }
   .doc-title { font-size: 22px; }
-  .video-coming { padding: 30px 20px; }
+  .video-wrap { grid-template-columns: 1fr; gap: 18px; }
+  .video-sec { margin-top: 6px; }
 }
