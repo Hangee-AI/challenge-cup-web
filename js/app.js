@@ -636,17 +636,36 @@
     // 延伸资源
     var refs = $('docRefs');
     refs.innerHTML = '';
+
+    // 公共必修课资料（与专业无关，所有专业的文字说明页都展示）
+    if (typeof COMMON_REFS !== 'undefined' && COMMON_REFS.length) {
+      var common = el('div', 'doc-common');
+      common.innerHTML = '<h3>公共必修课资料</h3>';
+      var commonUl = el('ul', 'doc-ref-list');
+      COMMON_REFS.forEach(function (r) {
+        var li = el('li');
+        li.innerHTML = '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>' +
+          (r.note ? '<span class="doc-ref-src"> · ' + r.note + '</span>' : '');
+        commonUl.appendChild(li);
+      });
+      common.appendChild(commonUl);
+      common.appendChild(el('p', 'doc-ref-note', '外部链接，本站只做推荐，不转载其内容。'));
+      refs.appendChild(common);
+    }
+
     if (doc.refs && doc.refs.length) {
-      refs.innerHTML = '<h3>想更深入一点？</h3>';
+      var more = el('div', 'doc-common');
+      more.innerHTML = '<h3>想更深入一点？</h3>';
       var ul = el('ul', 'doc-ref-list');
       doc.refs.forEach(function (r) {
         var li = el('li');
         li.innerHTML = '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>';
         ul.appendChild(li);
       });
-      refs.appendChild(ul);
+      more.appendChild(ul);
       var note = el('p', 'doc-ref-note', '延伸资源来自 <a href="https://csdiy.wiki/" target="_blank" rel="noopener">csdiy.wiki · CS 自学指南</a>，本站只做推荐，不转载其内容。');
-      refs.appendChild(note);
+      more.appendChild(note);
+      refs.appendChild(more);
     }
 
     // 底部按钮：有题目才能开始做题
