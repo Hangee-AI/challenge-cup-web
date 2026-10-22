@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    引路 · 数据层（后端版）
    与 js/data.js 保持同样的数据结构，额外提供：
    - 关卡详情剥离 answer/explain（前端不下发）
@@ -332,12 +332,8 @@ const CS_INTRO_LEVELS = [
 const CS_STAGE_OVERRIDE = {
   '大一 · 打地基': {
     modules: [
-      /* C 语言 15 关按学习顺序拆成 5 个模块，每关保留原 id（c-l1..c-l15）用于代码任务查找 */
-      { name: 'C 语言基础入门', levels: [CS_INTRO_LEVELS[0], CS_INTRO_LEVELS[8], CS_INTRO_LEVELS[7]] },
-      { name: '流程控制', levels: [CS_INTRO_LEVELS[1], CS_INTRO_LEVELS[9], CS_INTRO_LEVELS[2], CS_INTRO_LEVELS[10]] },
-      { name: '数据存储', levels: [CS_INTRO_LEVELS[3], CS_INTRO_LEVELS[11], CS_INTRO_LEVELS[12]] },
-      { name: '函数与指针', levels: [CS_INTRO_LEVELS[4], CS_INTRO_LEVELS[13], CS_INTRO_LEVELS[5]] },
-      { name: '高级应用', levels: [CS_INTRO_LEVELS[6], CS_INTRO_LEVELS[14]] },
+      /* C 语言 15 关整合为「C 语言程序设计」一门课，按学习顺序排列 */
+      { name: 'C 语言程序设计', levels: [CS_INTRO_LEVELS[0], CS_INTRO_LEVELS[8], CS_INTRO_LEVELS[7], CS_INTRO_LEVELS[1], CS_INTRO_LEVELS[9], CS_INTRO_LEVELS[2], CS_INTRO_LEVELS[10], CS_INTRO_LEVELS[3], CS_INTRO_LEVELS[11], CS_INTRO_LEVELS[12], CS_INTRO_LEVELS[4], CS_INTRO_LEVELS[13], CS_INTRO_LEVELS[5], CS_INTRO_LEVELS[6], CS_INTRO_LEVELS[14]] },
       { name: '计算机导论与伦理', levels: null },
       { name: '高等数学（上）', levels: null },
       { name: '高等数学（下）', levels: null },
@@ -379,19 +375,11 @@ const CS_STAGE_OVERRIDE = {
 /* ---------- csdiy.wiki 推荐课程（挂在计算机专业模块） ---------- */
 
 const CS_MODULE_RESOURCES = {
-  'C 语言基础入门': [
-    { name: 'Harvard CS50: This is CS50x', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/', desc: '风靡全球的计算机入门课，从 C 语言起步' }
-  ],
-  '流程控制': [
-    { name: 'runoob C 语言教程 · 分支/循环', school: 'runoob', url: 'https://www.runoob.com/cprogramming/c-decision.html', desc: 'if / switch / for / while 集中讲解' }
-  ],
-  '数据存储': [
-    { name: 'C 语言中文网 · 数组和字符串', school: 'c.biancheng.net', url: 'https://c.biancheng.net/c/array/', desc: '一维/二维数组、字符数组与字符串详解' }
-  ],
-  '函数与指针': [
-    { name: 'GeeksforGeeks · Functions & Pointers in C', school: 'GeeksforGeeks', url: 'https://www.geeksforgeeks.org/c-functions/', desc: '函数传值、递归、指针与数组的关系' }
-  ],
-  '高级应用': [
+  'C 语言程序设计': [
+    { name: 'Harvard CS50: This is CS50x', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/', desc: '风靡全球的计算机入门课，从 C 语言起步' },
+    { name: 'runoob C 语言教程', school: 'runoob', url: 'https://www.runoob.com/cprogramming/c-tutorial.html', desc: 'C 语言入门到进阶完整教程' },
+    { name: 'C 语言中文网 · 数组和字符串', school: 'c.biancheng.net', url: 'https://c.biancheng.net/c/array/', desc: '一维/二维数组、字符数组与字符串详解' },
+    { name: 'GeeksforGeeks · Functions & Pointers in C', school: 'GeeksforGeeks', url: 'https://www.geeksforgeeks.org/c-functions/', desc: '函数传值、递归、指针与数组的关系' },
     { name: 'cppreference C · 结构体与文件 I/O', school: 'cppreference', url: 'https://zh.cppreference.com/w/c/language/struct', desc: 'struct/union 与 stdio 文件操作的权威说明' }
   ],
   '线性代数': [
