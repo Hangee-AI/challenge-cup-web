@@ -283,13 +283,26 @@
   }
 
   /* ---------------- 后端状态 ---------------- */
+  /* 把 nvidia/nemotron-3-super-120b-a12b:free 缩成 nemotron-3-super-120b-a12b，状态栏才放得下 */
+  function shortModel(m) {
+    var s = String(m || '');
+    if (s.indexOf(':') > -1) s = s.split(':')[0];
+    var parts = s.split('/');
+    if (parts.length > 1) s = parts[parts.length - 1];
+    return s.length > 24 ? s.slice(0, 24) + '…' : s;
+  }
+
   function checkStatus() {
     checked = true;
     fetch(apiUrl('/api/chat/status'), { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (j) {
         ready = !!(j && j.ready);
-        el.sub.textContent = ready ? '在线 · ' + (j.model || 'deepseek') : '只连着本地（未配大模型）';
+        var label = j && j.providerLabel ? j.providerLabel : '';
+        var name = shortModel(j && j.model);
+        el.sub.textContent = ready
+          ? '在线 · ' + (label ? label + ' / ' : '') + (name || 'deepseek')
+          : '只连着本地（未配大模型）';
         el.wrap.classList.toggle('is-offline', !ready);
       })
       .catch(function () {

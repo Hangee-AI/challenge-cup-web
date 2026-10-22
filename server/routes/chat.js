@@ -26,9 +26,77 @@ const path = require('path');
 const express = require('express');
 const db = require('../db');
 
-const KEY_FILE = path.join(__dirname, '..', 'data', 'deepseek.json');
-const BASE = (process.env.DEEPSEEK_BASE || 'https://api.deepseek.com').replace(/\/+$/, '');
-const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+/* ---------- 服务商预设 ----------
+   只要对方「兼容 OpenAI 的 /chat/completions」，就能接进来。
+   切换方式：设环境变量 LLM_PROVIDER=deepseek|openrouter|siliconflow|ollama|custom
+   任何一个预设都可以用 LLM_BASE / LLM_MODEL / LLM_MODELS / LLM_API_KEY 覆盖。 */
+const PRESETS = {
+  deepseek: {
+    label: 'DeepSeek',
+    base: 'https://api.deepseek.com',
+    model: 'deepseek-chat',
+    keyEnvs: ['DEEPSEEK_API_KEY'],
+    files: ['deepseek.json']
+  },
+  openrouter: {
+    label: 'OpenRouter 免费模型',
+    base: 'https://openrouter.ai/api/v1',
+    model: 'nvidia/nemotron-3-super-120b-a12b:free',
+    /* OpenRouter 支持 models 数组：前一个限流/挂了自动换下一个 */
+    models: [
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      'google/gemma-4-31b-it:free',
+      'nvidia/nemotron-3.5-lightning:free'
+    ],
+    keyEnvs: ['OPENROUTER_API_KEY'],
+    files: ['openrouter.json', 'llm.json'],
+    headers: {
+      'HTTP-Referer': 'https://guoguan.surge.sh',
+      'X-Title': 'YinLu Study Companion'
+    }
+  },
+  siliconflow: {
+    label: '硅基流动',
+    base: 'https://api.siliconflow.cn/v1',
+    model: 'deepseek-ai/DeepSeek-V3',
+    keyEnvs: ['SILICONFLOW_API_KEY'],
+    files: ['siliconflow.json', 'llm.json']
+  },
+  ollama: {
+    label: '本地 Ollama',
+    base: 'http://127.0.0.1:11434/v1',
+    model: 'qwen2.5:1.5b',
+    keyEnvs: ['OLLAMA_API_KEY'],
+    files: ['ollama.json', 'llm.json']
+  },
+  custom: {
+    label: '自定义',
+    base: '',
+    model: '',
+    keyEnvs: ['LLM_API_KEY'],
+    files: ['llm.json']
+  }
+};
+
+/* 选服务商：LLM_PROVIDER 优先；没设就看哪个 Key 环境变量存在；都没有就 deepseek */
+function pickProviderName() {
+  const forced = String(process.env.LLM_PROVIDER || '').trim().toLowerCase();
+  if (forced && PRESETS[forced]) return forced;
+  if (process.env.OPENROUTER_API_KEY) return 'openrouter';
+  if (process.env.SILICONFLOW_API_KEY) return 'siliconflow';
+  if (process.env.LLM_BASE) return 'custom';
+  return 'deepseek';
+}
+
+const PROVIDER = pickProviderName();
+const PRESET = PRESETS[PROVIDER];
+const BASE = (process.env.LLM_BASE || process.env.DEEPSEEK_BASE || PRESET.base || '').replace(/\/+$/, '');
+const MODEL = process.env.LLM_MODEL || process.env.DEEPSEEK_MODEL || PRESET.model || '';
+const FALLBACK_MODELS = (function () {
+  const raw = String(process.env.LLM_MODELS || '').trim();
+  const list = raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : (PRESET.models || []);
+  return list.filter((m) => m && m !== MODEL);
+})();
 const MAX_TOKENS = Number(process.env.DEEPSEEK_MAX_TOKENS || 500);
 const TIMEOUT_MS = Number(process.env.DEEPSEEK_TIMEOUT_MS || 25000);
 
@@ -47,13 +115,27 @@ const SYSTEM_PROMPT = [
 ].join('\n');
 
 function readKey() {
-  if (process.env.DEEPSEEK_API_KEY) return String(process.env.DEEPSEEK_API_KEY).trim();
-  try {
-    const raw = fs.readFileSync(KEY_FILE, 'utf8');
-    const j = JSON.parse(raw);
-    if (j && j.apiKey) return String(j.apiKey).trim();
-  } catch (e) { /* 没文件就是没配 */ }
+  for (let i = 0; i < PRESET.keyEnvs.length; i++) {
+    const v = process.env[PRESET.keyEnvs[i]];
+    if (v) return String(v).trim();
+  }
+  if (process.env.LLM_API_KEY) return String(process.env.LLM_API_KEY).trim();
+  const dir = path.join(__dirname, '..', 'data');
+  const files = (PRESET.files || []).concat(['llm.json']);
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(dir, files[i]), 'utf8'));
+      if (j && j.apiKey) return String(j.apiKey).trim();
+    } catch (e) { /* 没文件就是没配 */ }
+  }
   return '';
+}
+
+/* 本地 Ollama 不校验 Key，给个占位即可 */
+function effectiveKey() {
+  const k = readKey();
+  if (k) return k;
+  return PROVIDER === 'ollama' ? 'ollama' : '';
 }
 
 /* ---------- 限流：每 IP 每小时 40 条，全站每天 CHAT_DAILY_CAP 条 ---------- */
@@ -144,25 +226,28 @@ const router = express.Router();
 
 /* GET /api/chat/status  前端用来决定显示「在线/未接大模型」 */
 router.get('/chat/status', (req, res) => {
-  const key = readKey();
+  const key = effectiveKey();
   res.json({
     ok: true,
     ready: !!key,
+    provider: PROVIDER,
+    providerLabel: PRESET.label,
     model: MODEL,
+    fallbacks: FALLBACK_MODELS,
     requireLogin: REQUIRE_LOGIN,
     reason: key ? '' : 'no-key',
-    note: key ? '' : '在服务器上配置 DEEPSEEK_API_KEY 或 server/data/deepseek.json 后即可对话'
+    note: key ? '' : '在服务器上配置对应 API Key（或 server/data/llm.json）后即可对话'
   });
 });
 
 /* POST /api/chat  { messages:[{role,content}], context:{} } */
 router.post('/chat', async (req, res) => {
-  const key = readKey();
+  const key = effectiveKey();
   if (!key) {
     return res.status(503).json({
       ok: false,
       reason: 'no-key',
-      hint: '学习搭子还没接通大模型：在服务器配置 DEEPSEEK_API_KEY 即可。'
+      hint: '学习搭子还没接通大模型：在服务器配置 API Key 即可。'
     });
   }
 
@@ -202,15 +287,21 @@ router.post('/chat', async (req, res) => {
     temperature: 0.6,
     stream: false
   };
+  /* OpenRouter：带 models 数组，主模型限流时自动换后面的免费模型 */
+  if (FALLBACK_MODELS.length) payload.models = [MODEL].concat(FALLBACK_MODELS);
 
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   const started = Date.now();
 
   try {
+    const headers = Object.assign(
+      { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+      PRESET.headers || {}
+    );
     const r = await fetch(BASE + '/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+      headers: headers,
       body: JSON.stringify(payload),
       signal: ctl.signal
     });
