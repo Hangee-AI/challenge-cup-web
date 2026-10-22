@@ -1,4 +1,4 @@
-/* ==========================================================
+﻿/* ==========================================================
    引路 · 数据层（后端版）
    与 js/data.js 保持同样的数据结构，额外提供：
    - 关卡详情剥离 answer/explain（前端不下发）
@@ -170,7 +170,7 @@ const CS_INTRO_LEVELS = [
   },
   {
     id: 'c-l2',
-    name: '第 2 关 · 让程序学会判断',
+    name: '第 4 关 · 让程序学会判断',
     brief: 'if 条件成立走一条路、不成立走另一条；switch 根据整数表达式的值跳到对应 case；每个 case 记得加 break 才不会一路往下跑。',
     questions: [
       { stem: '判断「成绩及格（60 分及以上）」，哪个写法正确？', options: ['if (score >= 60)', 'if score >= 60', 'if (score => 60)', 'while (score >= 60)'], answer: 0, explain: 'if 的条件必须写在圆括号里；「大于等于」是 >=；while 是循环不是判断。' },
@@ -180,7 +180,7 @@ const CS_INTRO_LEVELS = [
   },
   {
     id: 'c-l3',
-    name: '第 3 关 · 重复的力量',
+    name: '第 6 关 · 重复的力量',
     brief: '把同一段代码重复执行。for 写死次数、while 写到条件不成立为止、do-while 至少跑一遍才判断。break 跳出循环，continue 跳过本轮。',
     questions: [
       { stem: 'for (int i = 1; i <= 3; i++) printf("%d", i); 会输出什么？', options: ['123', '012', '1234', '321'], answer: 0, explain: 'i 依次取 1、2、3 并打印；当 i 变成 4 时，4 <= 3 不成立，循环结束。' },
@@ -190,7 +190,7 @@ const CS_INTRO_LEVELS = [
   },
   {
     id: 'c-l4',
-    name: '第 4 关 · 把一组数存起来',
+    name: '第 8 关 · 把一组数存起来',
     brief: '数组是连续存放的一排变量，下标从 0 开始。二维数组是"数组的数组"。C 没有字符串类型，字符串就是以 \\0 结尾的字符数组。C 不检查越界，自己看好下标。',
     questions: [
       { stem: 'int nums[5]; 这个数组最多能放几个整数？合法下标是？', options: ['4 个，0~3', '5 个，0~4', '5 个，1~5', '6 个，0~5'], answer: 1, explain: '方括号里的数字就是元素个数，下标从 0 开始。int nums[5] 有 5 个元素，下标 0 ~ 4。' },
@@ -200,7 +200,7 @@ const CS_INTRO_LEVELS = [
   },
   {
     id: 'c-l5',
-    name: '第 5 关 · 把代码块打包成函数',
+    name: '第 11 关 · 把代码块打包成函数',
     brief: '函数 = 返回类型 + 函数名 + 参数。调用者传实参给形参；默认是传值（函数内改形参不影响实参）。函数可以自己调自己——这就是递归。',
     questions: [
       { stem: '写一个函数返回两个整数中较大的那个，正确的函数头是？', options: ['int max(int a, int b)', 'max(int a, int b)', 'void max(int a, int b)', 'int max(a, b)'], answer: 0, explain: '函数头格式是「返回类型 函数名(参数类型 参数名, ...)」。max 要返回 int，参数也要写清楚类型。' },
@@ -210,7 +210,7 @@ const CS_INTRO_LEVELS = [
   },
   {
     id: 'c-l6',
-    name: '第 6 关 · 地址与指针',
+    name: '第 13 关 · 地址与指针',
     brief: '每个变量都有地址，& 取地址、* 解引用。指针变量存的是地址。数组名在表达式里常退化成首元素的地址，所以指针和数组关系非常近。',
     questions: [
       { stem: 'int a = 10; int *p = &a; printf("%d", *p); 输出什么？', options: ['10', 'a', '0x...（一个地址）', '程序报错'], answer: 0, explain: 'p 存的是 a 的地址，*p 是「p 指向的那个变量」也就是 a 本身，所以输出 10。注意 %d 对应整数，打印地址要用 %p。' },
@@ -220,12 +220,108 @@ const CS_INTRO_LEVELS = [
   },
   {
     id: 'c-l7',
-    name: '第 7 关 · 打包数据与读写文件',
+    name: '第 14 关 · 打包数据与读写文件',
     brief: 'struct 把不同类型的数据打包成一个新类型，用 . 访问成员；union 所有成员共用同一块内存；fopen / fclose / fread / fwrite 做文件 I/O。',
     questions: [
       { stem: '定义一个表示学生的结构体（名字、年龄、平均分），下面哪个是合法的？', options: ['struct Student { char name[20]; int age; double score; };', 'struct Student { string name; int age; double score; };', 'Student { char name[20]; int age; double score; }', 'struct Student: { char name[20]; int age; double score; };'], answer: 0, explain: 'struct 后面跟标签名 { 成员列表 }; 结尾必须有分号。string 不是 C 内置类型（得用 char 数组），成员之间没有逗号分隔。' },
       { stem: '关于 union（共用体），正确的说法是？', options: ['每个成员独占一块独立内存', '所有成员共用同一块内存，同一时刻只有一个成员有意义', '只能有两个成员', '和 struct 完全一样'], answer: 1, explain: 'union 的所有成员共用同一块起始地址的内存，大小取最大成员的大小。写了一个成员之后，其他成员的值就变成未定义的了。' },
       { stem: '打开文件并以只读方式读取，正确的调用是？', options: ['fopen("data.txt", "r")', 'open("data.txt")', 'read("data.txt")', 'fopen("data.txt", "w")'], answer: 0, explain: 'fopen 第一个参数是文件名，第二个是模式字符串："r" 只读、"w" 写（会清空文件）、"a" 追加。返回 NULL 表示打开失败。' }
+    ]
+  },
+
+  /* ---------- 第 8 关 · 输入输出与格式化 ---------- */
+  {
+    id: 'c-l8',
+    name: '第 3 关 · 和程序对话：输入输出',
+    brief: 'printf 负责输出，scanf 负责读入。scanf 的变量参数前要加 &（取地址）；格式占位符要和变量类型一一对应；%.2f 表示保留两位小数。',
+    questions: [
+      { stem: 'scanf("%d", &n); 里的 & 有什么作用？', options: ['把 n 的地址交给 scanf，让它能把值写回去', '表示取余运算', '只是固定写法，可以省略', '表示 n 是常量'], answer: 0, explain: 'scanf 需要知道「把读到的值存到哪里」，所以传的是变量地址。漏掉 & 是新手最常见的崩溃原因之一。' },
+      { stem: 'printf("%.2f", 3.14159); 会输出什么？', options: ['3.14', '3.14159', '3.1', '3'], answer: 0, explain: '%.2f 表示按浮点数输出并保留 2 位小数，第三位会四舍五入，所以是 3.14。' },
+      { stem: '要读入一个整数存进 int n，正确写法是？', options: ['scanf("%d", &n);', 'scanf("%d", n);', 'scanf("%f", &n);', 'scanf("%s", &n);'], answer: 0, explain: '整数用 %d，变量前要加 &。%f 对应 float，%s 对应字符串，类型不匹配会读错。' }
+    ]
+  },
+
+  /* ---------- 第 9 关 · 运算符与表达式 ---------- */
+  {
+    id: 'c-l9',
+    name: '第 2 关 · 运算符与表达式',
+    brief: '算术运算符 + - * / %，其中 / 做整数除法会丢掉小数；% 只能用于整数。++ / -- 有前置后置之分，优先级决定先算谁。',
+    questions: [
+      { stem: 'int a = 5; printf("%d", a++); 输出什么？', options: ['5', '6', '4', '编译报错'], answer: 0, explain: 'a++ 是后置自增：先使用 a 当前的值 5 输出，然后 a 才变成 6。' },
+      { stem: 'int a = 7, b = 2; 那么 a / b 和 a % b 分别是？', options: ['3 和 1', '3.5 和 1', '3 和 0', '2 和 3'], answer: 0, explain: '两个整数相除，结果仍是整数，小数部分被丢掉，所以 7 / 2 = 3；7 % 2 是余数 1。' },
+      { stem: '表达式 2 + 3 * 4 的值是多少？', options: ['14', '20', '24', '9'], answer: 0, explain: '乘法优先级高于加法，先算 3 * 4 = 12，再加 2，结果是 14。' }
+    ]
+  },
+
+  /* ---------- 第 10 关 · 分支逻辑实战 ---------- */
+  {
+    id: 'c-l10',
+    name: '第 5 关 · 分支逻辑实战',
+    brief: '多个条件要用 &&（并且）、||（或者）连起来；C 里不能写 90 <= score < 100。if (x = 5) 是赋值，不是比较。',
+    questions: [
+      { stem: '要判断 score 在 90 到 99 之间，正确写法是？', options: ['score >= 90 && score < 100', '90 <= score < 100', 'score >= 90 || score < 100', 'score => 90 && score =< 100'], answer: 0, explain: 'C 的关系运算符不能连写，必须拆成两个条件用 && 连接。|| 只要一边成立就为真，范围会失效。' },
+      { stem: 'if (x = 5) { ... } 这段代码的问题是什么？', options: ['把比较写成了赋值，条件永远为真', '5 不能赋给 x', 'if 后面不能加括号', '没有问题'], answer: 0, explain: '= 是赋值，== 才是比较。x = 5 会把 5 赋给 x，表达式的值非零，条件永远成立。' },
+      { stem: '逻辑或 a || b 中，如果 a 已经为真，会怎样？', options: ['不再计算 b（短路）', '仍然计算 b', '程序报错', '把 b 的值赋给 a'], answer: 0, explain: '|| 具有短路特性：左边已经能确定结果为真，右边就不会再执行。常用来避免不必要的计算或越界访问。' }
+    ]
+  },
+
+  /* ---------- 第 11 关 · 循环嵌套与图形打印 ---------- */
+  {
+    id: 'c-l11',
+    name: '第 7 关 · 循环嵌套与图案',
+    brief: '外层循环控制行，内层循环控制每一行打印几个字符，这是打印图形的通用套路。break 只跳出当前这一层循环。',
+    questions: [
+      { stem: '外层循环执行 3 次、内层循环每次执行 4 次，循环体一共执行多少次？', options: ['7 次', '12 次', '3 次', '4 次'], answer: 1, explain: '嵌套循环的总次数是相乘：3 × 4 = 12 次。' },
+      { stem: '在两层嵌套循环里执行 break，会跳出几层？', options: ['只跳出当前所在的那一层', '同时跳出两层', '跳出整个程序', '一层都不跳'], answer: 0, explain: 'break 只作用于它所在的那一层循环。要一次跳出多层，可以用标志变量或 goto。' },
+      { stem: 'continue 的作用是？', options: ['跳过本轮剩下的语句，直接进入下一轮', '结束整个循环', '重新从第一轮开始', '跳出函数'], answer: 0, explain: 'continue 不结束循环，只是放弃本轮剩余部分，接着判断下一轮条件。' }
+    ]
+  },
+
+  /* ---------- 第 12 关 · 数组统计 ---------- */
+  {
+    id: 'c-l12',
+    name: '第 9 关 · 数组遍历与统计',
+    brief: '数组下标从 0 开始，n 个元素的下标是 0 ~ n-1。求和先设 0，求最大值先把第一个元素当作最大值，再逐个比较。',
+    questions: [
+      { stem: 'int a[5] = {3, 1, 4}; 此时 a[3] 的值是多少？', options: ['0', '4', '随机值', '编译报错'], answer: 0, explain: '只初始化了前 3 个元素，剩下的元素会被自动初始化为 0。' },
+      { stem: '遍历一个长度为 5 的数组，下面哪个循环条件正确？', options: ['for (int i = 0; i < 5; i++)', 'for (int i = 1; i <= 5; i++)', 'for (int i = 0; i <= 5; i++)', 'for (int i = 5; i > 0; i--)'], answer: 0, explain: '合法下标是 0 ~ 4，所以 i < 5。i <= 5 会访问 a[5]，越界。' },
+      { stem: '把数组传给函数时，实际传递的是什么？', options: ['首元素的地址', '整个数组的拷贝', '数组的长度', '最后一个元素的值'], answer: 0, explain: '数组名在表达式中会退化成首元素地址，所以函数里通过指针访问原数组，修改会影响原数据。' }
+    ]
+  },
+
+  /* ---------- 第 13 关 · 字符串处理 ---------- */
+  {
+    id: 'c-l13',
+    name: '第 10 关 · 字符串处理',
+    brief: 'C 没有字符串类型，字符串是以 \\0 结尾的字符数组。strlen 数到 \\0 为止，sizeof 数整个数组占的字节，两者可能不同。比较字符串用 strcmp。',
+    questions: [
+      { stem: 'char s[] = "hello"; 那么 sizeof(s) 和 strlen(s) 分别是？', options: ['6 和 5', '5 和 5', '6 和 6', '5 和 6'], answer: 0, explain: 'sizeof 包含结尾的 \\0，共 6 个字节；strlen 遇到 \\0 停止，不算 \\0，所以是 5。' },
+      { stem: 'C 字符串的结束标志是哪个字符？', options: ['\\0', '\\n', '空格', 'EOF'], answer: 0, explain: '字符串以空字符 \\0 结尾，strlen、printf("%s") 等函数都靠它判断字符串到哪里结束。' },
+      { stem: '要判断两个字符串内容是否相同，应该用？', options: ['strcmp(a, b) == 0', 'a == b', 'strlen(a) == strlen(b)', 'a = b'], answer: 0, explain: '数组名比较的是地址，a == b 判断的是不是同一个数组。strcmp 返回 0 才表示内容相同。' }
+    ]
+  },
+
+  /* ---------- 第 14 关 · 递归与函数进阶 ---------- */
+  {
+    id: 'c-l14',
+    name: '第 12 关 · 递归与函数进阶',
+    brief: '递归就是函数自己调用自己：先写基准条件（什么时候停），再写向基准条件靠近的递推。每次调用都有自己独立的局部变量。',
+    questions: [
+      { stem: '写递归函数时，最不能少的是什么？', options: ['基准条件（递归出口）', '全局变量', '循环语句', 'printf 输出'], answer: 0, explain: '没有基准条件，递归会一直调用自己，直到栈溢出。' },
+      { stem: 'fact(n) = n * fact(n - 1)，fact(0) = 1，那么 fact(4) 是多少？', options: ['24', '12', '4', '120'], answer: 0, explain: '4 × 3 × 2 × 1 = 24。' },
+      { stem: '递归函数每一层的局部变量之间是什么关系？', options: ['各自独立，互不影响', '共用同一份', '只有最后一层有效', '会被自动清零'], answer: 0, explain: '每次函数调用都会在调用栈上新建一份栈帧，局部变量属于各自的那一层。' }
+    ]
+  },
+
+  /* ---------- 第 15 关 · 综合挑战：结构体数组 ---------- */
+  {
+    id: 'c-l15',
+    name: '第 15 关 · 综合挑战：成绩榜',
+    brief: '把结构体和数组结合起来，就能存一组学生。遍历、比较、找最大值都是之前学过的套路，只是这次比较的是结构体里的成员。',
+    questions: [
+      { stem: 'struct Student list[3]; 表示什么？', options: ['3 个 Student 结构体组成的数组', '1 个有 3 个成员的结构体', '3 个指向结构体的指针', '非法写法'], answer: 0, explain: '和普通数组一样，方括号里是元素个数，每个元素都是一个完整的 Student。' },
+      { stem: 'scanf("%s", s.name); 读入 "Tom Smith" 时，s.name 里会是什么？', options: ['"Tom"', '"Tom Smith"', '空字符串', '编译报错'], answer: 0, explain: '%s 遇到空格就停止，只会读入 Tom。要读整行可以用 fgets。' },
+      { stem: '在数组里找最高分，max 应该先初始化成什么？', options: ['第一个元素的分数', '0', '-1', '100'], answer: 0, explain: '先把第一个元素当作当前最大，再和后面的逐个比较。初始化为 0 在全是负分时会出错。' }
     ]
   }
 ];
@@ -236,7 +332,12 @@ const CS_INTRO_LEVELS = [
 const CS_STAGE_OVERRIDE = {
   '大一 · 打地基': {
     modules: [
-      { name: 'C 语言入门', levels: CS_INTRO_LEVELS },
+      /* C 语言 15 关按学习顺序拆成 5 个模块，每关保留原 id（c-l1..c-l15）用于代码任务查找 */
+      { name: 'C 语言基础入门', levels: [CS_INTRO_LEVELS[0], CS_INTRO_LEVELS[8], CS_INTRO_LEVELS[7]] },
+      { name: '流程控制', levels: [CS_INTRO_LEVELS[1], CS_INTRO_LEVELS[9], CS_INTRO_LEVELS[2], CS_INTRO_LEVELS[10]] },
+      { name: '数据存储', levels: [CS_INTRO_LEVELS[3], CS_INTRO_LEVELS[11], CS_INTRO_LEVELS[12]] },
+      { name: '函数与指针', levels: [CS_INTRO_LEVELS[4], CS_INTRO_LEVELS[13], CS_INTRO_LEVELS[5]] },
+      { name: '高级应用', levels: [CS_INTRO_LEVELS[6], CS_INTRO_LEVELS[14]] },
       { name: '计算机导论与伦理', levels: null },
       { name: '高等数学（上）', levels: null },
       { name: '高等数学（下）', levels: null },
@@ -278,9 +379,20 @@ const CS_STAGE_OVERRIDE = {
 /* ---------- csdiy.wiki 推荐课程（挂在计算机专业模块） ---------- */
 
 const CS_MODULE_RESOURCES = {
-  'C 语言入门': [
-    { name: 'Harvard CS50: This is CS50x', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/', desc: '风靡全球的计算机入门课' },
-    { name: 'Duke: Introductory C Programming Specialization', school: 'Duke / Coursera', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/Duke-Coursera-Intro-C/', desc: '体系化的 C 语言专项课程' }
+  'C 语言基础入门': [
+    { name: 'Harvard CS50: This is CS50x', school: 'Harvard', url: 'https://csdiy.wiki/%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/C/CS50/', desc: '风靡全球的计算机入门课，从 C 语言起步' }
+  ],
+  '流程控制': [
+    { name: 'runoob C 语言教程 · 分支/循环', school: 'runoob', url: 'https://www.runoob.com/cprogramming/c-decision.html', desc: 'if / switch / for / while 集中讲解' }
+  ],
+  '数据存储': [
+    { name: 'C 语言中文网 · 数组和字符串', school: 'c.biancheng.net', url: 'https://c.biancheng.net/c/array/', desc: '一维/二维数组、字符数组与字符串详解' }
+  ],
+  '函数与指针': [
+    { name: 'GeeksforGeeks · Functions & Pointers in C', school: 'GeeksforGeeks', url: 'https://www.geeksforgeeks.org/c-functions/', desc: '函数传值、递归、指针与数组的关系' }
+  ],
+  '高级应用': [
+    { name: 'cppreference C · 结构体与文件 I/O', school: 'cppreference', url: 'https://zh.cppreference.com/w/c/language/struct', desc: 'struct/union 与 stdio 文件操作的权威说明' }
   ],
   '线性代数': [
     { name: 'MIT 18.06: Linear Algebra (Gilbert Strang)', school: 'MIT', url: 'https://csdiy.wiki/%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%80/MIT-18.06/', desc: 'Strang 老爷子的线代神课' }

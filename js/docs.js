@@ -29,206 +29,201 @@ const C_SOURCES = [
 
 const DOCS = {
 
-  /* ---------------- C 语言入门 · 第 1 关 ---------------- */
+  /* ============================================================
+     模块 0 · C 语言基础入门
+     ============================================================ */
+
+  /* ---------------- 第 1 关：认识你的第一行代码 ---------------- */
   'engineering-计算机科学与技术-m0-l0': {
-    lead: '这一关的目标：看懂一个最小的 C 程序，知道每一行在干什么，然后自己把它敲出来、编译、运行。',
+    lead: '这一关的目标：写出人生第一段 C 程序，搞懂 main、printf、变量、类型、编译运行这条最基本的链路。',
     sections: [
       {
-        id: 'minimal',
-        title: '一个最小的 C 程序',
-        html: `<p>任何 C 程序都有<strong>一个入口</strong>：<code>main</code> 函数。操作系统运行程序时，从 <code>main</code> 的第一条语句开始执行。</p>
-<pre><code>#include &lt;stdio.h&gt;      // 引入标准输入输出库
+        id: 'hello',
+        title: 'Hello World：一切的开始',
+        html: `<pre><code>#include &lt;stdio.h&gt;
 
-int main(void) {        // 程序的入口
-    printf("Hello, C!\\n");
-    return 0;           // 0 表示正常结束
+int main() {
+    printf("Hello, World!\\n");
+    return 0;
 }</code></pre>
-<p>逐行拆开看：</p>
+<p>逐行拆解：</p>
 <ul>
-  <li><code>#include &lt;stdio.h&gt;</code>：把「标准输入输出」的声明包含进来，<code>printf</code> 就是从这儿来的。</li>
-  <li><code>int main(void)</code>：入口函数。<code>int</code> 表示它返回一个整数，<code>void</code> 表示不接受参数。</li>
-  <li>每条<strong>语句以分号结尾</strong>，这是 C 的硬性语法，漏了会直接编译失败。</li>
-  <li><code>return 0;</code>：把 0 返回给操作系统，表示程序正常结束。</li>
-</ul>
-<div class="doc-tip">💡 <strong>花括号</strong><code>{ }</code> 圈出的是「代码块」。C 不靠缩进决定结构，缩进只是为了人看。</div>`
-      },
-      {
-        id: 'printf',
-        title: 'printf 与格式占位符',
-        html: `<p><code>printf</code> 负责把内容打印到屏幕上。它的第一个参数是「格式串」，里面用 <code>%</code> 开头的<strong>占位符</strong>表示「这里要填一个值」。</p>
-<pre><code>int age = 19;
-double score = 91.5;
-char grade = 'A';
-
-printf("age = %d\\n", age);       // %d 整数
-printf("score = %f\\n", score);   // %f 小数
-printf("grade = %c\\n", grade);   // %c 单个字符
-printf("%s\\n", "hello");         // %s 字符串</code></pre>
-<ul>
-  <li><code>%d</code> 整数，<code>%f</code> 小数，<code>%c</code> 单个字符，<code>%s</code> 字符串。</li>
-  <li><code>\\n</code> 是换行符，写在字符串里表示「这里换一行」。</li>
-  <li>占位符和后面的参数<strong>按顺序一一对应</strong>，写反了会打出错误内容。</li>
-</ul>
-<div class="doc-tip">⚠️ 常见错误：在 <code>printf</code> 里写中文引号 <code>“ ”</code> 或中文分号 <code>；</code>，编译器会报莫名其妙的错——C 只认英文半角符号。</div>`
-      },
-      {
-        id: 'variable',
-        title: '变量：先声明，再使用',
-        html: `<p>变量的写法是「类型 + 名字 + 初值」：</p>
-<pre><code>int    a = 3;        // 整数
-double b = 2.5;      // 小数
-char   c = 'x';      // 字符（单引号）
-int    d;            // 只声明不赋值，值是随机的</code></pre>
-<p>C 是<strong>强类型</strong>语言：变量一旦声明成 <code>int</code>，就只能装整数。这也是 C 和 Python 最大的观感差别之一。</p>
-<div class="doc-tip">💡 <code>int d;</code> 没有初始化时，里面可能是<strong>任意值</strong>（不是 0）。养成「声明时就给初值」的习惯。</div>`
+  <li><code>#include &lt;stdio.h&gt;</code>：引入标准输入输出库，<code>printf</code> 就来自这里。</li>
+  <li><code>int main()</code>：程序的入口函数，<strong>每个 C 程序都从 main 开始执行</strong>。</li>
+  <li><code>printf("...")</code>：把括号里的内容打印到屏幕。<code>\\n</code> 是换行符。</li>
+  <li><code>return 0;</code>：向操作系统报告「程序正常结束」（0 = 成功）。</li>
+</ul>`
       },
       {
         id: 'compile',
-        title: '从源代码到能运行的程序',
-        html: `<p>你写的 <code>.c</code> 文件计算机读不懂，需要先<strong>编译</strong>成机器能执行的程序：</p>
-<pre><code>gcc hello.c -o hello     # 编译
-./hello                  # 运行（Windows 下是 hello.exe）</code></pre>
-<p>编译其实分四步：预处理（展开 <code>#include</code>）→ 编译（翻译成汇编）→ 汇编（变成机器码）→ 链接（把库函数接上）。现在你只需要记住：<strong>改完代码要重新编译</strong>，运行的是编译产物，不是源文件。</p>
-<div class="doc-tip">💡 初学阶段别急着背这些步骤，但要知道「报错分两种」：<strong>编译错误</strong>（语法不对，程序根本生成不出来）和<strong>运行错误</strong>（能跑但结果不对 / 崩溃）。</div>`
+        title: '编译运行：从源码到可执行文件',
+        html: `<p>C 是<strong>编译型语言</strong>，源码不能直接跑，要先编译成机器码：</p>
+<pre><code># 终端里执行
+gcc hello.c -o hello      # 编译，生成可执行文件 hello
+./hello                   # 运行（Windows 下是 hello.exe）</code></pre>
+<p>编译分四步：<strong>预处理 → 编译 → 汇编 → 链接</strong>。初学只要记住「写完代码 → gcc 编译 → 运行」就行。</p>
+<div class="doc-tip">💡 如果提示 <code>gcc: command not found</code>，说明没装编译器。Windows 装 MinGW 或 MSVC，macOS 装 Xcode Command Line Tools（<code>xcode-select --install</code>），Linux 装 <code>gcc</code>。</div>`
       },
       {
-        id: 'header_guard',
-        title: '头文件保护：防止重复包含',
-        html: `<p>当一个项目里有多个 <code>.c</code> 和 <code>.h</code> 文件时，同一个头文件可能被 <code>#include</code> 多次——编译器会报「重复定义」。解决方法：<strong>头文件保护</strong>，每个 <code>.h</code> 开头写上：</p>
-<pre><code>#ifndef HELLO_H        // 第一次进来时 HELLO_H 没定义，往下走
-#define HELLO_H
-
-// 这里放头文件内容（函数声明、结构体定义、宏定义等）
-void hello(void);
-
-#endif                 // 第二次进来时 HELLO_H 已定义，整段跳过</code></pre>
+        id: 'var',
+        title: '变量与数据类型',
+        html: `<p>变量是「给一块内存起个名字」，类型决定这块内存存什么、占多大：</p>
+<pre><code>int    age = 19;        // 整数，通常 4 字节
+float  height = 1.75;   // 单精度浮点，4 字节
+double pi = 3.14159;    // 双精度浮点，8 字节
+char   grade = 'A';     // 单个字符，1 字节</code></pre>
 <ul>
-  <li>格式：<code>#ifndef</code> + 宏名 → <code>#define</code> + 同名宏 → <code>#endif</code>。</li>
-  <li>宏名约定大写 + <code>_H</code> 后缀，保证全局唯一（比如 <code>MYPROJ_UTILS_H</code>）。</li>
-  <li>C++11 还有个更简洁的 <code>#pragma once</code>，但跨平台兼容性不如 <code>#ifndef</code> 保险。</li>
-</ul>
-<div class="doc-tip">⚠️ 这是 C 语言必考知识点——考研、期末、找工作面试都会问：「为什么要用头文件保护？怎么写？」。养成<strong>每个 .h 都加</strong>的习惯。</div>`
+  <li>C 是<strong>强类型语言</strong>：变量必须先声明类型才能用。</li>
+  <li>类型影响<strong>取值范围</strong>和<strong>精度</strong>：<code>int</code> 约 ±21 亿，<code>float</code> 只有 6~7 位有效数字，要高精度用 <code>double</code>。</li>
+  <li>命名规则：字母/数字/下划线，不能数字开头，区分大小写，不能用关键字（<code>int</code>、<code>if</code> 等）。</li>
+</ul>`
       },
       {
-        id: 'scanf',
-        title: 'scanf：让用户输入',
-        html: `<p><code>scanf</code> 是 <code>printf</code> 的搭档——负责从键盘读入数据。它的格式串和占位符用法跟 <code>printf</code> 一样，但变量前面要加 <code>&amp;</code>（取地址）。</p>
-<pre><code>int age;
-double score;
-char name[32];
+        id: 'printf_fmt',
+        title: 'printf 的格式化占位符',
+        html: `<pre><code>int a = 10;
+double b = 3.14;
+char c = 'X';
 
-printf("请输入年龄：");
-scanf("%d", &amp;age);
-
-printf("请输入分数：");
-scanf("%lf", &amp;score);   // double 用 %lf
-
-printf("请输入姓名：");
-scanf("%s", name);         // 数组名本身就是地址，不用 &amp;</code></pre>
-<ul>
-  <li><code>&amp;</code> 的作用：<code>scanf</code> 要知道"把值写到内存哪个位置"，所以你得把变量的<strong>地址</strong>给它。</li>
-  <li><code>char name[32]</code> 是字符数组，数组名 <code>name</code> 本身就是首地址，不用再加 <code>&amp;</code>。</li>
-  <li><code>%lf</code> 对应 <code>double</code>，<code>%f</code> 对应 <code>float</code>——<code>printf</code> 里 <code>double</code> 用 <code>%f</code> 就够了，但 <code>scanf</code> 一定要 <code>%lf</code>。</li>
-</ul>
-<div class="doc-tip">⚠️ <code>scanf("%s", name)</code> 遇到空格就停。要读带空格的整行，用 <code>fgets(name, sizeof(name), stdin)</code>。</div>`
-      },
-      {
-        id: 'string_input_4ways',
-        title: '记录输入字符串的 4 种常用方式',
-        html: `<p>C 语言读入字符串是新手常踩坑的地方，这里汇总<strong>4 种主流方式</strong>，每种有自己的适用场景和坑：</p>
-<table>
-<tr><th>方式</th><th>代码</th><th>能读空格？</th><th>安全？</th><th>备注</th></tr>
-<tr><td><code>scanf("%s", s)</code></td><td>见上节</td><td>❌ 空格即停</td><td>⚠️ 不限制长度</td><td>最简单，但只适合读单个单词</td></tr>
-<tr><td><code>scanf("%[^\n]", s)</code></td><td><code>scanf("%[^\n]%*c", s);</code></td><td>✅ 直到换行为止</td><td>⚠️ 不限制长度</td><td>正则扫集，<code>%*c</code> 吃掉残留的换行符</td></tr>
-<tr><td><code>gets(s)</code></td><td><code>gets(name);</code></td><td>✅</td><td>❌ <strong>极不安全</strong></td><td>无长度检查，容易溢出，<strong>C11 已废弃</strong>，绝对别用</td></tr>
-<tr><td><code>fgets(s, n, stdin)</code></td><td><code>fgets(name, 32, stdin);</code></td><td>✅</td><td>✅ 指定上限</td><td><strong>推荐首选</strong>，唯一的坑是会把换行符也读进数组</td></tr>
-</table>
-<p><strong>结论</strong>：<strong>永远用 <code>fgets</code></strong>，它是现代 C 唯一安全的行读函数。</p>`
-      },
-      {
-        id: 'fgets',
-        title: 'fgets 详解（最重要的输入函数）',
-        html: `<p><code>fgets</code> 是 C 里读一行字符串的<strong>标准首选</strong>，它同时解决了 <code>gets</code> 的溢出问题和 <code>scanf("%s")</code> 不能读空格的问题。</p>
-<pre><code>char buf[128];
-fgets(buf, sizeof(buf), stdin);    // 从键盘最多读 127 个字符 + \\0
-// 读文件时把 stdin 换成 FILE* 指针即可</code></pre>
-<p><strong>三个参数</strong>：目标数组、最大字符数（实际最多读 n-1 个，留一个给 <code>\\0</code>）、输入源（<code>stdin</code> / <code>FILE*</code>）。</p>
-<p><strong>和 gets 的核心区别</strong>：</p>
-<ul>
-  <li><code>gets</code> 不限制长度 → 缓冲区溢出 → 已被 C11 标准废弃（编译会警告）。</li>
-  <li><code>fgets</code> 遇到 <code>\\n</code> 或 <code>n-1</code> 字符就停，<strong>会把换行符 <code>\\n</code> 也存进数组</strong>——这是新手最不习惯的行为。</li>
-</ul>
-<p><strong>常见的"吃掉末尾换行符"写法</strong>：</p>
-<pre><code>if (buf[strlen(buf) - 1] == '\\n') {
-  buf[strlen(buf) - 1] = '\\0';   // 把末尾的 \\n 换成 \\0
-}</code></pre>
-<div class="doc-tip">⚠️ 面试必问：「gets 和 fgets 有什么区别？」答出「gets 不安全已废弃 / fgets 指定长度 / fgets 会读入 \\n 要手动去掉」三点就是满分。</div>`
-      },
-      {
-        id: 'operators',
-        title: '运算符速查',
-        html: `<p>除了 <code>+ - * /</code>，C 还有几种常用运算符：</p>
-<table>
-<tr><th>类别</th><th>运算符</th><th>举例</th><th>说明</th></tr>
-<tr><td>算术</td><td><code>+ - * / %</code></td><td><code>10 % 3</code></td><td><code>%</code> 取余只能用于整数；整数除法会丢掉小数</td></tr>
-<tr><td>自增自减</td><td><code>++ --</code></td><td><code>a++</code></td><td><code>a++</code> 先用后加，<code>++a</code> 先加后用</td></tr>
-<tr><td>赋值</td><td><code>= += -= *= /=</code></td><td><code>a += 2</code></td><td><code>a += 2</code> 等价于 <code>a = a + 2</code></td></tr>
-<tr><td>比较</td><td><code>== != &gt; &lt; &gt;= &lt;=</code></td><td><code>x &gt; 5</code></td><td>结果是整数：0 假，1 真</td></tr>
-<tr><td>逻辑</td><td><code>&amp;&amp; || !</code></td><td><code>a &amp;&amp; b</code></td><td>短路求值，见下一关</td></tr>
-<tr><td>逗号</td><td><code>,</code></td><td><code>a=1, b=2</code></td><td>从左往右依次执行，整个表达式的值是最右边那个</td></tr>
-</table>
-<p>优先级记不住没关系——<strong>不确定就加括号</strong>，代码更清晰。</p>`
-      },
-      {
-        id: 'operator_precedence',
-        title: '运算符优先级（从高到低，常用）',
-        html: `<p>C 的运算符优先级是<strong>面试/期末必考</strong>。不用全背，但记住<strong>常见几个层级</strong>就够解决 90% 的困惑：</p>
-<table>
-<tr><th>优先级</th><th>运算符</th><th>说明</th></tr>
-<tr><td>1（最高）</td><td><code>()</code> <code>[]</code> <code>.</code> <code>-></code></td><td>括号、数组、成员访问</td></tr>
-<tr><td>2</td><td><code>! ~ ++ -- + - * &amp;</code></td><td>单目（逻辑非、按位取反、自增自减、正负号、解引用、取地址）</td></tr>
-<tr><td>3</td><td><code>* / %</code></td><td>乘除取余</td></tr>
-<tr><td>4</td><td><code>+ -</code></td><td>加减</td></tr>
-<tr><td>5</td><td><code>&lt;&lt; &gt;&gt;</code></td><td>左右移（下面会讲）</td></tr>
-<tr><td>6</td><td><code>&amp;</code></td><td>按位与</td></tr>
-<tr><td>7</td><td><code>^</code></td><td>按位异或</td></tr>
-<tr><td>8</td><td><code>|</code></td><td>按位或</td></tr>
-<tr><td>9</td><td><code>&amp;&amp;</code></td><td>逻辑与</td></tr>
-<tr><td>10</td><td><code>||</code></td><td>逻辑或</td></tr>
-<tr><td>11</td><td><code>? :</code></td><td>条件运算符（三目）</td></tr>
-<tr><td>12</td><td><code>= += -= *= /=</code> 等</td><td>赋值（最低的几个之一）</td></tr>
-</table>
-<p>一个容易混淆的典型例子：<code>*p++</code> 等价于 <code>*(p++)</code>（因为 <code>*</code> 和 <code>++</code> 同优先级、<strong>右结合</strong>），即先解引用再让指针后移。</p>
-<div class="doc-tip">💡 口诀记忆（从高到低）：<strong>括号成员 → 单目 → 乘除余 → 加减 → 移位 → 按位与或异或 → 逻辑与或 → 三目 → 赋值</strong>。</div>`
-      },
-      {
-        id: 'bitwise_ops',
-        title: '按位运算符（& | ^ ~ << >>）',
-        html: `<p>按位运算符直接操作<strong>整数的二进制位</strong>——嵌入式、系统编程、算法优化里大量使用。</p>
-<table>
-<tr><th>运算符</th><th>意义</th><th>规则</th><th>示例（8 位）</th></tr>
-<tr><td><code>&amp;</code></td><td>按位与</td><td>两位都 1 才得 1</td><td><code>0b1010 &amp; 0b1100 = 0b1000</code></td></tr>
-<tr><td><code>|</code></td><td>按位或</td><td>有一个 1 就得 1</td><td><code>0b1010 | 0b0100 = 0b1110</code></td></tr>
-<tr><td><code>^</code></td><td>按位异或</td><td>不同为 1，相同为 0</td><td><code>0b1010 ^ 0b1100 = 0b0110</code></td></tr>
-<tr><td><code>~</code></td><td>按位取反</td><td>每位翻转</td><td><code>~0b1010 = 0b...0101</code></td></tr>
-<tr><td><code>&lt;&lt;</code></td><td>左移</td><td>整体左移 n 位，右边补 0</td><td><code>5 &lt;&lt; 1 = 10</code>（等价 ×2）</td></tr>
-<tr><td><code>&gt;&gt;</code></td><td>右移</td><td>整体右移 n 位，无符号左边补 0</td><td><code>8 &gt;&gt; 2 = 2</code>（等价 ÷4）</td></tr>
-</table>
-<p><strong>经典小技巧</strong>：</p>
-<ul>
-  <li><code>n &amp; 1</code> → 快速判断奇偶（最低位为 1 是奇数）。</li>
-  <li><code>n ^= 1</code> → 翻转最低位（0↔1）。</li>
-  <li><code>1 &lt;&lt; k</code> → 生成第 k 位为 1 的掩码。</li>
-  <li><code>n &amp; (n - 1)</code> → 把最低位的 1 清零（判断 2 的幂、统计 1 的个数）。</li>
-</ul>
-<div class="doc-tip">⚠️ 位运算只适合整数，浮点数不能用。左移相当于乘以 2 的 k 次方、右移相当于除以 2 的 k 次方，但编译器优化会自动用移位代替乘除法，你写不写都一样快——关键是能读懂别人的位运算技巧。</div>`
+printf("整数=%d\\n", a);        // %d  → int
+printf("浮点=%.2f\\n", b);      // %f  → float/double，.2 表示保留 2 位小数
+printf("字符=%c\\n", c);        // %c  → char
+printf("字符串=%s\\n", "hi");   // %s  → 字符串
+printf("地址=%p\\n", &amp;a);       // %p  → 指针地址</code></pre>
+<p>占位符和参数的<strong>类型、数量必须一一对应</strong>，写错了结果不可预期（比如用 <code>%d</code> 打印 <code>double</code> 会出乱码）。</p>`
       }
     ],
     refs: [CS_REFS.entry, CS_REFS.tools].concat(C_SOURCES)
   },
 
-  /* ---------------- C 语言入门 · 第 2 关 ---------------- */
+  /* ---------------- 第 2 关：运算符与表达式 ---------------- */
   'engineering-计算机科学与技术-m0-l1': {
+    lead: '这一关的目标：掌握 C 里各种运算符的写法和优先级，能看懂一个复杂表达式到底先算谁、后算谁。',
+    sections: [
+      {
+        id: 'arith',
+        title: '算术运算符：加减乘除余',
+        html: `<pre><code>int a = 10, b = 3;
+a + b    // 13
+a - b    // 7
+a * b    // 30
+a / b    // 3   ← 整数除法，只保留整数部分！
+a % b    // 1   ← 取余（模），只对整数有效</code></pre>
+<ul>
+  <li><code>/</code> 的坑：<strong>两个整数相除结果还是整数</strong>，小数部分直接丢弃（不是四舍五入）。想要小数，至少一个操作数写成浮点：<code>10.0 / 3</code> → <code>3.333...</code>。</li>
+  <li><code>%</code> 取余只能用于整数，常用于「判断奇偶」（<code>n % 2 == 0</code>）和「取个位」（<code>n % 10</code>）。</li>
+</ul>`
+      },
+      {
+        id: 'inc',
+        title: '自增自减：++ 与 --',
+        html: `<pre><code>int i = 5;
+i++;      // i 变成 6，等价于 i = i + 1
+++i;      // i 变成 7
+i--;      // i 变成 6</code></pre>
+<p><strong>前缀 vs 后缀</strong>的区别在「取值时机」：</p>
+<pre><code>int a = 5, b = 5;
+int x = a++;   // 先取 a 的值赋给 x，a 再加 1 → x=5, a=6
+int y = ++b;   // b 先加 1，再赋给 y       → y=6, b=6</code></pre>
+<div class="doc-tip">⚠️ 不要在同一个表达式里对同一个变量多次 <code>++</code>，比如 <code>i++ + ++i</code>——这在 C 标准里是<strong>未定义行为</strong>，不同编译器结果不一样。拆开写最安全。</div>`
+      },
+      {
+        id: 'assign',
+        title: '赋值与复合赋值',
+        html: `<pre><code>int a = 10;
+a += 5;   // a = a + 5 → 15
+a -= 3;   // a = a - 3 → 12
+a *= 2;   // a = a * 2 → 24
+a /= 4;   // a = a / 4 → 6
+a %= 4;   // a = a % 4 → 2</code></pre>
+<p>复合赋值运算符（<code>+= -= *= /= %=</code>）是简写，<strong>功能完全等价</strong>于展开写法，但更紧凑。</p>
+<div class="doc-tip">💡 赋值表达式本身也有值：<code>a = 5</code> 这个表达式的值是 5。所以 <code>a = b = c = 0</code> 可以连续赋值（从右往左）。</div>`
+      },
+      {
+        id: 'precedence',
+        title: '优先级与结合性',
+        html: `<p>运算符有<strong>优先级</strong>（谁先算）和<strong>结合性</strong>（同级时从左还是从右算）：</p>
+<ul>
+  <li>高 → 低：<code>()</code> 括号 &gt; 单目（<code>++ -- ! &amp; *</code>）&gt; 算术（<code>* / %</code> &gt; <code>+ -</code>）&gt; 比较（<code>&gt; &lt; == !=</code>）&gt; 逻辑（<code>&amp;&amp;</code> &gt; <code>||</code>）&gt; 赋值（<code>= +=</code>）。</li>
+  <li>赋值运算符是<strong>右结合</strong>：<code>a = b = 3</code> 先算 <code>b = 3</code>。</li>
+  <li>其余大多<strong>左结合</strong>：<code>a - b - c</code> 先算 <code>a - b</code>。</li>
+</ul>
+<div class="doc-tip">💡 记不住优先级？<strong>加括号</strong>永远不会错。写复杂表达式时，括号既是给编译器看的，更是给三个月后的自己看的。</div>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.tools].concat(C_SOURCES)
+  },
+
+  /* ---------------- 第 3 关：和程序对话——输入输出 ---------------- */
+  'engineering-计算机科学与技术-m0-l2': {
+    lead: '这一关的目标：用 printf 格式化输出、用 scanf 读取用户输入，理解 & 为什么在 scanf 里必须出现。',
+    sections: [
+      {
+        id: 'printf',
+        title: 'printf：格式化输出',
+        html: `<pre><code>int    n = 42;
+double d = 3.14159;
+char   c = 'Q';
+char  *s = "Hello";
+
+printf("%d\\n", n);           // 42
+printf("%5d\\n", n);          // "   42"  宽度 5，右对齐
+printf("%-5d|\\n", n);        // "42   |"  负号表示左对齐
+printf("%.2f\\n", d);         // 3.14     保留 2 位小数
+printf("%8.3f\\n", d);        // "   3.142"  总宽 8，小数 3 位
+printf("%c %s\\n", c, s);     // Q Hello</code></pre>
+<p>常用格式符：<code>%d</code>(int)、<code>%f</code>(float/double)、<code>%c</code>(char)、<code>%s</code>(字符串)、<code>%p</code>(地址)、<code>%%</code>(输出百分号本身)。</p>`
+      },
+      {
+        id: 'scanf',
+        title: 'scanf：读取输入（& 是关键）',
+        html: `<pre><code>int age;
+printf("请输入年龄：");
+scanf("%d", &amp;age);           // &amp; 取地址，把读到的值放进 age 所在的内存
+printf("你输入了：%d\\n", age);</code></pre>
+<p><strong>为什么要 <code>&amp;</code>？</strong><code>scanf</code> 需要知道「把数据写到哪里」，所以它要的是变量的<strong>地址</strong>，而不是变量的值。忘了 <code>&amp;</code> 会编译通过但运行时崩溃或写入错误位置。</p>
+<pre><code>double height;
+scanf("%lf", &amp;height);       // double 用 %lf（long float）
+char name[20];
+scanf("%s", name);           // 字符串数组名本身就是地址，不用 &amp;</code></pre>
+<div class="doc-tip">⚠️ <code>%s</code> 遇到空格/回车就停，所以 <code>scanf("%s", name)</code> 读不了「张 三」。要读一整行用 <code>fgets(name, sizeof(name), stdin)</code>。</div>`
+      },
+      {
+        id: 'escape',
+        title: '转义字符',
+        html: `<p>反斜杠 <code>\\</code> 开头的特殊字符：</p>
+<table>
+<tr><th>转义符</th><th>含义</th></tr>
+<tr><td><code>\\n</code></td><td>换行</td></tr>
+<tr><td><code>\\t</code></td><td>制表符（Tab）</td></tr>
+<tr><td><code>\\\\</code></td><td>反斜杠本身</td></tr>
+<tr><td><code>\\"</code></td><td>双引号</td></tr>
+<tr><td><code>\\0</code></td><td>空字符（字符串结束标记）</td></tr>
+</table>
+<pre><code>printf("C:\\\\Users\\\\name");   // 输出 C:\Users\name
+printf("姓名\\t年龄\\n");        // 用制表符对齐</code></pre>`
+      },
+      {
+        id: 'pitfalls',
+        title: '输入缓冲区的坑',
+        html: `<p>用户敲的字符先放在<strong>输入缓冲区</strong>里，<code>scanf</code> 从里面取。常见坑：</p>
+<pre><code>int a; char c;
+scanf("%d", &amp;a);
+scanf("%c", &amp;c);          // 会读到上一个 scanf 留下的回车！
+printf("a=%d c=%c\\n", a, c);</code></pre>
+<p>输入 <code>42</code> 回车后，缓冲区里剩了个 <code>\\n</code>，第二个 <code>scanf("%c")</code> 直接把它读走了。</p>
+<p>解决：在 <code>%c</code> 前加空格跳过空白：<code>scanf(" %c", &amp;c);</code>。或者用 <code>getchar()</code> 吃掉多余的回车。</p>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.tools].concat(C_SOURCES)
+  },
+
+  /* ============================================================
+     模块 1 · 流程控制
+     ============================================================ */
+
+  /* ---------------- 第 1 关：让程序学会判断 ---------------- */
+  'engineering-计算机科学与技术-m1-l0': {
     lead: '这一关的目标：让程序根据条件走不同的分支，并且能看懂「为什么我的 if 没生效」这类问题。',
     sections: [
       {
@@ -323,8 +318,69 @@ switch (grade) {
     refs: [CS_REFS.entry, CS_REFS.plan].concat(C_SOURCES)
   },
 
-  /* ---------------- C 语言入门 · 第 3 关 ---------------- */
-  'engineering-计算机科学与技术-m0-l2': {
+  /* ---------------- 第 2 关：分支逻辑实战 ---------------- */
+  'engineering-计算机科学与技术-m1-l1': {
+    lead: '这一关的目标：用逻辑运算符组合复杂条件，避开 = 与 ==、悬垂 else 等经典陷阱，写出不会出错的判断。',
+    sections: [
+      {
+        id: 'compound',
+        title: '组合条件：&& || !',
+        html: `<p>真实题目里的条件很少是单一判断，通常要组合：</p>
+<pre><code>// 判断闰年：能被 4 整除但不能被 100 整除，或者能被 400 整除
+int isLeap = (year % 4 == 0 &amp;&amp; year % 100 != 0) || (year % 400 == 0);
+
+// 判断成绩是否在 [60, 90) 区间
+int ok = score &gt;= 60 &amp;&amp; score &lt; 90;
+
+// 判断字符是否为小写字母
+int isLower = ch &gt;= 'a' &amp;&amp; ch &lt;= 'z';</code></pre>
+<p><strong>范围判断</strong>必须用 <code>&amp;&amp;</code> 连接两个不等式，不能写 <code>60 &lt;= score &lt; 90</code>——那在数学里对，在 C 里会先算 <code>60 &lt;= score</code> 得到 0 或 1，再用结果和 90 比，逻辑全错。</p>`
+      },
+      {
+        id: 'short-circuit',
+        title: '短路求值：有时是好事，有时是坑',
+        html: `<pre><code>int a = 0;
+if (a != 0 &amp;&amp; 10 / a &gt; 1) {   // a!=0 为假，10/a 不会执行 → 不会除零崩溃
+    printf("ok");
+}
+
+if (a == 0 || 10 / a &gt; 1) {   // a==0 为真，后面不算
+    printf("ok");
+}</code></pre>
+<p>短路让我们可以<strong>把安全检查写在前面</strong>，后续条件就可以放心使用可能危险的操作。反过来，如果你期望某个条件的副作用（比如 <code>i++</code>）一定执行，就要小心短路会跳过它。</p>`
+      },
+      {
+        id: 'equal',
+        title: '= vs ==：一辈子的对手',
+        html: `<pre><code>if (x = 5) { ... }   // ⚠️ 这是赋值！x 被设为 5，条件永真
+if (x == 5) { ... }  // ✅ 这才是判断</code></pre>
+<p>有个防御性写法：<strong>把常量放左边</strong>：<code>if (5 == x)</code>。这样万一写成 <code>5 = x</code>，编译器会直接报错（不能给常量赋值），帮你在编译期就发现 bug。</p>
+<div class="doc-tip">💡 现代编译器（gcc -Wall）会对 <code>if (x = 5)</code> 报警告，但养成 <code>==</code> 的肌肉记忆更靠谱。</div>`
+      },
+      {
+        id: 'dangling-else',
+        title: '悬垂 else：else 到底跟谁？',
+        html: `<pre><code>if (a &gt; 0)
+    if (b &gt; 0)
+        printf("A");
+else
+    printf("B");   // 这个 else 属于谁？</code></pre>
+<p>C 的规则：<strong>else 总是和最近的未匹配的 if 配对</strong>。所以上面的 <code>else</code> 属于内层的 <code>if (b &gt; 0)</code>，不是外层的。</p>
+<p>想让 else 属于外层，必须加花括号：</p>
+<pre><code>if (a &gt; 0) {
+    if (b &gt; 0)
+        printf("A");
+} else {
+    printf("B");   // 现在属于外层 if
+}</code></pre>
+<div class="doc-tip">⚠️ 这就是为什么「永远写花括号」是铁律——省花括号省出来的 bug，比省下的那一行代码贵一万倍。</div>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.plan].concat(C_SOURCES)
+  },
+
+  /* ---------------- 第 3 关：重复的力量 ---------------- */
+  'engineering-计算机科学与技术-m1-l2': {
     lead: '这一关的目标：用循环把「重复的事」交给计算机做，并且能判断自己写的是不是会死循环。',
     sections: [
       {
@@ -395,8 +451,84 @@ for (int i = 1; i &lt; 5; i++)
     refs: [CS_REFS.entry, CS_REFS.missing].concat(C_SOURCES)
   },
 
-  /* ---------------- C 语言入门 · 第 4 关 ---------------- */
-  'engineering-计算机科学与技术-m0-l3': {
+  /* ---------------- 第 4 关：循环嵌套与图案 ---------------- */
+  'engineering-计算机科学与技术-m1-l3': {
+    lead: '这一关的目标：用嵌套循环打印二维图案，理解 break/continue 在多层循环里的作用范围。',
+    sections: [
+      {
+        id: 'nested',
+        title: '嵌套循环：外层管行，内层管列',
+        html: `<pre><code>// 打印 3 行 5 列的星号矩阵
+for (int i = 0; i &lt; 3; i++) {        // 外层：行
+    for (int j = 0; j &lt; 5; j++) {    // 内层：列
+        printf("*");
+    }
+    printf("\\n");                    // 一行打完换行
+}
+// 输出：
+// *****
+// *****
+// *****</code></pre>
+<p>规律：<strong>外层循环变量 <code>i</code> 控制行号，内层 <code>j</code> 控制每行的第几个字符</strong>。所有二维图案题都套用这个骨架，只是「每行打什么」的条件不同。</p>`
+      },
+      {
+        id: 'triangle',
+        title: '三角形：让每行的星数随行号变化',
+        html: `<pre><code>// 直角三角形（第 i 行打 i+1 个星）
+for (int i = 0; i &lt; 5; i++) {
+    for (int j = 0; j &lt;= i; j++) {   // 列数 = 行号 + 1
+        printf("*");
+    }
+    printf("\\n");
+}
+// *
+// **
+// ***
+// ****
+// *****</code></pre>
+<p>关键是找到「第 i 行打几个」的规律。想打印倒三角就让列数从多到少：<code>j &lt; 5 - i</code>。</p>`
+      },
+      {
+        id: 'multiply',
+        title: '经典例题：九九乘法表',
+        html: `<pre><code>for (int i = 1; i &lt;= 9; i++) {
+    for (int j = 1; j &lt;= i; j++) {
+        printf("%d*%d=%-4d", j, i, i * j);
+    }
+    printf("\\n");
+}</code></pre>
+<p>第 i 行有 i 个式子，所以内层 <code>j</code> 从 1 到 <code>i</code>。<code>%-4d</code> 让每个式子占 4 列、左对齐，排起来整齐。</p>`
+      },
+      {
+        id: 'scope',
+        title: 'break / continue 在嵌套中的作用域',
+        html: `<p><code>break</code> 和 <code>continue</code> <strong>只作用于最内层的那一层循环</strong>，不会跳出外层：</p>
+<pre><code>for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 5; j++) {
+        if (j == 2) break;   // 只跳出内层 j 循环，外层 i 继续
+        printf("(%d,%d) ", i, j);
+    }
+    printf("\\n");
+}
+// 每行只会打印 j=0, j=1</code></pre>
+<p>想跳出多层循环？可以用 <code>goto</code>（C 里合法但要慎用），或者设一个外层标志变量：</p>
+<pre><code>int stop = 0;
+for (int i = 0; i &lt; 3 &amp;&amp; !stop; i++) {
+    for (int j = 0; j &lt; 5; j++) {
+        if (j == 2) { stop = 1; break; }
+    }
+}</code></pre>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.missing].concat(C_SOURCES)
+  },
+
+  /* ============================================================
+     模块 2 · 数据存储
+     ============================================================ */
+
+  /* ---------------- 第 1 关：把一组数存起来 ---------------- */
+  'engineering-计算机科学与技术-m2-l0': {
     lead: '这一关的目标：用数组一次性管理一组数据，并且知道下标越界为什么最危险。',
     sections: [
       {
@@ -529,8 +661,149 @@ for (int i = 0; i &lt; 3; i++)
     refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
   },
 
-  /* ---------------- C 语言入门 · 第 5 关（新）· 函数 ---------------- */
-  'engineering-计算机科学与技术-m0-l4': {
+  /* ---------------- 第 2 关：数组遍历与统计 ---------------- */
+  'engineering-计算机科学与技术-m2-l1': {
+    lead: '这一关的目标：熟练遍历数组做求和、计数、求最值、查找，并掌握最简单的排序算法。',
+    sections: [
+      {
+        id: 'traverse',
+        title: '遍历的写法',
+        html: `<pre><code>int a[5] = {3, 9, 2, 7, 5};
+int n = 5;
+
+// 写法一：下标遍历（最常用）
+for (int i = 0; i &lt; n; i++) {
+    printf("%d ", a[i]);
+}
+
+// 写法二：指针遍历
+for (int *p = a; p &lt; a + n; p++) {
+    printf("%d ", *p);
+}</code></pre>
+<p>两种写法完全等价，编译器生成的代码几乎一样。下标写法更直观，指针写法在面试里常考。</p>`
+      },
+      {
+        id: 'stat',
+        title: '求和 / 平均 / 计数',
+        html: `<pre><code>int a[5] = {3, 9, 2, 7, 5};
+int n = 5;
+
+int sum = 0, even = 0;
+for (int i = 0; i &lt; n; i++) {
+    sum += a[i];                // 累加
+    if (a[i] % 2 == 0) even++;  // 统计偶数个数
+}
+double avg = (double)sum / n;   // 求平均（先转 double）
+printf("和=%d 平均=%.2f 偶数=%d\\n", sum, avg, even);</code></pre>
+<div class="doc-tip">💡 累加器 <code>sum</code> 初始必须为 0，计数器 <code>cnt</code> 初始也为 0。忘了初始化，里面是垃圾值，结果全错。</div>`
+      },
+      {
+        id: 'minmax',
+        title: '最大值 / 最小值 / 查找',
+        html: `<pre><code>int a[5] = {3, 9, 2, 7, 5};
+int n = 5;
+
+int max = a[0], min = a[0];   // 先假设第一个就是最值
+for (int i = 1; i &lt; n; i++) {
+    if (a[i] &gt; max) max = a[i];
+    if (a[i] &lt; min) min = a[i];
+}
+
+// 查找 7 是否存在
+int target = 7, found = -1;
+for (int i = 0; i &lt; n; i++) {
+    if (a[i] == target) { found = i; break; }
+}
+printf("最大=%d 最小=%d 7的下标=%d\\n", max, min, found);</code></pre>
+<p>求最值的关键：<strong>先把第一个元素当最值，再从第二个开始比较</strong>。不要把 max 初始化成 0——如果数组全是负数，结果就错了。</p>`
+      },
+      {
+        id: 'bubble',
+        title: '排序入门：冒泡排序',
+        html: `<p>冒泡排序的思想：每轮把最大的元素「冒泡」到末尾，像气泡往上浮。</p>
+<pre><code>int a[5] = {3, 9, 2, 7, 5};
+int n = 5;
+for (int i = 0; i &lt; n - 1; i++) {           // 共 n-1 轮
+    for (int j = 0; j &lt; n - 1 - i; j++) {   // 每轮比较到 n-1-i
+        if (a[j] &gt; a[j + 1]) {              // 前一个比后一个大就交换
+            int t = a[j]; a[j] = a[j+1]; a[j+1] = t;
+        }
+    }
+}
+// 结果：2 3 5 7 9</code></pre>
+<p>时间复杂度 O(n²)，数据量大时很慢，但作为排序入门是必学的。更高效的排序（快排、归并）在数据结构课里学。</p>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
+  },
+
+  /* ---------------- 第 3 关：字符串处理 ---------------- */
+  'engineering-计算机科学与技术-m2-l2': {
+    lead: '这一关的目标：弄清 C 字符串的本质（以 \\0 结尾的字符数组），熟练使用 strlen、strcmp、strcpy 等库函数。',
+    sections: [
+      {
+        id: 'essence',
+        title: '字符串的本质：\\0 结尾',
+        html: `<pre><code>char s1[] = "abc";       // 占 4 字节：'a' 'b' 'c' '\\0'
+char s2[10] = "hi";      // s2[0]='h' s2[1]='i' s2[2]='\\0' 其余清零
+char s3[] = {'a', 'b', 'c'};  // ⚠️ 没有 \\0，不是合法字符串！</code></pre>
+<p>C 里所有字符串操作都依赖结尾的 <code>\\0</code> 来判断「到哪结束」。少了 <code>\\0</code>，<code>printf("%s")</code>、<code>strlen</code> 会一直往后读到内存里的垃圾或崩溃。</p>`
+      },
+      {
+        id: 'strlen-sizeof',
+        title: 'strlen vs sizeof',
+        html: `<pre><code>char s[] = "hello";
+strlen(s);   // 5   —— 不含 \\0 的字符个数
+sizeof(s);   // 6   —— 整个数组的字节数（含 \\0）
+
+char *p = "hello";
+strlen(p);   // 5
+sizeof(p);   // 8（64 位下指针大小）—— 注意！不是字符串长度</code></pre>
+<p><strong>核心区别</strong>：<code>strlen</code> 是函数，运行时数到 <code>\\0</code> 为止；<code>sizeof</code> 是运算符，编译期就知道大小。对字符数组用 <code>sizeof</code> 能得到容量，对 char* 用 <code>sizeof</code> 只能得到指针大小。</p>`
+      },
+      {
+        id: 'funcs',
+        title: '常用字符串函数（string.h）',
+        html: `<pre><code>#include &lt;string.h&gt;
+
+char a[20] = "Hello";
+char b[20] = "World";
+
+strcpy(a, b);        // 把 b 复制到 a，a 现在是 "World"
+strcat(a, b);        // 把 b 拼到 a 末尾，a 变成 "WorldWorld"
+strcmp(a, b);        // 比较：a<b 返回负数，相等返回 0，a>b 返回正数
+strlen(a);           // 长度</code></pre>
+<table>
+<tr><th>函数</th><th>作用</th><th>注意</th></tr>
+<tr><td><code>strcpy(dst, src)</code></td><td>复制字符串</td><td>dst 必须足够大，否则溢出</td></tr>
+<tr><td><code>strcat(dst, src)</code></td><td>追加到末尾</td><td>dst 要有足够剩余空间</td></tr>
+<tr><td><code>strcmp(a, b)</code></td><td>比较大小</td><td>逐字符按 ASCII 码比，不能用 <code>==</code></td></tr>
+<tr><td><code>strlen(s)</code></td><td>求长度</td><td>不含 <code>\\0</code></td></tr>
+</table>
+<div class="doc-tip">⚠️ <code>strcpy</code>/<code>strcat</code> 不检查目标数组大小，是缓冲区溢出的重灾区。实际工程里推荐用 <code>strncpy</code>、<code>strncat</code> 限制长度。</div>`
+      },
+      {
+        id: 'input',
+        title: '字符串输入：gets 已死，fgets 当立',
+        html: `<pre><code>char name[20];
+scanf("%s", name);        // 遇到空格/回车停止，读不了带空格的名字
+// 输入 "Zhang San" → name 只有 "Zhang"
+
+fgets(name, sizeof(name), stdin);  // 读一整行，包括空格
+// 但 fgets 会把末尾的 \\n 也读进来，需要手动去掉
+name[strcspn(name, "\\n")] = '\\0';</code></pre>
+<p><code>gets()</code> 函数因为无法限制输入长度，已被 C11 标准<strong>彻底移除</strong>，永远不要用。读取一行用 <code>fgets</code>。</p>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
+  },
+
+  /* ============================================================
+     模块 3 · 函数与指针
+     ============================================================ */
+
+  /* ---------------- 第 1 关：把代码块打包成函数 ---------------- */
+  'engineering-计算机科学与技术-m3-l0': {
     lead: '这一关的目标：把一段重复的代码打包成函数，理解形参与实参，以及递归的"自己调自己"。',
     sections: [
       {
@@ -602,8 +875,69 @@ int fact(int n) {
     refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
   },
 
-  /* ---------------- C 语言入门 · 第 6 关（新）· 指针 ---------------- */
-  'engineering-计算机科学与技术-m0-l5': {
+  /* ---------------- 第 2 关：递归与函数进阶 ---------------- */
+  'engineering-计算机科学与技术-m3-l1': {
+    lead: '这一关的目标：深入理解递归的执行过程（栈帧），掌握经典递归问题，并学会在递归与迭代之间取舍。',
+    sections: [
+      {
+        id: 'stack',
+        title: '递归的底层：调用栈',
+        html: `<p>每次函数调用，系统都会在<strong>调用栈</strong>上分配一块叫<strong>栈帧（stack frame）</strong>的内存，存这个函数的局部变量、参数、返回地址。函数返回时栈帧被回收。</p>
+<p>以 <code>fact(3)</code> 为例：</p>
+<pre><code>fact(3)
+  → 3 * fact(2)
+      → 2 * fact(1)
+          → 1 * fact(0)
+              → return 1      // 基准条件，开始回弹
+          → return 1 * 1 = 1
+      → return 2 * 1 = 2
+  → return 3 * 2 = 6</code></pre>
+<p>递归越深，栈帧越多。<strong>栈空间是有限的</strong>（通常几 MB），递归过深会触发<strong>栈溢出（stack overflow）</strong>导致程序崩溃。</p>`
+      },
+      {
+        id: 'fib',
+        title: '经典递归：斐波那契',
+        html: `<p>斐波那契数列：1, 1, 2, 3, 5, 8, 13... 从第三项起每项等于前两项之和。</p>
+<pre><code>int fib(int n) {
+    if (n &lt;= 2) return 1;           // 基准条件
+    return fib(n - 1) + fib(n - 2); // 递归
+}</code></pre>
+<p>看似简洁，但有大问题：<code>fib(5)</code> 会调用 <code>fib(4)</code> 和 <code>fib(3)</code>，而 <code>fib(4)</code> 又会调用 <code>fib(3)</code>——<strong>大量重复计算</strong>。时间复杂度是指数级 O(2ⁿ)，算到 n=40 就明显变慢。</p>
+<div class="doc-tip">💡 优化方法：① 用循环改写（迭代）；② 记忆化递归（把算过的结果存起来，避免重复）。面试时能写出递归版再加一句「实际用迭代或记忆化」会很加分。</div>`
+      },
+      {
+        id: 'hanoi',
+        title: '经典递归：汉诺塔',
+        html: `<p>汉诺塔：把 n 个盘子从 A 柱移到 C 柱，大盘不能压小盘，每次只能移一个。</p>
+<pre><code>void hanoi(int n, char from, char via, char to) {
+    if (n == 1) {
+        printf("%c → %c\\n", from, to);  // 只有一个盘子，直接移
+        return;
+    }
+    hanoi(n - 1, from, to, via);   // 把上面 n-1 个从 from 移到 via（借助 to）
+    printf("%c → %c\\n", from, to); // 把最底下的大盘从 from 移到 to
+    hanoi(n - 1, via, from, to);   // 把 n-1 个从 via 移到 to（借助 from）
+}</code></pre>
+<p>汉诺塔是「递归思想」最经典的演示：把 n 个盘子的问题，化成两个 n-1 盘子的子问题 + 一次移动。递归公式：移动次数 = 2ⁿ - 1。</p>`
+      },
+      {
+        id: 'tradeoff',
+        title: '递归 vs 迭代：怎么选',
+        html: `<table>
+<tr><th></th><th>递归</th><th>迭代（循环）</th></tr>
+<tr><td>代码</td><td>简洁、贴近数学定义</td><td>通常更长</td></tr>
+<tr><td>性能</td><td>有函数调用开销，可能爆栈</td><td>快，无栈开销</td></tr>
+<tr><td>风险</td><td>忘了基准条件就死递归</td><td>循环条件写错会死循环</td></tr>
+</table>
+<p><strong>经验法则</strong>：问题天然是递归结构（树、分治、汉诺塔）用递归；简单重复（累加、遍历）用循环。能用循环轻松改写的递归，优先用循环。</p>
+<p>进阶：<strong>尾递归</strong>——递归调用是函数最后一条语句，部分编译器可以优化成循环（不占额外栈帧）。但 C 标准不保证优化，不能依赖。</p>`
+      }
+    ],
+    refs: [CS_REFS.entry, CS_REFS.algo].concat(C_SOURCES)
+  },
+
+  /* ---------------- 第 3 关：地址与指针 ---------------- */
+  'engineering-计算机科学与技术-m3-l2': {
     lead: '这一关的目标：搞懂「地址」是什么，& 和 * 分别干什么，以及为什么数组和指针经常可以互换。',
     sections: [
       {
@@ -667,8 +1001,12 @@ int main() {
     refs: [CS_REFS.entry, CS_REFS.csapp].concat(C_SOURCES)
   },
 
-  /* ---------------- C 语言入门 · 第 7 关（新）· 结构体 / 共用体 / 文件读写 ---------------- */
-  'engineering-计算机科学与技术-m0-l6': {
+  /* ============================================================
+     模块 4 · 高级应用
+     ============================================================ */
+
+  /* ---------------- 第 1 关：打包数据与读写文件 ---------------- */
+  'engineering-计算机科学与技术-m4-l0': {
     lead: '这一关的目标：用 struct 把不同类型的数据打包成新类型，了解 union 的内存共享特性，学会用 fopen/fclose 做基本的文件读写。',
     sections: [
       {
@@ -759,7 +1097,122 @@ fclose(fp);</code></pre>
       }
     ],
     refs: [CS_REFS.csapp, CS_REFS.plan].concat(C_SOURCES)
+  },
+
+  /* ---------------- 第 2 关：综合挑战——成绩榜 ---------------- */
+  'engineering-计算机科学与技术-m4-l1': {
+    lead: '这一关的目标：把前面学的结构体、数组、循环、函数、指针组合起来，完成一个有实际意义的综合程序。',
+    sections: [
+      {
+        id: 'problem',
+        title: '题目拆解：我们要做什么',
+        html: `<p><strong>需求</strong>：录入 N 个学生的姓名和分数，输出平均分、最高分学生，并按分数从高到低排序打印成绩榜。</p>
+<p>拆成子任务：</p>
+<ol>
+  <li>用结构体数组存学生信息（姓名 + 分数）。</li>
+  <li>输入 N 和每个学生的数据。</li>
+  <li>遍历求平均分。</li>
+  <li>遍历找最高分学生。</li>
+  <li>按分数排序。</li>
+  <li>输出成绩榜。</li>
+</ol>
+<p>这就是「<strong>输入 → 处理 → 输出</strong>」的经典程序结构，也是所有编程题的通用骨架。</p>`
+      },
+      {
+        id: 'struct-array',
+        title: '结构体数组：存多个学生',
+        html: `<pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+struct Student {
+    char name[32];
+    double score;
+};
+
+int main() {
+    int n;
+    printf("学生人数：");
+    scanf("%d", &amp;n);
+
+    struct Student stu[100];   // 最多 100 人
+    for (int i = 0; i &lt; n; i++) {
+        printf("第 %d 个：姓名 分数 = ", i + 1);
+        scanf("%s %lf", stu[i].name, &amp;stu[i].score);
+    }
+    // ... 后续处理
+    return 0;
+}</code></pre>
+<p><code>stu[i].name</code> 是数组名（地址），scanf 不用 <code>&amp;</code>；<code>stu[i].score</code> 是普通变量，要加 <code>&amp;</code>。</p>`
+      },
+      {
+        id: 'modular',
+        title: '模块化：拆成多个函数',
+        html: `<p>把不同功能拆成独立函数，主函数只负责调度，代码更清晰：</p>
+<pre><code>// 求平均分
+double average(struct Student *s, int n) {
+    double sum = 0;
+    for (int i = 0; i &lt; n; i++) sum += s[i].score;
+    return sum / n;
+}
+
+// 找最高分学生的下标
+int topStudent(struct Student *s, int n) {
+    int top = 0;
+    for (int i = 1; i &lt; n; i++)
+        if (s[i].score &gt; s[top].score) top = i;
+    return top;
+}
+
+// 按分数降序排序（冒泡）
+void sortByScore(struct Student *s, int n) {
+    for (int i = 0; i &lt; n - 1; i++)
+        for (int j = 0; j &lt; n - 1 - i; j++)
+            if (s[j].score &lt; s[j+1].score) {
+                struct Student t = s[j];
+                s[j] = s[j+1];
+                s[j+1] = t;
+            }
+}</code></pre>
+<p>函数参数用<strong>结构体指针</strong>（<code>struct Student *s</code>），避免每次传参都拷贝整个数组。</p>`
+      },
+      {
+        id: 'main',
+        title: '组装主函数',
+        html: `<pre><code>int main() {
+    int n;
+    scanf("%d", &amp;n);
+    struct Student stu[100];
+    for (int i = 0; i &lt; n; i++)
+        scanf("%s %lf", stu[i].name, &amp;stu[i].score);
+
+    printf("平均分：%.2f\\n", average(stu, n));
+
+    int top = topStudent(stu, n);
+    printf("最高分：%s (%.1f)\\n", stu[top].name, stu[top].score);
+
+    sortByScore(stu, n);
+    printf("\\n成绩榜：\\n");
+    for (int i = 0; i &lt; n; i++)
+        printf("%d. %s %.1f\\n", i + 1, stu[i].name, stu[i].score);
+    return 0;
+}</code></pre>
+<p>这一关把<strong>结构体、数组、循环、函数、指针</strong>全用上了，是 C 语言基础阶段的综合检验。能独立写出来，说明前面的知识真正打通了。</p>`
+      },
+      {
+        id: 'extend',
+        title: '进阶拓展',
+        html: `<ul>
+  <li><strong>文件版</strong>：用 <code>fopen</code>/<code>fscanf</code> 从文件读成绩，<code>fprintf</code> 把榜单写入文件。</li>
+  <li><strong>动态数组</strong>：用 <code>malloc</code> 按实际人数分配内存，不用固定 100。</li>
+  <li><strong>多字段排序</strong>：分数相同按姓名排序，需要在比较函数里加条件。</li>
+  <li><strong>统计功能</strong>：统计各分数段人数（90+、80-89、…），画简易柱状图。</li>
+</ul>
+<div class="doc-tip">💡 到这里你已经掌握了 C 语言的核心语法。下一步可以学<strong>数据结构</strong>（用 C 实现链表、栈、队列），它会让你对指针和内存的理解再上一个台阶。</div>`
+      }
+    ],
+    refs: [CS_REFS.csapp, CS_REFS.algo].concat(C_SOURCES)
   }
+
 };
 
 /* 没有专门文档时生成的通用文档 */
@@ -797,7 +1250,7 @@ function makeGenericDoc(level, ctx) {
       {
         id: 'todo',
         title: '当前进度',
-        html: '<p>本关的正文内容由团队按培养方案补充（当前版本优先完成「计算机科学与技术 · C 语言入门」七关的完整文档）。</p>'
+        html: '<p>计算机科学与技术专业的 C 语言 15 关文档已全部补齐，可在「地图」中逐关学习。</p>'
       }
     ],
     refs: refs
