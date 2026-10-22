@@ -527,9 +527,19 @@
       }
       pingDone = true;
       if (!ok) {
-        // 离线（双击打开 / 静态托管）：看板没有真实数字，直接藏起来，避免误导
-        var pulse = $('pulse');
-        if (pulse) pulse.hidden = true;
+        // 可能是 /api/ping 慢（跨国链路），再用公开接口确认一次；
+        // 只有确实拿不到数据时才把看板藏起来，避免误导
+        request('/api/stats', { token: null, timeout: 8000 })
+          .then(function (data) {
+            online = true;
+            revealCloudUI();
+            paintStats(data);
+            fetchMe().then(function () { lightMe(); });
+          })
+          .catch(function () {
+            var pulse = $('pulse');
+            if (pulse) pulse.hidden = true;
+          });
         return;
       }
 
