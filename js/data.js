@@ -379,6 +379,56 @@ var PAD_TEMPLATE = {
   9: { name: '第 10 关 · 期末冲刺', tip: '按期末标准做一轮自测' }
 };
 
+/* 一章被多关复用时的后缀（教材知识点用完后启用） */
+var PAD_SUFFIX = ['提高', '综合', '冲刺', '深化', '拓展', '进阶', '应用'];
+
+/* 补齐关卡的命名：按这门课教材的真实章节 / 知识点来定，
+   让每一关都能对上教材的具体内容（而不是"第 8 关 · 提高题"这种通用名）。
+   规则：接着已有关卡的章号往下走；走完整本书再从头来第二轮、第三轮，
+   同一章第二次出现时用该章的知识点命名，知识点用完后用"提高/综合/冲刺"。 */
+function padPlanFor(md, majorId) {
+  if (typeof textbookOf !== 'function') return null;
+  var book = textbookOf(majorId, md.name);
+  if (!book || !book.chapters || !book.chapters.length) return null;
+
+  var chapters = book.chapters, C = chapters.length;
+  var lastNo = 0;
+  md.levels.forEach(function (l) {
+    var n = chapterNoOf(l.name, 0);
+    if (n > lastNo) lastNo = n;
+  });
+  if (lastNo > C) lastNo = C;
+
+  var need = MIN_LEVELS_PER_MODULE - md.levels.length;
+  if (need <= 0) return null;
+
+  var from = lastNo + 1; if (from > C) from = 1;
+  var seq = [], no = from;
+  while (seq.length < need) { seq.push(no); no = (no + 1 > C) ? 1 : no + 1; }
+
+  /* 统计每一章已经被占了几关（含已有的真题关），第二次出现时用知识点区分 */
+  var seen = {};
+  md.levels.forEach(function (l) {
+    var n2 = chapterNoOf(l.name, 0);
+    if (n2 >= 1 && n2 <= C) seen[n2] = (seen[n2] || 0) + 1;
+  });
+  return seq.map(function (n) {
+    var j = seen[n] || 0; seen[n] = j + 1;
+    var ch = chapters[n - 1] || { t: '综合复习', p: [] };
+    var pts = ch.p || [];
+    var suffix = '';
+    if (j > 0) {
+      suffix = (pts.length >= j)
+        ? ('：' + pts[j - 1])
+        : ('（' + PAD_SUFFIX[Math.min(j - 1, PAD_SUFFIX.length - 1)] + '）');
+    }
+    var brief = pts.length
+      ? '对应教材第 ' + n + ' 章「' + ch.t + '」，要点：' + pts.slice(0, 3).join('、')
+      : '对应教材第 ' + n + ' 章「' + ch.t + '」';
+    return { name: '第 ' + n + ' 章 · ' + ch.t + suffix, brief: brief };
+  });
+}
+
 function padLevelsTo(major, stages) {
   var total = 0, i, j;
   for (i = 0; i < stages.length; i++)
@@ -388,16 +438,20 @@ function padLevelsTo(major, stages) {
   for (i = 0; i < stages.length; i++) {
     for (j = 0; j < stages[i].modules.length; j++) {
       var md = stages[i].modules[j];
-      while (md.levels.length < MIN_LEVELS_PER_MODULE && PAD_TEMPLATE[md.levels.length]) {
-        var idx = md.levels.length;
-        var t = PAD_TEMPLATE[idx];
+      var plan = padPlanFor(md, major.id);
+      var idx = md.levels.length, k = 0;
+      while (idx + k < MIN_LEVELS_PER_MODULE) {
+        var at = idx + k;
+        var t = (plan && plan[k]) ? plan[k]
+          : (PAD_TEMPLATE[at] || { name: '第 ' + (at + 1) + ' 关 · 综合练习', tip: '本关待补充真题' });
         md.levels.push(attachTextbookSync({
-          id: md.id + '-l' + idx,
+          id: md.id + '-l' + at,
           name: t.name,
-          brief: t.tip,
+          brief: t.brief || t.tip,
           questions: null,
           ready: false
-        }, major.id, md.name, idx));
+        }, major.id, md.name, at));
+        k++;
       }
       spreadSyncChapters(md.levels);
     }
