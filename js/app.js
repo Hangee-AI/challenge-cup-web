@@ -2644,10 +2644,11 @@
       clearBtn.hidden = true;
       results.hidden = true;
       results.innerHTML = '';
+      input.focus();
     });
 
     document.addEventListener('click', function (e) {
-      if (!e.target.closest('.search-wrap')) {
+      if (!e.target.closest('.search-hero-inner')) {
         results.hidden = true;
       }
     });
@@ -2657,6 +2658,17 @@
         results.hidden = true;
         input.blur();
       }
+    });
+
+    document.querySelectorAll('[data-search-tag]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var tag = a.getAttribute('data-search-tag');
+        input.value = tag;
+        clearBtn.hidden = false;
+        doSearch(tag);
+        input.focus();
+      });
     });
   }
 
