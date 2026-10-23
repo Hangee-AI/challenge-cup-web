@@ -2272,8 +2272,8 @@ html[data-layout="mobile"] .doc-foot .btn { width: 100%; }
 .pet > * { pointer-events: auto; }
 
 .pet-body {
-  width: 62px;
-  height: 62px;
+  width: 100px;
+  height: 100px;
   border: 1px solid var(--line);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 28%, #ffffff, var(--brand-soft) 72%);
@@ -2308,6 +2308,7 @@ html[data-layout="mobile"] .doc-foot .btn { width: 100%; }
 .pet-mouth { fill: none; stroke: #2b2f3a; stroke-width: 2.4; stroke-linecap: round; }
 .pet-sprout { fill: #7fd6a4; stroke: #5cbf8a; stroke-width: 1; }
 .pet-sprout2 { opacity: .85; }
+.pet-arm { fill: #ffffff; stroke: #e4e9f2; stroke-width: 2; }
 .pet-eye {
   transform-box: fill-box;
   transform-origin: center;
@@ -2327,8 +2328,8 @@ html[data-layout="mobile"] .doc-foot .btn { width: 100%; }
   100% { transform: translateY(0) scale(1, 1); }
 }
 .pet-particle {
-  position: absolute; right: 16px; bottom: 52px;
-  font-size: 15px; line-height: 1; pointer-events: none; z-index: 1;
+  position: absolute; right: 24px; bottom: 86px;
+  font-size: 17px; line-height: 1; pointer-events: none; z-index: 1;
   animation: petPop 1.5s ease-out forwards;
 }
 @keyframes petPop {
