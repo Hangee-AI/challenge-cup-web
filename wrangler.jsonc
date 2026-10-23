@@ -7,5 +7,8 @@
       "binding": "YINLU_KV",
       "id": "976dcc257b3f46bfbdff9dc6808c703b"
     }
-  ]
+  ],
+  "ai": {
+    "binding": "AI"
+  }
 }

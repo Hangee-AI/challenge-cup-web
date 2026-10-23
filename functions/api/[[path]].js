@@ -339,10 +339,11 @@ async function handleLight(env, request) {
 const SYSTEM_PROMPT = `你是「引路」网站里的学习搭子，名字叫小引，一只猫头鹰。
 学生是大学新生，可能正在为选专业、学基础课、做题目发愁。
 回答要求：
-1. 用中文，口语化，像学长聊天，不要官腔。
-2. 先给结论或下一步动作，再简要解释，控制在 120 字以内。
+1. 只用简体中文，绝对不要夹杂英文单词或拼音（代码关键字除外）。
+2. 先给结论或下一步动作，再简要解释，总共不超过 100 字。
 3. 结合他当前所在的页面/专业/关卡来答，不要答与学习无关的内容。
-4. 不确定的就说不知道，不要编造课程、政策、分数。`;
+4. 不确定的就说不知道，不要编造课程、政策、分数。
+5. 语气像一个靠谱的学长，不要客套、不要念目录。`;
 
 function chatKey(env) {
   return env.OPENROUTER_API_KEY || env.DEEPSEEK_API_KEY || env.LLM_API_KEY || '';
@@ -350,25 +351,45 @@ function chatKey(env) {
 function chatProvider(env) {
   return (env.LLM_PROVIDER || 'openrouter').toLowerCase();
 }
-const FREE_MODELS = ['nvidia/nemotron-3-super-120b-a12b:free', 'google/gemma-4-31b-it:free', 'nvidia/nemotron-3.5-lightning:free'];
+
+/** Workers AI 备选模型（按顺序试，第一个能用的就用）—— 不需要任何 API Key */
+const WA_MODELS = [
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  '@cf/qwen/qwen2.5-7b-instruct',
+  '@cf/meta/llama-3.1-8b-instruct',
+  '@cf/meta/llama-3.2-3b-instruct',
+];
+
+/** 小引到底走哪条通道：有 Key 走 Key，否则有 AI 绑定就走 Workers AI */
+function chatEngine(env) {
+  const key = chatKey(env);
+  if (key) {
+    const provider = chatProvider(env);
+    return { kind: provider === 'deepseek' ? 'deepseek' : 'openrouter', key, label: provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter' };
+  }
+  if (env.AI) return { kind: 'workers-ai', key: '', label: 'Cloudflare AI' };
+  return { kind: 'none', key: '', label: '离线' };
+}
 
 async function handleChatStatus(env) {
-  const key = chatKey(env);
-  const provider = chatProvider(env);
+  const engine = chatEngine(env);
+  const ready = engine.kind !== 'none';
   return json({
     ok: true,
-    ready: !!key,
-    provider,
-    providerLabel: provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter',
-    model: env.LLM_MODEL || FREE_MODELS[0],
+    ready,
+    provider: engine.kind,
+    providerLabel: engine.label,
+    model: env.LLM_MODEL || (engine.kind === 'workers-ai' ? WA_MODELS[0] : 'deepseek-chat'),
     requireLogin: env.CHAT_REQUIRE_LOGIN === '1',
-    reason: key ? '' : 'no-key',
+    reason: ready ? '' : 'no-key',
   });
 }
 
 async function handleChat(env, request, ctx) {
-  const key = chatKey(env);
-  if (!key) return json({ ok: false, reason: 'no-key', hint: '后端还没配大模型 API Key，小引暂时用本地兜底回答。' }, 503);
+  const engine = chatEngine(env);
+  if (engine.kind === 'none') {
+    return json({ ok: false, reason: 'no-key', hint: '后端还没配大模型，小引暂时用本地兜底回答。' }, 503);
+  }
   if (env.CHAT_REQUIRE_LOGIN === '1' && !ctx.user) {
     return json({ ok: false, reason: 'login-required', hint: '登录之后才能用小引。' }, 401);
   }
@@ -383,18 +404,41 @@ async function handleChat(env, request, ctx) {
   ];
   if (!messages.some((m) => m.role === 'user')) return json({ ok: false, error: '没有提问内容' }, 400);
 
+  // ---- 通道一：Workers AI（不需要任何 Key，走 Cloudflare 自家额度）----
+  if (engine.kind === 'workers-ai') {
+    const models = (env.LLM_MODEL || env.LLM_MODELS || WA_MODELS.join(','))
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let lastErr = '';
+    for (const model of models) {
+      try {
+        const out = await env.AI.run(model, { messages, max_tokens: 400, temperature: 0.7 });
+        const text = (out && (out.response || out.text || out.result)) || '';
+        if (text && String(text).trim()) {
+          return json({ ok: true, text: String(text).trim(), model, provider: 'workers-ai' });
+        }
+        lastErr = 'empty response';
+      } catch (err) {
+        lastErr = err && err.message ? err.message : String(err);
+      }
+    }
+    return json({ ok: false, reason: 'upstream', error: 'Workers AI 没返回内容：' + String(lastErr).slice(0, 200) }, 502);
+  }
+
+  // ---- 通道二：外部大模型 API（OpenRouter / DeepSeek，需 Key）----
   const provider = chatProvider(env);
-  const isOpenRouter = provider === 'openrouter';
+  const isOpenRouter = engine.kind === 'openrouter';
   const base = (env.LLM_BASE || (isOpenRouter ? 'https://openrouter.ai/api/v1' : 'https://api.deepseek.com')).replace(/\/+$/, '');
-  const model = env.LLM_MODEL || (isOpenRouter ? FREE_MODELS[0] : 'deepseek-chat');
+  const model = env.LLM_MODEL || (isOpenRouter ? 'nvidia/nemotron-3-super-120b-a12b:free' : 'deepseek-chat');
   const payload = { model, messages, max_tokens: 500, temperature: 0.7 };
   if (isOpenRouter) {
-    payload.models = (env.LLM_MODELS || FREE_MODELS.join(','))
+    payload.models = (env.LLM_MODELS || 'nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
   }
-  const headers = { 'content-type': 'application/json', authorization: 'Bearer ' + key };
+  const headers = { 'content-type': 'application/json', authorization: 'Bearer ' + engine.key };
   if (isOpenRouter) {
     headers['HTTP-Referer'] = 'https://yinlu.pages.dev';
     headers['X-Title'] = 'YinLu Study Companion';
@@ -408,7 +452,7 @@ async function handleChat(env, request, ctx) {
     }
     const data = await resp.json();
     const text = data?.choices?.[0]?.message?.content || '';
-    return json({ ok: true, text, model: data?.model || model });
+    return json({ ok: true, text, model: data?.model || model, provider: engine.kind });
   } catch (err) {
     return json({ ok: false, reason: 'timeout', error: '大模型请求失败：' + (err && err.message ? err.message : 'unknown') }, 504);
   }
