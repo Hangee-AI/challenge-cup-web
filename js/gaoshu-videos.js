@@ -258,6 +258,10 @@ function isGaoshuModule(moduleName) {
 /* renderVideo 里调用：决定当前关卡用哪套视频课程 */
 function pickVideoCourse(major, level, found) {
   var modName = found && found.module ? found.module.name : '';
+  if (typeof isDaolunModule === 'function' && isDaolunModule(modName)) {
+    DAOLUN_VIDEO._levelName = (level && level.name) || '';
+    return DAOLUN_VIDEO;
+  }
   if (isGaoshuModule(modName)) {
     GAOSHU_VIDEO._levelName = (level && level.name) || '';
     return GAOSHU_VIDEO;
