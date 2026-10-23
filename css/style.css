@@ -2291,6 +2291,13 @@ html[data-layout="mobile"] .doc-foot .btn { width: 100%; }
 }
 .pet-body:hover { transform: translateY(-2px) scale(1.04); }
 .pet-body.is-drag { cursor: grabbing; animation: none; transform: scale(.96); }
+/* 聊天框标题栏也能拖着走 */
+.pet-head {
+  cursor: grab;
+  touch-action: none;
+  user-select: none; -webkit-user-select: none;
+}
+.pet-head.is-drag { cursor: grabbing; }
 .pet-face { display: inline-block; animation: petBlink 5.6s ease-in-out infinite; }
 
 .pet.is-thinking .pet-body { animation: petThink 1s ease-in-out infinite; }

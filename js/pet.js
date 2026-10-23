@@ -242,6 +242,7 @@
     el.panel.hidden = !!min;
     hideBubble();
     el.wrap.classList.toggle('is-open', !min);
+    if (!min) setTimeout(clampPos, 0);   // 打开后把整体（含聊天框）收进屏幕内
   }
 
   function toggle() {
@@ -313,42 +314,69 @@
     }
   }
 
-  /* 拖动：按住猫头鹰可以拖着走，位置记在本地 */
+  /* 把挂件整体收回屏幕内（含聊天框打开后的高度） */
+  function clampPos() {
+    var w = el.wrap.offsetWidth || 100;
+    var h = el.wrap.offsetHeight || 100;
+    var r = el.wrap.getBoundingClientRect();
+    var left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left));
+    var top = Math.max(8, Math.min(window.innerHeight - h - 8, r.top));
+    el.wrap.style.left = left + 'px';
+    el.wrap.style.top = top + 'px';
+    el.wrap.style.right = 'auto';
+    el.wrap.style.bottom = 'auto';
+  }
+
+  /* 拖动：按住小引或聊天框标题栏都能拖着走，位置记在本地 */
   function dragify() {
     var dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    var head = el.panel.querySelector('.pet-head');
+    var handles = [el.body, head];
 
-    el.body.addEventListener('pointerdown', function (e) {
+    function onDown(e) {
+      if (e.target && e.target.closest && e.target.closest('.pet-x')) return;   // 关闭按钮不当拖把手
       dragging = true; moved = false; justDragged = false;
       sx = e.clientX; sy = e.clientY;
       var r = el.wrap.getBoundingClientRect();
       ox = r.left; oy = r.top;
-      el.body.classList.add('is-drag');
-      try { el.body.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-    });
+      handles.forEach(function (h) { if (h) h.classList.add('is-drag'); });
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    }
 
-    el.body.addEventListener('pointermove', function (e) {
+    function onMove(e) {
       if (!dragging) return;
       var dx = e.clientX - sx, dy = e.clientY - sy;
       if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
       if (!moved) return;
-      var left = Math.max(8, Math.min(window.innerWidth - 80, ox + dx));
-      var top = Math.max(8, Math.min(window.innerHeight - 80, oy + dy));
+      var w = el.wrap.offsetWidth || 100;
+      var h = el.wrap.offsetHeight || 100;
+      var left = Math.max(8, Math.min(window.innerWidth - w - 8, ox + dx));
+      var top = Math.max(8, Math.min(window.innerHeight - h - 8, oy + dy));
       el.wrap.style.left = left + 'px';
       el.wrap.style.top = top + 'px';
       el.wrap.style.right = 'auto';
       el.wrap.style.bottom = 'auto';
-    });
+      e.preventDefault();
+    }
 
-    el.body.addEventListener('pointerup', function (e) {
+    function onUp(e) {
       if (!dragging) return;
       dragging = false;
-      el.body.classList.remove('is-drag');
-      try { el.body.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      handles.forEach(function (h) { if (h) h.classList.remove('is-drag'); });
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
       if (moved) {
         justDragged = true;
         var r = el.wrap.getBoundingClientRect();
         setStore(K_POS, JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) }));
       }
+    }
+
+    handles.forEach(function (h) {
+      if (!h) return;
+      h.addEventListener('pointerdown', onDown);
+      h.addEventListener('pointermove', onMove);
+      h.addEventListener('pointerup', onUp);
+      h.addEventListener('pointercancel', onUp);
     });
   }
 
@@ -358,10 +386,11 @@
     try {
       var p = JSON.parse(raw);
       if (typeof p.left === 'number' && typeof p.top === 'number') {
-        el.wrap.style.left = Math.max(8, Math.min(window.innerWidth - 80, p.left)) + 'px';
-        el.wrap.style.top = Math.max(8, Math.min(window.innerHeight - 80, p.top)) + 'px';
+        el.wrap.style.left = p.left + 'px';
+        el.wrap.style.top = p.top + 'px';
         el.wrap.style.right = 'auto';
         el.wrap.style.bottom = 'auto';
+        clampPos();
       }
     } catch (e) { /* ignore */ }
   }
