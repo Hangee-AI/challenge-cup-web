@@ -195,10 +195,8 @@
     });
 
     bindDrag(el.head, el.head, function () { savePos(); });
-    bindDrag(el.stage, el.stage, function () { saveBigPos(); }, function () {
-      lastAct = Date.now();
-      toggleRing();
-    });
+    bindStageDrag();
+    el.stage.addEventListener('dblclick', function () { resetBigPos(); });
 
     Array.prototype.forEach.call(wrap.querySelectorAll('.ring-cat'), function (btn) {
       btn.addEventListener('click', function (e) {
@@ -346,10 +344,36 @@
     if (el.ring) Array.prototype.forEach.call(el.ring.querySelectorAll('.ring-cat'), function (b) { b.classList.remove('is-active'); });
   }
 
+  /* 圆环按钮按熊身中心排一圈，自动避开聊天框和屏幕边缘 */
+  function layoutRing() {
+    if (!built || !el.ring) return;
+    var sr = el.stage.getBoundingClientRect();
+    var cx = sr.left + sr.width / 2, cy = sr.top + sr.height - 118;
+    var cats = Array.prototype.slice.call(el.ring.querySelectorAll('.ring-cat'));
+    var R = Math.min(118, Math.max(96, sr.width / 2 - 8));
+    var pts = cats.map(function (b) {
+      var a = parseFloat(b.getAttribute('data-angle') || '0') * Math.PI / 180;
+      return { b: b, x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R };
+    });
+    var minX = Math.min.apply(null, pts.map(function (o) { return o.x; }));
+    var maxX = Math.max.apply(null, pts.map(function (o) { return o.x; }));
+    var dx = 0;
+    if (minX < 34) dx = 34 - minX;
+    else if (maxX > window.innerWidth - 34) dx = (window.innerWidth - 34) - maxX;
+    pts.forEach(function (o) {
+      o.b.style.left = Math.round(o.x + dx - cx) + 'px';
+      o.b.style.top = Math.round(o.y - cy) + 'px';
+      o.b.style.transform = 'translate(-50%, -50%)';
+    });
+    var centerX = Math.round(cx + dx - sr.left), centerY = Math.round(cy - sr.top);
+    el.ring.style.left = centerX + 'px';
+    el.ring.style.top = centerY + 'px';
+  }
   function toggleRing() {
     ringOpen = !ringOpen;
     el.ring.hidden = !ringOpen;
     closeArm();
+    if (ringOpen) layoutRing();
   }
 
   function ringClose() {
@@ -433,6 +457,56 @@
     } catch (e) { }
     return false;
   }
+
+  /* 大熊单独拖拽：只移动大熊本体，聊天框/头像不动 */
+  function bindStageDrag() {
+    var startX = 0, startY = 0, ox = 0, oy = 0, active = false, moved = 0;
+    el.stage.addEventListener('pointerdown', function (e) {
+      if (e.target && e.target.closest && e.target.closest('.ring-cat, .arm-item')) return;
+      if (e.button != null && e.button !== 0) return;
+      active = true; moved = 0; justDragged = false;
+      var r = el.stage.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY; ox = r.left; oy = r.top;
+      try { el.stage.setPointerCapture(e.pointerId); } catch (err) { }
+    });
+    el.stage.addEventListener('pointermove', function (e) {
+      if (!active) return;
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+      if (moved < 5) return;
+      justDragged = true;
+      var vw = document.documentElement.clientWidth || window.innerWidth;
+      var vh = document.documentElement.clientHeight || window.innerHeight;
+      var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
+      var l = Math.max(6, Math.min(vw - sw - 6, ox + dx));
+      var t = Math.max(6, Math.min(vh - sh - 6, oy + dy));
+      el.stage.style.left = l + 'px';
+      el.stage.style.top = t + 'px';
+      el.stage.style.right = 'auto';
+      el.stage.style.bottom = 'auto';
+    });
+    function end(e) {
+      if (!active) return;
+      active = false;
+      try { el.stage.releasePointerCapture(e.pointerId); } catch (err) { }
+      if (moved > 6) {
+        justDragged = true;
+        var vw = document.documentElement.clientWidth || window.innerWidth;
+        var vh = document.documentElement.clientHeight || window.innerHeight;
+        var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
+        var cur = el.stage.getBoundingClientRect();
+        el.stage.style.left = Math.max(6, Math.min(vw - sw - 6, cur.left)) + 'px';
+        el.stage.style.top = Math.max(6, Math.min(vh - sh - 6, cur.top)) + 'px';
+        el.stage.style.right = 'auto';
+        el.stage.style.bottom = 'auto';
+        saveBigPos();
+      }
+      else { justDragged = false; lastAct = Date.now(); toggleRing(); }
+      setTimeout(function () { justDragged = false; }, 60);
+    }
+    el.stage.addEventListener('pointerup', end);
+    el.stage.addEventListener('pointercancel', function () { active = false; });
+  }
   /* ---------------- 拖动 ---------------- */
   function bindDrag(handle, surface, onDragEnd, onClick) {
     var startX = 0, startY = 0, ox = 0, oy = 0, active = false, moved = 0;
@@ -471,6 +545,16 @@
     el.wrap.style.top = t + 'px';
     el.wrap.style.right = 'auto';
     el.wrap.style.bottom = 'auto';
+  }
+
+  /* 双击大熊：回到默认位置（聊天框左边） */
+  function resetBigPos() {
+    setStore(K_BIGPOS, '');
+    el.stage.style.left = '';
+    el.stage.style.top = '';
+    el.stage.style.right = '';
+    el.stage.style.bottom = '';
+    geometry();
   }
   function clampPos() {
     var r = el.wrap.getBoundingClientRect();
@@ -580,6 +664,25 @@
     });
   }
 
+
+  /* 不定时冒一句鼓励（不打断聊天输入） */
+  var cheerTimer = null;
+  function startCheer() {
+    clearTimeout(cheerTimer);
+    (function loop() {
+      var wait = 45000 + Math.floor(Math.random() * 35000);
+      cheerTimer = setTimeout(function () {
+        try {
+          if (built && !waiting) {
+            var text = pick(tipList());
+            if (!el.bubble.hidden) { /* 已有气泡，跳过这回 */ }
+            else showBubble(text, 6000);
+          }
+        } catch (e) { }
+        loop();
+      }, wait);
+    })();
+  }
   function startIdleWatch() {
     clearInterval(idleTimer);
     idleTimer = setInterval(function () {

@@ -3064,14 +3064,14 @@ html[data-theme="night"] .pw-random { box-shadow: 0 6px 16px rgba(0, 0, 0, .4); 
   left: 50%;
   bottom: 2px;
   transform: translateX(-50%);
-  height: 258px;
+  height: 222px;
   display: flex;
   align-items: flex-end;
   filter: drop-shadow(0 12px 20px rgba(24, 34, 60, .16));
   animation: petBreath 5.2s ease-in-out infinite;
 }
 .pet-dress img { display: block; }
-.p-body { height: 258px; width: auto; position: relative; z-index: 1; }
+.p-body { height: 222px; width: auto; position: relative; z-index: 1; }
 .p-glasses, .p-scarf, .p-jacket {
   position: absolute;
   left: 50%;
@@ -3110,7 +3110,7 @@ html[data-theme="night"] .pw-random { box-shadow: 0 6px 16px rgba(0, 0, 0, .4); 
   top: 150px;
   width: 0;
   height: 0;
-  z-index: 8;
+  z-index: 10001;
 }
 .pet-ring[hidden] { display: none !important; }
 .ring-cat {
