@@ -87,6 +87,10 @@
   }
 
   G.REAL_PAD['专业实习'] = set(LIST);
+  G.REAL_PAD_ALIAS['实习'] = '专业实习';
+  G.REAL_PAD_ALIAS['教学实习'] = '专业实习';
+  G.REAL_PAD_ALIAS['教育研习'] = '专业实习';
+  G.REAL_PAD_ALIAS['教育实习与研习'] = '专业实习';
   G.REAL_PAD_ALIAS['教育实习'] = '专业实习';
   G.REAL_PAD_ALIAS['毕业实习'] = '专业实习';
   G.REAL_PAD_ALIAS['生产实习'] = '专业实习';

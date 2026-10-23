@@ -88,6 +88,9 @@
   }
 
   G.REAL_PAD['考研与求职'] = set(LIST);
+  G.REAL_PAD_ALIAS['考编与考研'] = '考研与求职';
+  G.REAL_PAD_ALIAS['考研与考编'] = '考研与求职';
+  G.REAL_PAD_ALIAS['考公与考研'] = '考研与求职';
   G.REAL_PAD_ALIAS['考研与求职准备'] = '考研与求职';
   G.REAL_PAD_ALIAS['考研与就业'] = '考研与求职';
   G.REAL_PAD_ALIAS['就业指导'] = '考研与求职';
