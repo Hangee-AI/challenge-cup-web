@@ -872,6 +872,55 @@ html[data-theme="night"] .jnode.is-lock .jnode-title { color: #7f9488; }
   display: flex; align-items: center; gap: 6px; flex: none;
 }
 .doc-side-sub { margin-top: 2px; font-size: 12.5px; color: var(--text-3); flex: none; }
+
+/* 目录卡片：标题行 + 收起按钮 */
+.doc-side-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; flex: none;
+}
+.doc-side-head .doc-side-title { flex: 1; min-width: 0; }
+.doc-side-hide {
+  flex: none; width: 26px; height: 26px; margin-top: 6px;
+  display: none; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-2); color: var(--text-3);
+  font: inherit; font-size: 14px; line-height: 1; cursor: pointer;
+  transition: .15s;
+}
+.doc-side-hide:hover { color: var(--brand); border-color: var(--brand); }
+/* 收起后左侧只留一条竖栏按钮 */
+.doc-side-show { display: none; }
+.doc-side.is-mini .back,
+.doc-side.is-mini .doc-side-head,
+.doc-side.is-mini .doc-side-sub,
+.doc-side.is-mini .doc-nav,
+.doc-side.is-mini .doc-fold-btn { display: none; }
+.doc-side.is-mini .doc-side-show {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 44px; padding: 12px 4px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-2); color: var(--text-2);
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: .15s;
+}
+.doc-side.is-mini .doc-side-show:hover { color: var(--brand); border-color: var(--brand); }
+.doc-side-show-icon { font-size: 18px; line-height: 1; }
+
+/* 桌面端也允许点大标题折叠：阶段 → 课程 → 章节 */
+html:not([data-layout="mobile"]) .doc-side .doc-nav-group:not(.is-open) > .doc-nav-group-body { display: none; }
+html:not([data-layout="mobile"]) .doc-side .doc-nav-sub:not(.is-open) > .doc-nav-sub-body { display: none; }
+html:not([data-layout="mobile"]) .doc-side .doc-nav-stage,
+html:not([data-layout="mobile"]) .doc-side .doc-nav-label { display: flex; align-items: center; gap: 8px; }
+html:not([data-layout="mobile"]) .doc-side .doc-nav-stage .fold-arrow,
+html:not([data-layout="mobile"]) .doc-side .doc-nav-label .fold-arrow { margin-left: auto; }
+@media (min-width: 641px) {
+  html:not([data-layout="mobile"]) .doc-side .fold-arrow { display: inline-block; }
+  html:not([data-layout="mobile"]) .doc-side-hide { display: inline-flex; }
+  html:not([data-layout="mobile"]) .doc-wrap.side-mini { grid-template-columns: 48px minmax(0, 1fr) 200px; gap: 22px; }
+}
+html[data-layout="desktop"] .doc-side .fold-arrow { display: inline-block; }
+html[data-layout="desktop"] .doc-side-hide { display: inline-flex; }
+html[data-layout="desktop"] .doc-wrap.side-mini { grid-template-columns: 48px minmax(0, 1fr) 200px; gap: 22px; }
 .doc-nav, .video-nav {
   margin-top: 14px; display: flex; flex-direction: column; gap: 2px;
   border-left: 2px solid var(--line); padding-left: 0;

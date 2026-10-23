@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>引路 · 大学新生专业学习导航</title>
   <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
-  <link rel="stylesheet" href="css/style.css?v=20261024c" />
+  <link rel="stylesheet" href="css/style.css?v=20261024d" />
 </head>
 <body>
 
@@ -342,12 +342,18 @@
 
       <aside class="doc-side fold">
         <a class="back" href="#" id="docBack">← 返回路径</a>
-        <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+        <div class="doc-side-head">
+          <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+          <button class="doc-side-hide" id="docSideHide" type="button" title="收起目录" aria-label="收起目录">⟨</button>
+        </div>
         <div class="doc-side-sub" id="docSideSub"></div>
         <button class="doc-fold-btn" type="button" data-fold aria-expanded="false">
           <span>📚 课程目录</span><span class="fold-arrow" aria-hidden="true">▾</span>
         </button>
         <nav class="doc-nav" id="docNav"></nav>
+        <button class="doc-side-show" id="docSideShow" type="button" title="展开目录" aria-label="展开目录">
+          <span class="doc-side-show-icon" aria-hidden="true">📚</span><span>目录</span>
+        </button>
       </aside>
 
       <article class="doc-main">
@@ -695,6 +701,7 @@
 <script src="js/philosophy-courses-more.js?v=20261024c"></script>
 <script src="js/logic-courses-more.js?v=20261024c"></script>
 <script src="js/law-courses-more2.js?v=20261024c"></script>
+<script src="js/law-falixue-docs.js?v=20261024e"></script>
 <script src="js/literature-courses-more.js?v=20261024c"></script>
 <script src="js/english-courses-more.js?v=20261024c"></script>
 <script src="js/journalism-courses-more.js?v=20261024c"></script>
@@ -742,7 +749,18 @@
 <script src="js/majors/stomatology-courses.js?v=20261024c"></script>
 <script src="js/majors/nursing-courses.js?v=20261024c"></script>
 <script src="js/majors/pharmacy-courses.js?v=20261024c"></script>
+<script src="js/majors/pharmacy-courses-more.js?v=20261024e"></script>
 <script src="js/majors/stomatology-courses-more.js?v=20261024c"></script>
+<script src="js/art-design-courses.js?v=20261024d"></script>
+<script src="js/art-design-courses-more.js?v=20261024d"></script>
+<script src="js/art-media-courses.js?v=20261024d"></script>
+<script src="js/art-media-courses-more.js?v=20261024d"></script>
+<script src="js/inter-courses.js?v=20261024d"></script>
+<script src="js/inter-courses-more.js?v=20261024e"></script>
+<script src="js/agriculture-courses.js?v=20261024d"></script>
+<script src="js/agriculture-courses-more.js?v=20261024f"></script>
+<script src="js/agriculture-animal-courses.js?v=20261024f"></script>
+<script src="js/majors/nursing-courses-more.js?v=20261024d"></script>
 <!-- 同步教材数据层（必须在 data.js 之后、app.js 之前） -->
 <script src="js/textbooks.js?v=20261024c"></script>
 <script src="js/textbooks-books-a.js?v=20261024c"></script>
@@ -769,7 +787,7 @@
 <script src="js/config.js?v=20261024c"></script>
 <script src="js/universities.js?v=20261024c"></script>
 <script src="js/school-pick.js?v=20261024c"></script>
-<script src="js/app.js?v=20261024c"></script>
+<script src="js/app.js?v=20261024e"></script>
 <script src="js/cloud.js?v=20261024c"></script>
 <script src="js/pet.js?v=20261024c"></script>
 </body>
