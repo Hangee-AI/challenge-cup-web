@@ -362,28 +362,33 @@ function buildLevels(majorId, moduleIndex, realLevels, moduleName) {
   return list;
 }
 
-/* ---------------- 6.1 关卡补齐：不足 84 关的专业补到 84 ----------------
-   部分专业（占位专业 / 医学类精简版）一门课只有 3 关，整个专业只有 36 关。
-   这里把每个不足 7 关的模块补到 7 关：12 门课 × 7 关 = 84 关，
-   与生物科学、统计学等已建成专业的关卡数对齐。
+/* ---------------- 6.1 关卡补齐：不足 120 关的专业补到 120 ----------------
+   统一口径：每门课 10 关 × 12 门课 = 120 关。
+   部分专业一门课只有 3~8 关，这里逐门课补齐到 MIN_LEVELS_PER_MODULE 关，
    补出来的关卡是占位题（ready: false），后续可直接替换成真题。 */
+var MIN_LEVELS_PER_MODULE = 10;
+var MIN_LEVELS_PER_MAJOR = 120;
+
 var PAD_TEMPLATE = {
   3: { name: '第 4 关 · 提高题',   tip: '在基础题上再进一步' },
   4: { name: '第 5 关 · 变式训练', tip: '换个角度再考一次' },
   5: { name: '第 6 关 · 综合演练', tip: '把这一章的内容串起来' },
-  6: { name: '第 7 关 · 章末测试', tip: '模拟一次章末小测' }
+  6: { name: '第 7 关 · 章末测试', tip: '模拟一次章末小测' },
+  7: { name: '第 8 关 · 深化提高', tip: '把难点再拆开练一遍' },
+  8: { name: '第 9 关 · 综合应用', tip: '用本章知识解决实际问题' },
+  9: { name: '第 10 关 · 期末冲刺', tip: '按期末标准做一轮自测' }
 };
 
-function padLevelsTo84(major, stages) {
+function padLevelsTo(major, stages) {
   var total = 0, i, j;
   for (i = 0; i < stages.length; i++)
     for (j = 0; j < stages[i].modules.length; j++)
       total += stages[i].modules[j].levels.length;
-  if (!total || total >= 84) return stages;
+  if (!total || total >= MIN_LEVELS_PER_MAJOR) return stages;
   for (i = 0; i < stages.length; i++) {
     for (j = 0; j < stages[i].modules.length; j++) {
       var md = stages[i].modules[j];
-      while (md.levels.length < 7 && PAD_TEMPLATE[md.levels.length]) {
+      while (md.levels.length < MIN_LEVELS_PER_MODULE && PAD_TEMPLATE[md.levels.length]) {
         var idx = md.levels.length;
         var t = PAD_TEMPLATE[idx];
         md.levels.push(attachTextbookSync({
@@ -399,6 +404,9 @@ function padLevelsTo84(major, stages) {
   }
   return stages;
 }
+
+/* 兼容旧名：早期脚本可能调用 padLevelsTo84 */
+var padLevelsTo84 = padLevelsTo;
 
 /* 关卡数多于教材章数时（如 7 关配 4 章的讲义），把章节序号按比例摊到整本书，
    避免"第 7 章 / 共 4 章"这种越界展示。明确写"第 N 章"的关卡保持原样。 */
@@ -446,7 +454,7 @@ function getPath(majorId) {
     }
     stages.push(stage);
   }
-  return { major: major, stages: padLevelsTo84(major, stages) };
+  return { major: major, stages: padLevelsTo(major, stages) };
 }
 
 function getMajor(id) {
