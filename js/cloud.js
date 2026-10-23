@@ -517,38 +517,32 @@
     tryOnline(0);
   }
 
-  /* 首次探测可能被隧道/网络抖动打断，失败后再试两次 */
+  /* 首屏看板：直接请求 /api/stats（一次请求同时拿到“能不能连上”和数字），
+     不要先等 ping——跨国链路 + 冷启动很容易让 ping 超时，看板就会一直显示「—」。
+     ping 只当作预热，不参与判断。 */
   function tryOnline(attempt) {
-    probe().then(function (ok) {
-      online = ok;
-      if (!ok && attempt < 2) {
-        setTimeout(function () { tryOnline(attempt + 1); }, 1200 + attempt * 800);
-        return;
-      }
-      pingDone = true;
-      if (!ok) {
-        // 可能是 /api/ping 慢（跨国链路），再用公开接口确认一次；
-        // 只有确实拿不到数据时才把看板藏起来，避免误导
-        request('/api/stats', { token: null, timeout: 8000 })
-          .then(function (data) {
-            online = true;
-            revealCloudUI();
-            paintStats(data);
-            fetchMe().then(function () { lightMe(); });
-          })
-          .catch(function () {
-            var pulse = $('pulse');
-            if (pulse) pulse.hidden = true;
-          });
-        return;
-      }
-
-      revealCloudUI();
-      fetchMe().then(function () {
-        loadStats();
-        lightMe();
+    probe().catch(function () {});
+    var settled = false;
+    request('/api/stats', { token: null, timeout: 9000 })
+      .then(function (data) {
+        if (settled) return;
+        settled = true;
+        online = true;
+        pingDone = true;
+        revealCloudUI();
+        paintStats(data);
+        fetchMe().then(function () { lightMe(); });
+      })
+      .catch(function () {
+        if (settled) return;
+        settled = true;
+        if (attempt < 3) {
+          setTimeout(function () { tryOnline(attempt + 1); }, 800 + attempt * 700);
+          return;
+        }
+        var pulse = $('pulse');
+        if (pulse) pulse.hidden = true;
       });
-    });
   }
 
   window.Cloud = {
