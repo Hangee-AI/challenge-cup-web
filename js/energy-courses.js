@@ -6,15 +6,26 @@
   var MAJOR = 'engineering-能源与动力工程';
   var TITLES = stageTitlesOf('engineering');
 
-  function mk(title, brief, q, lead, s1, h1, s2, h2) {
+  /* 章节参数：先 id、再标题、再正文，两节共 6 个尾参 */
+  function mk(title, brief, q, lead) {
+    var a = Array.prototype.slice.call(arguments, 4);
+    var sections;
+    if (a.length >= 6) {
+      sections = [
+        { id: a[0], title: a[1], html: a[2] },
+        { id: a[3], title: a[4], html: a[5] }
+      ];
+    } else {
+      sections = [
+        { id: a[0], title: a[0], html: a[1] },
+        { id: a[2], title: a[2], html: a[3] }
+      ];
+    }
     return {
       title: title,
       brief: brief,
       q: q,
-      doc: { lead: lead, sections: [
-        { id: s1, title: s1, html: h1 },
-        { id: s2, title: s2, html: h2 }
-      ], refs: [] }
+      doc: { lead: lead, sections: sections, refs: [] }
     };
   }
 
