@@ -556,6 +556,7 @@ type Asset = { raw: Uint8Array; gz: Uint8Array | null; br: Uint8Array | null };
 type Bundle = {
   core: Asset;      // 首屏必需：界面代码 + 专业目录 + 路径模板
   content: Asset;   // 课程/教材正文，首屏之后后台加载
+  all: Asset;       // core + content 合并（一次性加载用，避免拆分顺序问题）
   html: Asset;
   count: number;
   contentCount: number;
@@ -672,6 +673,7 @@ function buildBundleOnce(): Promise<Bundle | null> {
     const html = new TextEncoder().encode(htmlText.slice(0, firstIdx) + inject + htmlText.slice(lastEnd));
 
     const bundle: Bundle = {
+      all: await pack(srcs, coreCode + '\n;\n' + contentCode),
       core: await pack(srcs, coreCode),
       content: await pack(srcs, contentCode),
       html: await pack(srcs, new TextDecoder().decode(html)),
@@ -728,13 +730,17 @@ async function serveStatic(path: string, req: Request): Promise<Response> {
 
   const JS = 'text/javascript; charset=utf-8';
 
-  if (rel === 'js/bundle-core.js' || rel === 'js/bundle.js') {
+  if (rel === 'js/bundle.js') {
     const b = await buildBundleOnce();
-    if (b) return sendAsset(req, b.core, JS, 'public, max-age=600');
+    if (b) return sendAsset(req, b.all, JS, 'public, max-age=86400, immutable');
+  }
+  if (rel === 'js/bundle-core.js') {
+    const b = await buildBundleOnce();
+    if (b) return sendAsset(req, b.core, JS, 'public, max-age=86400, immutable');
   }
   if (rel === 'js/bundle-content.js') {
     const b = await buildBundleOnce();
-    if (b) return sendAsset(req, b.content, JS, 'public, max-age=600');
+    if (b) return sendAsset(req, b.content, JS, 'public, max-age=86400, immutable');
   }
   if (rel === 'index.html' || rel === '') {
     const b = await buildBundleOnce();

@@ -101,16 +101,11 @@ fs.mkdirSync(jsDir, { recursive: true });
    经典 script 允许跨域加载，所以 <script src> 直接引过去即可。
    需要换地址时设环境变量 CONTENT_BASE。 */
 const assetBase = (process.env.CONTENT_BASE || 'https://challenge-cup-web.hangee-ai.deno.net').replace(/\/+$/, '');
-const coreUrl = assetBase + '/js/bundle-core.js?v=' + marker;
-const contentUrl = assetBase + '/js/bundle-content.js?v=' + marker;
+const bundleUrl = assetBase + '/js/bundle.js?v=' + marker;
 
-const inject =
-  '<script src="' + coreUrl + '"></script>\n' +
-  '<script>\n' +
-  '(function(){function load(){var s=document.createElement("script");' +
-  's.src="' + contentUrl + '";s.async=true;document.body.appendChild(s);}\n' +
-  'if(document.readyState==="complete")setTimeout(load,60);else window.addEventListener("load",function(){setTimeout(load,60);});})();\n' +
-  '</script>\n';
+// 单文件加载：拆分 core/content 会让 app.js 顶层的依赖（如 stageTitlesOf）缺失，
+// 所以这里一次性加载合并包；Deno 那边给的是 br 压缩 + 一天强缓存，第二次打开是秒开。
+const inject = '<script src="' + bundleUrl + '"></script>\n';
 
 const newHtml = html.slice(0, firstIdx) + inject + html.slice(lastEnd);
 fs.writeFileSync(path.join(outDir, 'index.html'), newHtml, 'utf8');
