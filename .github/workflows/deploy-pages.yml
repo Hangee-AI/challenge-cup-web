@@ -1,0 +1,48 @@
+name: Deploy to Cloudflare Pages
+
+# 推送到 main 就自动构建 + 发布到 https://yinlu.pages.dev
+# 需要在仓库 Settings → Secrets and variables → Actions 里配置两个 secret：
+#   CLOUDFLARE_API_TOKEN   （Cloudflare 面板：My Profile → API Tokens → Create Token → Edit Cloudflare Workers 模板）
+#   CLOUDFLARE_ACCOUNT_ID  （Cloudflare 面板：Workers & Pages 首页右下角 Account ID，或 wrangler whoami 里能看到）
+# 没配 secret 时这个 workflow 会直接跳过，不会报红。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build static bundle
+        run: node tools/cf-build.js
+
+      - name: Check secrets
+        id: check
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "没有配置 CLOUDFLARE_API_TOKEN，跳过自动部署"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.check.outputs.skip == 'false'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist-cf --project-name=yinlu --branch=main
