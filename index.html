@@ -45,6 +45,27 @@
   </button>
 </header>
 
+<!-- ==================== 搜索栏 ==================== -->
+<div class="search-hero" id="searchHero">
+  <div class="search-hero-inner">
+    <div class="search-hero-title">🔍 搜索课程</div>
+    <div class="search-hero-box">
+      <span class="search-hero-ico">🔎</span>
+      <input type="text" id="homeSearch" class="search-hero-input" placeholder="输入专业、课程或关键词，如：计算机、C语言、数据结构、机器学习……" autocomplete="off" />
+      <button class="search-hero-clear" id="searchClear" type="button" hidden>✕</button>
+    </div>
+    <div class="search-hero-tags">
+      <span>热门：</span>
+      <a href="#" data-search-tag="计算机">计算机</a>
+      <a href="#" data-search-tag="C语言">C语言</a>
+      <a href="#" data-search-tag="数据结构">数据结构</a>
+      <a href="#" data-search-tag="人工智能">人工智能</a>
+      <a href="#" data-search-tag="医学">医学</a>
+    </div>
+    <div class="search-results" id="searchResults" hidden></div>
+  </div>
+</div>
+
 <main id="main">
 
   <!-- ==================== 1. 首页 ==================== -->
@@ -79,18 +100,6 @@
           <p class="quote-text" id="homeQuote">慢慢来，比较快。</p>
           <button class="quote-next" type="button" id="quoteNext">换一句 ↻</button>
         </div>
-      </div>
-    </div>
-
-    <!-- 搜索框 -->
-    <div class="section search-section">
-      <div class="search-wrap">
-        <div class="search-box">
-          <span class="search-ico">🔍</span>
-          <input type="text" id="homeSearch" class="search-input" placeholder="搜索专业、课程或关键词（如：计算机、C语言、数据结构）" autocomplete="off" />
-          <button class="search-clear" id="searchClear" type="button" hidden>✕</button>
-        </div>
-        <div class="search-results" id="searchResults" hidden></div>
       </div>
     </div>
 
