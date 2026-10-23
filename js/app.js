@@ -34,7 +34,8 @@
     layout: 'auto',       // 'auto' | 'mobile' | 'desktop' 版式切换
     pendingAvatar: '',    // 云端注册时待提交的头像
     caro: 0,
-    quote: 0
+    quote: 0,
+    mistakes: []          // 错题集：见 recordMistake()，随 yinlu_v1 持久化
   };
 
   function $(id) { return document.getElementById(id); }
@@ -62,6 +63,7 @@
       state.last = data.last || null;
       state.theme = data.theme === 'night' ? 'night' : 'morning';
       state.layout = (data.layout === 'mobile' || data.layout === 'desktop') ? data.layout : 'auto';
+      state.mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
     } catch (e) { /* 忽略损坏数据 */ }
   }
   function save() {
@@ -70,13 +72,14 @@
         majorId: state.majorId, style: state.style, done: state.done,
         code: state.code, drafts: state.drafts,
         profile: state.profile, study: state.study, checkins: state.checkins,
-        last: state.last, theme: state.theme, layout: state.layout
+        last: state.last, theme: state.theme, layout: state.layout,
+        mistakes: state.mistakes
       }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'profile', 'course'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'mistakes', 'profile', 'course'];
   var curView = 'home';
 
   function show(name) {
@@ -109,6 +112,7 @@
     if (name === 'video') renderVideo();
     if (name === 'course') renderCourse();
     if (name === 'report') renderReport();
+    if (name === 'mistakes') renderMistakes();
     if (name === 'profile') { renderProfile(); renderCheckin(); }
   }
 
@@ -1432,6 +1436,9 @@
     });
     var ok = userChoice === serverAnswer;
     if (ok) state.levelCorrect++;
+    // 错题集：答错记入，答对自动移出（视为已掌握）
+    if (ok) removeMistakeByLevelQi(state.levelId, state.qi);
+    else recordMistake(currentLevel(), q, userChoice);
     $('feedback').hidden = false;
     $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[serverAnswer];
     $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
@@ -1501,6 +1508,185 @@
     toast('🎉 本关已点亮：' + state.levelCorrect + '/' + total + ' 题正确' +
       (found.level.code ? '，代码任务已通过' : '') + ' ' + starsText(stars));
     show(state.fromMap ? 'map' : 'major');
+  }
+
+  /* ---------------- 错题集 ----------------
+     答错的题自动收进来，按学科分组，并给出同章节的同类题。
+     数据存在 state.mistakes，随 yinlu_v1 一起持久化。 */
+  function recordMistake(found, q, wrongChoice) {
+    if (!found || !found.level || !found.level.questions) return;
+    var lv = found.level;
+    var qi = state.qi;
+    var id = lv.id + '#' + qi;
+    var major = getMajor(state.majorId);
+    var entry = {
+      id: id,
+      majorId: major ? major.id : '',
+      subject: major ? major.name : '其他',
+      stageTitle: found.stage ? found.stage.title : '',
+      moduleName: found.module ? found.module.name : '',
+      levelId: lv.id,
+      levelName: lv.name,
+      qi: qi,
+      stem: q.stem,
+      options: q.options.slice(),
+      answer: q.answer,
+      explain: q.explain,
+      wrongChoice: wrongChoice,
+      ts: Date.now()
+    };
+    // 去重：同一道题只保留一条，更新时间戳与错误选项
+    for (var i = 0; i < state.mistakes.length; i++) {
+      if (state.mistakes[i].id === id) { state.mistakes[i] = entry; save(); return; }
+    }
+    state.mistakes.push(entry);
+    save();
+  }
+  function removeMistake(id) {
+    state.mistakes = state.mistakes.filter(function (m) { return m.id !== id; });
+    save();
+  }
+  function removeMistakeByLevelQi(levelId, qi) {
+    var id = levelId + '#' + qi;
+    var before = state.mistakes.length;
+    state.mistakes = state.mistakes.filter(function (m) { return m.id !== id; });
+    if (state.mistakes.length !== before) save();
+  }
+  function clearMistakes() {
+    if (!state.mistakes.length) return;
+    state.mistakes = [];
+    save();
+  }
+  // 取同章节（同模块）的其它题作为「同类题」，优先同关卡内的其它题
+  function similarOf(m) {
+    var major = getMajor(m.majorId);
+    if (!major) return [];
+    var path = getPath(m.majorId);
+    if (!path) return [];
+    var out = [];
+    path.stages.forEach(function (st) {
+      st.modules.forEach(function (mod) {
+        if (mod.name !== m.moduleName) return;
+        (mod.levels || []).forEach(function (lv) {
+          (lv.questions || []).forEach(function (q, idx) {
+            if (lv.id === m.levelId && idx === m.qi) return;
+            out.push({
+              levelId: lv.id, levelName: lv.name,
+              stem: q.stem, options: q.options.slice(), answer: q.answer,
+              explain: q.explain,
+              sameLevel: lv.id === m.levelId
+            });
+          });
+        });
+      });
+    });
+    out.sort(function (a, b) { return (a.sameLevel === b.sameLevel) ? 0 : (a.sameLevel ? -1 : 1); });
+    return out.slice(0, 4);
+  }
+
+  function renderMistakes() {
+    var wrap = $('mistakesBody');
+    if (!wrap) return;
+    var ms = state.mistakes;
+    $('mistakesCount').textContent = ms.length;
+    if ($('clearMistakesBtn')) {
+      $('clearMistakesBtn').onclick = function () {
+        if (!state.mistakes.length) return;
+        if (confirm('确定清空整个错题集吗？此操作不可恢复。')) { clearMistakes(); renderMistakes(); }
+      };
+    }
+    if (!ms.length) {
+      $('mistakesFilters').innerHTML = '';
+      wrap.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div>' +
+        '<h2>还没有错题</h2><p>在闯关里答错的题会自动收进这里；之后再答对，就会自动移出。</p>' +
+        '<a class="btn btn-primary btn-sm" href="#" data-go="map">去闯关地图 →</a></div>';
+      return;
+    }
+    // 按学科分组，生成过滤器
+    var groups = {};
+    ms.forEach(function (m) { (groups[m.subject] = groups[m.subject] || []).push(m); });
+    var subjects = Object.keys(groups);
+    var fhtml = '<button class="chip is-on" data-subject="__all">全部 ' + ms.length + '</button>';
+    subjects.forEach(function (s) {
+      fhtml += '<button class="chip" data-subject="' + esc(s) + '">' + esc(s) + ' ' + groups[s].length + '</button>';
+    });
+    $('mistakesFilters').innerHTML = fhtml;
+    Array.prototype.forEach.call($('mistakesFilters').querySelectorAll('.chip'), function (c) {
+      c.addEventListener('click', function () {
+        Array.prototype.forEach.call($('mistakesFilters').querySelectorAll('.chip'), function (x) { x.classList.remove('is-on'); });
+        c.classList.add('is-on');
+        var key = c.getAttribute('data-subject');
+        renderMistakesList(key === '__all' ? ms : (groups[key] || []));
+      });
+    });
+    renderMistakesList(ms);
+  }
+
+  function renderMistakesList(list) {
+    var wrap = $('mistakesList');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    list.forEach(function (m) {
+      var card = el('div', 'mistake-card');
+
+      var head = el('div', 'mistake-head');
+      head.innerHTML =
+        '<span class="mistake-subject">' + esc(m.subject) + '</span>' +
+        '<span class="mistake-loc">' + esc(m.moduleName || '—') + ' · ' + esc(m.levelName || '') + '</span>' +
+        '<span class="mistake-time">' + new Date(m.ts).toLocaleDateString('zh-CN') + '</span>';
+      card.appendChild(head);
+
+      var q = el('div', 'mistake-q');
+      q.innerHTML = '<p class="mistake-stem">' + esc(m.stem) + '</p>';
+      var opts = el('div', 'mistake-opts');
+      m.options.forEach(function (opt, i) {
+        var o = el('div', 'mopt');
+        if (i === m.answer) o.classList.add('is-correct');
+        if (i === m.wrongChoice) o.classList.add('is-wrong');
+        o.innerHTML = '<span class="mopt-key">' + 'ABCD'[i] + '</span><span class="mopt-txt">' + esc(opt) + '</span>';
+        opts.appendChild(o);
+      });
+      q.appendChild(opts);
+      var exp = el('div', 'mistake-exp');
+      exp.innerHTML = '<span class="mistake-exp-label">解析</span>' + esc(m.explain || '（暂无解析）');
+      q.appendChild(exp);
+      card.appendChild(q);
+
+      // 右侧：同章节同类题
+      var aside = el('div', 'mistake-similar');
+      aside.innerHTML = '<div class="mistake-similar-title">📎 同章节 · 同类题再练</div>';
+      var sims = similarOf(m);
+      if (!sims.length) {
+        aside.innerHTML += '<p class="mistake-similar-empty">这一章暂时没有更多题可以练。</p>';
+      } else {
+        sims.forEach(function (s) {
+          var sc = el('div', 'similar-card');
+          sc.innerHTML =
+            '<div class="similar-loc">' + esc(s.levelName) + (s.sameLevel ? ' · 本关' : '') + '</div>' +
+            '<div class="similar-stem">' + esc(s.stem) + '</div>';
+          var ans = el('div', 'similar-ans', '正确答案：' + 'ABCD'[s.answer] + ' · ' + esc(s.options[s.answer]));
+          ans.hidden = true;
+          var btn = el('button', 'btn btn-ghost btn-xs', '看答案');
+          btn.addEventListener('click', function () { ans.hidden = !ans.hidden; });
+          var go = el('button', 'btn btn-primary btn-xs', '去这关练');
+          go.addEventListener('click', function () { startLevelQuiz(s.levelId, true); });
+          sc.appendChild(btn);
+          sc.appendChild(go);
+          sc.appendChild(ans);
+          aside.appendChild(sc);
+        });
+      }
+      card.appendChild(aside);
+
+      // 操作
+      var act = el('div', 'mistake-act');
+      var done = el('button', 'btn btn-ghost btn-xs', '✓ 我会了，移出');
+      done.addEventListener('click', function () { removeMistake(m.id); renderMistakes(); });
+      act.appendChild(done);
+      card.appendChild(act);
+
+      wrap.appendChild(card);
+    });
   }
 
   /* ---------------- 代码任务：运行与判题 ---------------- */

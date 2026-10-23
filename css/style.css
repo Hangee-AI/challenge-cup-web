@@ -424,6 +424,46 @@ button { font: inherit; cursor: pointer; }
 .option.wrong { border-color: #f5c6c9; background: var(--bad-soft); }
 .option.wrong .option-key { background: var(--bad); color: #fff; }
 
+/* ---- 错题集 ---- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.chip.is-on { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 6px 16px rgba(79, 110, 247, .25); }
+.btn-xs { padding: 6px 11px; font-size: 12.5px; border-radius: 9px; }
+.mistakes-list { display: flex; flex-direction: column; gap: 18px; }
+.mistake-card {
+  display: grid; grid-template-columns: 1fr 322px; gap: 20px; align-items: start;
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow); padding: 22px 24px;
+}
+.mistake-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mistake-subject {
+  font-size: 13px; font-weight: 700; color: var(--brand);
+  background: var(--brand-soft); border-radius: 999px; padding: 4px 12px;
+}
+.mistake-loc { font-size: 13px; color: var(--text-2); }
+.mistake-time { margin-left: auto; font-size: 12px; color: var(--text-3); }
+.mistake-stem { font-size: 16px; font-weight: 600; white-space: pre-wrap; margin: 0 0 14px; }
+.mistake-opts { display: flex; flex-direction: column; gap: 9px; }
+.mopt { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 11px; font-size: 14px; }
+.mopt-key { flex: 0 0 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 700; }
+.mopt.is-correct { border-color: #b9e4c9; background: var(--ok-soft); }
+.mopt.is-correct .mopt-key { background: var(--ok); color: #fff; }
+.mopt.is-wrong { border-color: #f5c6c9; background: var(--bad-soft); }
+.mopt.is-wrong .mopt-key { background: var(--bad); color: #fff; }
+.mistake-exp { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+.mistake-exp-label { display: inline-block; font-size: 11px; font-weight: 700; color: var(--text-3); background: var(--surface-2); border-radius: 6px; padding: 2px 8px; margin-right: 8px; }
+.mistake-similar { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.mistake-similar-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.mistake-similar-empty { font-size: 13px; color: var(--text-3); }
+.similar-card { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 12px 13px; margin-bottom: 10px; }
+.similar-card:last-child { margin-bottom: 0; }
+.similar-loc { font-size: 11.5px; color: var(--text-3); margin-bottom: 4px; }
+.similar-stem { font-size: 13.5px; line-height: 1.5; margin-bottom: 10px; white-space: pre-wrap; }
+.similar-ans { margin-top: 8px; font-size: 13px; color: var(--brand-deep); background: var(--ok-soft); border-radius: 9px; padding: 8px 10px; white-space: pre-wrap; }
+.similar-card .btn { margin-top: 8px; }
+.similar-card .btn + .btn { margin-left: 6px; }
+.mistake-act { grid-column: 1 / -1; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+html[data-layout="mobile"] .mistake-card { grid-template-columns: 1fr; }
+
 /* ---- 代码任务：编辑器 + 运行 + 判题 ---- */
 .code-card { max-width: 900px; margin-top: 18px; }
 .code-head {
