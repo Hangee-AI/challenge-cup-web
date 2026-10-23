@@ -71,6 +71,17 @@ const MAJOR_ROWS = [
   ['engineering', '机械设计制造及其自动化',   '⚙️', '设计并造出机构'],
   ['engineering', '土木工程',                 '🏗️', '把建筑稳稳立住'],
   ['engineering', '材料科学与工程',           '🧱', '结构决定性能'],
+  ['engineering', '网络空间安全',             '🛡️', '攻防、密码与合规'],
+  ['engineering', '通信工程',                 '📶', '电波、信号与网络'],
+  ['engineering', '测控技术与仪器',           '📏', '感知、测量与控制'],
+  ['engineering', '智能制造工程',             '🏭', '会思考的产线'],
+  ['engineering', '电气工程及其自动化',       '⚡', '电力系统与电机'],
+  ['engineering', '能源与动力工程',           '🔥', '能量的转换与利用'],
+  ['engineering', '化学工程与工艺',           '⚗️', '反应、分离与流程'],
+  ['engineering', '水利水电工程',             '💧', '大坝、河流与发电'],
+  ['engineering', '环境工程',                 '🌿', '污染治理与修复'],
+  ['engineering', '生物工程',                 '🧫', '细胞工厂与发酵'],
+  ['engineering', '制药工程',                 '💊', '从分子到药品'],
   ['agriculture', '农学',                     '🌾', '作物与生长'],
   ['agriculture', '园艺',                     '🍎', '果树、蔬菜与花卉'],
   ['agriculture', '动物医学',                 '🐾', '动物健康'],
@@ -126,6 +137,17 @@ const VIDEO_COURSES = {
   '机械设计制造及其自动化': { title: '《机械原理》8小时零基础速成课', url: 'https://www.bilibili.com/video/BV1FfMvzuEjQ' },
   '土木工程': { title: '同济大学《土木工程概论》36讲', url: 'https://www.bilibili.com/video/av11154768' },
   '材料科学与工程': { title: '西北工业大学《材料科学基础》93讲', url: 'https://www.bilibili.com/video/BV1qxwTziEKf' },
+  '网络空间安全': { title: '网络安全零基础全套教程（768集）', url: 'https://www.bilibili.com/video/BV1Lc9rBGEkE' },
+  '通信工程': { title: '电子科技大学《通信原理》李晓峰 国家精品课', url: 'https://www.bilibili.com/video/BV1rE411r7Yq' },
+  '测控技术与仪器': { title: '国防科技大学《传感器与测试技术》', url: 'https://www.bilibili.com/video/BV1xLadzaEFm' },
+  '智能制造工程': { title: '智能制造通识（面向初学者）', url: 'https://www.bilibili.com/video/BV1NwWhejENm' },
+  '电气工程及其自动化': { title: '石群《电路》全80讲（邱关源教材）', url: 'https://www.bilibili.com/video/BV1Ss41117Fs' },
+  '能源与动力工程': { title: '西安交通大学《工程热力学》', url: 'https://www.bilibili.com/video/BV1dkUpYpEiH' },
+  '化学工程与工艺': { title: '北京化工大学《化工原理》杨祖荣 全123讲', url: 'https://www.bilibili.com/video/BV1TyYZz5EPh' },
+  '水利水电工程': { title: '四川大学《水力学》李克锋 全83讲', url: 'https://www.bilibili.com/video/BV1DZaEzMECr' },
+  '环境工程': { title: '清华大学《环境工程原理》55集', url: 'https://www.bilibili.com/video/BV1w1TVz1Ek8' },
+  '生物工程': { title: '同济大学《生物化学》国家级一流课程', url: 'https://www.bilibili.com/video/BV1RFU6BsEY9' },
+  '制药工程': { title: '中国药科大学《工业药剂学》全156集', url: 'https://www.bilibili.com/video/BV16uoNYhERV' },
   '人工智能': { title: '吴恩达《机器学习》中文配音 2025版', url: 'https://www.bilibili.com/video/BV1MBKRzqEBR' },
   '数据科学与大数据技术': { title: 'Python数据分析教程 69集（NumPy+Pandas+Matplotlib）', url: 'https://www.bilibili.com/video/BV18ohHzkEnw' },
   '集成电路设计与集成系统': { title: '复旦大学合作《半导体与集成电路》公开课', url: 'https://www.bilibili.com/video/BV1rVd1BiEPq' },
@@ -340,43 +362,105 @@ function buildLevels(majorId, moduleIndex, realLevels, moduleName) {
   return list;
 }
 
-/* ---------------- 6.1 关卡补齐：不足 84 关的专业补到 84 ----------------
-   部分专业（占位专业 / 医学类精简版）一门课只有 3 关，整个专业只有 36 关。
-   这里把每个不足 7 关的模块补到 7 关：12 门课 × 7 关 = 84 关，
-   与生物科学、统计学等已建成专业的关卡数对齐。
+/* ---------------- 6.1 关卡补齐：不足 120 关的专业补到 120 ----------------
+   统一口径：每门课 10 关 × 12 门课 = 120 关。
+   部分专业一门课只有 3~8 关，这里逐门课补齐到 MIN_LEVELS_PER_MODULE 关，
    补出来的关卡是占位题（ready: false），后续可直接替换成真题。 */
+var MIN_LEVELS_PER_MODULE = 10;
+var MIN_LEVELS_PER_MAJOR = 120;
+
 var PAD_TEMPLATE = {
   3: { name: '第 4 关 · 提高题',   tip: '在基础题上再进一步' },
   4: { name: '第 5 关 · 变式训练', tip: '换个角度再考一次' },
   5: { name: '第 6 关 · 综合演练', tip: '把这一章的内容串起来' },
-  6: { name: '第 7 关 · 章末测试', tip: '模拟一次章末小测' }
+  6: { name: '第 7 关 · 章末测试', tip: '模拟一次章末小测' },
+  7: { name: '第 8 关 · 深化提高', tip: '把难点再拆开练一遍' },
+  8: { name: '第 9 关 · 综合应用', tip: '用本章知识解决实际问题' },
+  9: { name: '第 10 关 · 期末冲刺', tip: '按期末标准做一轮自测' }
 };
 
-function padLevelsTo84(major, stages) {
+/* 一章被多关复用时的后缀（教材知识点用完后启用） */
+var PAD_SUFFIX = ['提高', '综合', '冲刺', '深化', '拓展', '进阶', '应用'];
+
+/* 补齐关卡的命名：按这门课教材的真实章节 / 知识点来定，
+   让每一关都能对上教材的具体内容（而不是"第 8 关 · 提高题"这种通用名）。
+   规则：接着已有关卡的章号往下走；走完整本书再从头来第二轮、第三轮，
+   同一章第二次出现时用该章的知识点命名，知识点用完后用"提高/综合/冲刺"。 */
+function padPlanFor(md, majorId) {
+  if (typeof textbookOf !== 'function') return null;
+  var book = textbookOf(majorId, md.name);
+  if (!book || !book.chapters || !book.chapters.length) return null;
+
+  var chapters = book.chapters, C = chapters.length;
+  var lastNo = 0;
+  md.levels.forEach(function (l) {
+    var n = chapterNoOf(l.name, 0);
+    if (n > lastNo) lastNo = n;
+  });
+  if (lastNo > C) lastNo = C;
+
+  var need = MIN_LEVELS_PER_MODULE - md.levels.length;
+  if (need <= 0) return null;
+
+  var from = lastNo + 1; if (from > C) from = 1;
+  var seq = [], no = from;
+  while (seq.length < need) { seq.push(no); no = (no + 1 > C) ? 1 : no + 1; }
+
+  /* 统计每一章已经被占了几关（含已有的真题关），第二次出现时用知识点区分 */
+  var seen = {};
+  md.levels.forEach(function (l) {
+    var n2 = chapterNoOf(l.name, 0);
+    if (n2 >= 1 && n2 <= C) seen[n2] = (seen[n2] || 0) + 1;
+  });
+  return seq.map(function (n) {
+    var j = seen[n] || 0; seen[n] = j + 1;
+    var ch = chapters[n - 1] || { t: '综合复习', p: [] };
+    var pts = ch.p || [];
+    var suffix = '';
+    if (j > 0) {
+      suffix = (pts.length >= j)
+        ? ('：' + pts[j - 1])
+        : ('（' + PAD_SUFFIX[Math.min(j - 1, PAD_SUFFIX.length - 1)] + '）');
+    }
+    var brief = pts.length
+      ? '对应教材第 ' + n + ' 章「' + ch.t + '」，要点：' + pts.slice(0, 3).join('、')
+      : '对应教材第 ' + n + ' 章「' + ch.t + '」';
+    return { name: '第 ' + n + ' 章 · ' + ch.t + suffix, brief: brief };
+  });
+}
+
+function padLevelsTo(major, stages) {
   var total = 0, i, j;
   for (i = 0; i < stages.length; i++)
     for (j = 0; j < stages[i].modules.length; j++)
       total += stages[i].modules[j].levels.length;
-  if (!total || total >= 84) return stages;
+  if (!total || total >= MIN_LEVELS_PER_MAJOR) return stages;
   for (i = 0; i < stages.length; i++) {
     for (j = 0; j < stages[i].modules.length; j++) {
       var md = stages[i].modules[j];
-      while (md.levels.length < 7 && PAD_TEMPLATE[md.levels.length]) {
-        var idx = md.levels.length;
-        var t = PAD_TEMPLATE[idx];
+      var plan = padPlanFor(md, major.id);
+      var idx = md.levels.length, k = 0;
+      while (idx + k < MIN_LEVELS_PER_MODULE) {
+        var at = idx + k;
+        var t = (plan && plan[k]) ? plan[k]
+          : (PAD_TEMPLATE[at] || { name: '第 ' + (at + 1) + ' 关 · 综合练习', tip: '本关待补充真题' });
         md.levels.push(attachTextbookSync({
-          id: md.id + '-l' + idx,
+          id: md.id + '-l' + at,
           name: t.name,
-          brief: t.tip,
+          brief: t.brief || t.tip,
           questions: null,
           ready: false
-        }, major.id, md.name, idx));
+        }, major.id, md.name, at));
+        k++;
       }
       spreadSyncChapters(md.levels);
     }
   }
   return stages;
 }
+
+/* 兼容旧名：早期脚本可能调用 padLevelsTo84 */
+var padLevelsTo84 = padLevelsTo;
 
 /* 关卡数多于教材章数时（如 7 关配 4 章的讲义），把章节序号按比例摊到整本书，
    避免"第 7 章 / 共 4 章"这种越界展示。明确写"第 N 章"的关卡保持原样。 */
@@ -424,7 +508,7 @@ function getPath(majorId) {
     }
     stages.push(stage);
   }
-  return { major: major, stages: padLevelsTo84(major, stages) };
+  return { major: major, stages: padLevelsTo(major, stages) };
 }
 
 function getMajor(id) {

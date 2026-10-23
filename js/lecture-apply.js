@@ -18,6 +18,15 @@
   function tailOf(name) {
     return String(name || '').replace(/^第\s*\d+\s*[章关][·\.、\s]*/, '');
   }
+  // 去掉「：知识点」后缀，便于按章标题匹配
+  function baseOf(name) {
+    return tailOf(name).split(/[：:（(]/)[0].replace(/\s+$/, '');
+  }
+  // 关卡名里的章号（"第 9 章 · xxx" → 9）
+  function noOf(name) {
+    var m = /第\s*(\d+)\s*[章关]/.exec(String(name || ''));
+    return m ? parseInt(m[1], 10) : 0;
+  }
 
   window.addLectures = function (majorId, data) {
     var p;
@@ -32,8 +41,14 @@
         (m.levels || []).forEach(function (l, k) {
           var ch = null;
           var tail = tailOf(l.name);
+          var base = baseOf(l.name);
           for (var j = 0; j < list.length; j++) {
-            if (list[j][0] === tail) { ch = list[j]; break; }
+            if (list[j][0] === tail || list[j][0] === base) { ch = list[j]; break; }
+          }
+          // 章标题对不上时，按关卡名里的章号取对应章（补齐关卡常带「：知识点」后缀）
+          if (!ch) {
+            var n = noOf(l.name);
+            if (n >= 1 && list[n - 1]) ch = list[n - 1];
           }
           if (!ch) ch = list[k];
           if (!ch) return;
@@ -41,7 +56,7 @@
           // 同一本教材直接复用共享精讲（按章标题精确匹配，避免错配）
           var book = l.sync && l.sync.book;
           var sList = book && shared[book];
-          var sharedCh = sList && sList[tail];
+          var sharedCh = sList && sList[ch[0]];
           var src = sharedCh || ch;
           var isShared = !!sharedCh;
 

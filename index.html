@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>引路 · 大学新生专业学习导航</title>
   <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
-  <link rel="stylesheet" href="css/style.css?v=20261024d" />
+  <link rel="stylesheet" href="css/style.css?v=20261026b" />
 </head>
 <body>
 
@@ -347,12 +347,18 @@
 
       <aside class="doc-side fold">
         <a class="back" href="#" id="docBack">← 返回路径</a>
-        <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+        <div class="doc-side-head">
+          <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+          <button class="doc-side-hide" id="docSideHide" type="button" title="收起目录" aria-label="收起目录">⟨</button>
+        </div>
         <div class="doc-side-sub" id="docSideSub"></div>
         <button class="doc-fold-btn" type="button" data-fold aria-expanded="false">
           <span>📚 课程目录</span><span class="fold-arrow" aria-hidden="true">▾</span>
         </button>
         <nav class="doc-nav" id="docNav"></nav>
+        <button class="doc-side-show" id="docSideShow" type="button" title="展开目录" aria-label="展开目录">
+          <span class="doc-side-show-icon" aria-hidden="true">📚</span><span>目录</span>
+        </button>
       </aside>
 
       <article class="doc-main">
@@ -672,7 +678,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20261024c"></script>
+<script src="js/data.js?v=20261024q"></script>
 <script src="js/course-common.js?v=20261024c"></script>
 <script src="js/docs.js?v=20261024c"></script>
 <script src="js/philosophy.js?v=20261024c"></script>
@@ -700,6 +706,7 @@
 <script src="js/philosophy-courses-more.js?v=20261024c"></script>
 <script src="js/logic-courses-more.js?v=20261024c"></script>
 <script src="js/law-courses-more2.js?v=20261024c"></script>
+<script src="js/law-falixue-docs.js?v=20261024e"></script>
 <script src="js/literature-courses-more.js?v=20261024c"></script>
 <script src="js/english-courses-more.js?v=20261024c"></script>
 <script src="js/journalism-courses-more.js?v=20261024c"></script>
@@ -741,6 +748,17 @@
 <script src="js/mech-courses.js?v=20261024c"></script>
 <script src="js/civil-courses.js?v=20261024c"></script>
 <script src="js/material-courses.js?v=20261024c"></script>
+<script src="js/cybersec-courses.js?v=20261024h"></script>
+<script src="js/comm-courses.js?v=20261024h"></script>
+<script src="js/measure-courses.js?v=20261024h"></script>
+<script src="js/smartmfg-courses.js?v=20261024h"></script>
+<script src="js/eee-courses.js?v=20261024h"></script>
+<script src="js/energy-courses.js?v=20261024h"></script>
+<script src="js/chemeng-courses.js?v=20261024h"></script>
+<script src="js/hydro-courses.js?v=20261024h"></script>
+<script src="js/environ-courses.js?v=20261024h"></script>
+<script src="js/bioeng-courses.js?v=20261024h"></script>
+<script src="js/pharmeng-courses.js?v=20261024h"></script>
 <script src="js/bm-courses.js?v=20261023e"></script>
 <script src="js/accounting-courses.js?v=20261023e"></script>
 <script src="js/mkt-courses.js?v=20261023f"></script>
@@ -781,11 +799,14 @@
 <script src="js/textbooks-chapters-p.js?v=20261024c"></script>
 <script src="js/textbooks-chapters-r.js?v=20261024c"></script>
 <script src="js/textbooks-books-q.js?v=20261024c"></script>
+<script src="js/textbooks-books-z1.js?v=20261026c"></script>
+<script src="js/textbooks-books-z2.js?v=20261026d"></script>
 <script src="js/textbooks-fin-deep.js?v=20261024f"></script>
 <script src="js/textbook-notes.js?v=20261025a"></script>
 <script src="js/textbook-notes-2.js?v=20261025b"></script>
 <script src="js/textbook-notes-3.js?v=20261025c"></script>
 <script src="js/textbook-notes-4.js?v=20261025d"></script>
+<script src="js/textbook-notes-5.js?v=20261026a"></script>
 <script src="js/textbook-notes-apply.js?v=20261025a"></script>
 <script src="js/majors/clinical-medicine-courses-more.js?v=20261024c"></script>
 <script src="js/majors/nursing-courses-more.js?v=20261024c"></script>
@@ -806,18 +827,24 @@
 <script src="js/textbooks-books-y.js?v=20261024j"></script>
 <script src="js/textbooks-books-z.js?v=20261024j"></script>
 <script src="js/textbooks-books-aa.js?v=20261024j"></script>
+<script src="js/textbooks-books-ab.js?v=20261024n"></script>
+<script src="js/textbooks-books-ac.js?v=20261024n"></script>
+<script src="js/textbooks-books-ad.js?v=20261024n"></script>
+<script src="js/textbooks-books-ae.js?v=20261024n"></script>
+<script src="js/textbooks-books-af.js?v=20261024n"></script>
 <script src="js/code-offline.js?v=20261024c"></script>
 <script src="js/config.js?v=20261024c"></script>
 <script src="js/universities.js?v=20261024c"></script>
 <script src="js/school-pick.js?v=20261024c"></script>
-<script src="js/lecture-apply.js?v=20261027a"></script>
-<script src="js/accounting-lectures.js?v=20261027a"></script>
-<script src="js/visual-lectures.js?v=20261027a"></script>
-<script src="js/broadcast-lectures.js?v=20261027a"></script>
-<script src="js/ic-lectures.js?v=20261027a"></script>
-<script src="js/docs-deepen.js?v=20261024m"></script>
-<script src="js/app.js?v=20261024c"></script>
+<script src="js/lecture-apply.js?v=20261028a"></script>
+<script src="js/accounting-lectures.js?v=20261028a"></script>
+<script src="js/visual-lectures.js?v=20261028a"></script>
+<script src="js/broadcast-lectures.js?v=20261028a"></script>
+<script src="js/ic-lectures.js?v=20261028a"></script>
+<script src="js/textbook-fit.js?v=20261024q"></script>
+<script src="js/docs-deepen.js?v=20261024o"></script>
+<script src="js/app.js?v=20261026b"></script>
 <script src="js/cloud.js?v=20261024c"></script>
-<script src="js/pet.js?v=20261024c"></script>
+<script src="js/pet.js?v=20261024e"></script>
 </body>
 </html>

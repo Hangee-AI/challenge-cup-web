@@ -19,7 +19,16 @@
       (s.modules || []).forEach(function (md) {
         (md.levels || []).forEach(function (l, k) {
           var doc = DOCS[m.id + '-m' + ci + '-l' + k];
-          if (!doc || !doc.sections) return;
+          if (!doc) {
+            /* 占位关（待补真题）也要有讲义：先看教材要点，再按清单自查 */
+            doc = {
+              lead: '本关是待补充真题的练习关。先按下面的教材要点把本章过一遍，'
+                + '再对照自查清单检验自己是否真的掌握。',
+              sections: [], refs: []
+            };
+            DOCS[m.id + '-m' + ci + '-l' + k] = doc;
+          }
+          if (!doc.sections) doc.sections = [];
 
           var has = false;
           doc.sections.forEach(function (sec) { if (sec.id === 'bk') has = true; });

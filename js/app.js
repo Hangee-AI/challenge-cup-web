@@ -1259,12 +1259,14 @@
       });
     });
 
+    var desktopNav = !isMobileView();
     path.stages.forEach(function (stage, si) {
-      var group = el('div', 'doc-nav-group fold' + (si === curStage ? ' is-open' : ''));
+      var groupOpen = desktopNav || si === curStage;
+      var group = el('div', 'doc-nav-group fold' + (groupOpen ? ' is-open' : ''));
       var stageHead = el('button', 'doc-nav-stage');
       stageHead.type = 'button';
       stageHead.setAttribute('data-fold', '');
-      stageHead.setAttribute('aria-expanded', si === curStage ? 'true' : 'false');
+      stageHead.setAttribute('aria-expanded', groupOpen ? 'true' : 'false');
       stageHead.innerHTML =
         '<span class="doc-nav-stage-txt">' + stage.title + '</span>' +
         '<span class="fold-arrow" aria-hidden="true">▾</span>';
@@ -1272,7 +1274,7 @@
 
       var groupBody = el('div', 'doc-nav-group-body');
       stage.modules.forEach(function (mod, mi) {
-        var open = si === curStage && mi === curModule;
+        var open = desktopNav || (si === curStage && mi === curModule);
         var sub = el('div', 'doc-nav-sub fold' + (open ? ' is-open' : ''));
         var modHead = el('button', 'doc-nav-label');
         modHead.type = 'button';
@@ -1301,6 +1303,9 @@
       group.appendChild(groupBody);
       nav.appendChild(group);
     });
+
+    // 桌面端默认全展开（可点大标题收起）；手机端只展开当前阶段/课程
+    applyDocSideState();
 
     // 正文
     $('docCrumb').textContent = found.stage.title + ' / ' + found.module.name;
@@ -1780,6 +1785,13 @@
     if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
     var sw = e.target.closest('[data-switch-style]');
     if (sw) { e.preventDefault(); switchStyle(sw.getAttribute('data-switch-style')); return; }
+    // 文档页：左侧目录整栏收起 / 展开
+    var sideToggle = e.target.closest('#docSideHide, #docSideShow');
+    if (sideToggle) {
+      e.preventDefault();
+      setDocSideMini(sideToggle.id === 'docSideHide', true);
+      return;
+    }
     // 多级折叠：阶段 / 模块 / 目录分组（必须排在 data-level 之前，否则会被关卡点击吃掉）
     var fold = e.target.closest('[data-fold]');
     if (fold) {
@@ -1883,6 +1895,23 @@
     var node = document.querySelector(sel);
     if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+  /* 文档页左侧目录：整栏收起成一条窄栏（记住状态） */
+  function setDocSideMini(mini, persist) {
+    var wrap = document.querySelector('#view-doc .doc-wrap');
+    var side = document.querySelector('#view-doc .doc-side');
+    if (!wrap || !side) return;
+    mini = !!mini && !isMobileView();
+    wrap.classList.toggle('side-mini', mini);
+    side.classList.toggle('is-mini', mini);
+    if (persist) {
+      try { localStorage.setItem('yinlu_doc_side', mini ? 'mini' : 'full'); } catch (e) {}
+    }
+  }
+  function applyDocSideState() {
+    var mini = false;
+    try { mini = localStorage.getItem('yinlu_doc_side') === 'mini'; } catch (e) {}
+    setDocSideMini(mini, false);
+  }
 
   function applyLayout() {
     var html = document.documentElement;
@@ -1896,6 +1925,7 @@
     var ico = $('layoutIco'), txt = $('layoutText');
     if (ico) ico.textContent = state.layout === 'mobile' ? '📱' : state.layout === 'desktop' ? '💻' : '🖥️';
     if (txt) txt.textContent = state.layout === 'mobile' ? '手机版' : state.layout === 'desktop' ? '电脑版' : '版式';
+    if (typeof applyDocSideState === 'function') applyDocSideState();
     syncNavMode();
   }
   function cycleLayout() {
@@ -2307,6 +2337,11 @@
   load();
   applyTheme();
   applyLayout();
+  var sideResizeTimer = 0;
+  window.addEventListener('resize', function () {
+    clearTimeout(sideResizeTimer);
+    sideResizeTimer = setTimeout(applyDocSideState, 120);
+  });
   renderHomeCats();
   renderHomeCommon();
   renderCarousel();
