@@ -429,12 +429,37 @@ function padPlanFor(md, majorId) {
   });
 }
 
+/* 已备好的真题（由 js/pad-real-*.js 提供）：把某些通用课的补齐关直接做成真题。
+   命中优先按关卡名精确匹配，名字对不上时按未用过的顺序取一关。 */
+function realPadHit(course, levelName, key) {
+  if (typeof REAL_PAD === 'undefined') return null;
+  var set = REAL_PAD[course];
+  if (!set && typeof REAL_PAD_ALIAS !== 'undefined' && REAL_PAD_ALIAS[course]) set = REAL_PAD[REAL_PAD_ALIAS[course]];
+  if (!set || !set.list) return null;
+  if (set.byName && set.byName[levelName]) return set.byName[levelName];
+
+  /* 教材版本不同导致关卡名对不上时，按章号匹配；再不行就按顺序取还没用过的 */
+  var used = set.__used || (set.__used = {});
+  var u = used[key] || (used[key] = {});
+  var n = chapterNoOf(levelName, 0), i;
+  if (n) {
+    for (i = 0; i < set.list.length; i++) {
+      if (!u[i] && chapterNoOf(set.list[i].title, 0) === n) { u[i] = 1; return set.list[i]; }
+    }
+  }
+  for (i = 0; i < set.list.length; i++) {
+    if (!u[i]) { u[i] = 1; return set.list[i]; }
+  }
+  return null;
+}
+
 function padLevelsTo(major, stages) {
   var total = 0, i, j;
   for (i = 0; i < stages.length; i++)
     for (j = 0; j < stages[i].modules.length; j++)
       total += stages[i].modules[j].levels.length;
   if (!total || total >= MIN_LEVELS_PER_MAJOR) return stages;
+  var ci = 0;
   for (i = 0; i < stages.length; i++) {
     for (j = 0; j < stages[i].modules.length; j++) {
       var md = stages[i].modules[j];
@@ -444,16 +469,24 @@ function padLevelsTo(major, stages) {
         var at = idx + k;
         var t = (plan && plan[k]) ? plan[k]
           : (PAD_TEMPLATE[at] || { name: '第 ' + (at + 1) + ' 关 · 综合练习', tip: '本关待补充真题' });
+        var hit = realPadHit(md.name, t.name, major.id + '|' + md.name);
+        /* 题目章节不能超出该课程教材的章数，否则宁可留作占位 */
+        if (hit && typeof textbookOf === 'function') {
+          var bk = textbookOf(major.id, md.name);
+          if (bk && bk.chapters && chapterNoOf(hit.title, 0) > bk.chapters.length) hit = null;
+        }
+        if (hit && hit.doc && typeof DOCS !== 'undefined') DOCS[major.id + '-m' + ci + '-l' + at] = hit.doc;
         md.levels.push(attachTextbookSync({
           id: md.id + '-l' + at,
-          name: t.name,
-          brief: t.brief || t.tip,
-          questions: null,
-          ready: false
+          name: hit ? hit.title : t.name,
+          brief: hit ? hit.brief : (t.brief || t.tip),
+          questions: hit ? hit.q : null,
+          ready: !!hit
         }, major.id, md.name, at));
         k++;
       }
       spreadSyncChapters(md.levels);
+      ci++;
     }
   }
   return stages;
