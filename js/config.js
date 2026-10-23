@@ -16,6 +16,6 @@
  *    （优先级：本文件 > localStorage > 同源）
  * ============================================================ */
 
-window.YL_API_BASE = 'https://challenge-cup-web.hangee-ai.deno.net';
+window.YL_API_BASE = 'https://conversion-pumps-flat-exams.trycloudflare.com';
 
-// ci-marker: 2026-10-22-d
+// ci-marker: 2026-10-23-tunnel

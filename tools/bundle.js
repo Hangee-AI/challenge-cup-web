@@ -92,20 +92,16 @@ contentParts.push(
 
 const jsDir = path.join(outDir, 'js');
 fs.mkdirSync(jsDir, { recursive: true });
-// 首屏包也不写进 dist：由 Deno 域名提供（见下方 coreUrl）
-// 内容包不写进 dist：由 Deno 域名提供（见下方 contentUrl）
+fs.writeFileSync(path.join(jsDir, 'bundle.js'), coreParts.concat(contentParts).join('\n;\n'), 'utf8');
+
 
 /* JS 全部放 Deno 域名：
    - Surge 的上传/CDN 经常把 300KB 的包传成半截，页面直接白掉（这是「照明数据没了」的真因）；
    - Deno 那边同时给 br/gzip 压缩，实测首屏包 90KB，一次请求就到。
    经典 script 允许跨域加载，所以 <script src> 直接引过去即可。
    需要换地址时设环境变量 CONTENT_BASE。 */
-const assetBase = (process.env.CONTENT_BASE || 'https://challenge-cup-web.hangee-ai.deno.net').replace(/\/+$/, '');
-const bundleUrl = assetBase + '/js/bundle.js?v=' + marker;
-
-// 单文件加载：拆分 core/content 会让 app.js 顶层的依赖（如 stageTitlesOf）缺失，
-// 所以这里一次性加载合并包；Deno 那边给的是 br 压缩 + 一天强缓存，第二次打开是秒开。
-const inject = '<script src="' + bundleUrl + '"></script>\n';
+// 单文件放本域（Surge）：Deno 免费额度会被大包流量打爆，不能把 JS 挂过去。
+const inject = '<script src="js/bundle.js?v=' + marker + '"></script>\n';
 
 const newHtml = html.slice(0, firstIdx) + inject + html.slice(lastEnd);
 fs.writeFileSync(path.join(outDir, 'index.html'), newHtml, 'utf8');
@@ -118,7 +114,7 @@ console.log(
 
 // 清掉输出目录里已经不需要的零散 js，减小上传体积
 if (!keepOriginals) {
-  const keep = [];
+  const keep = [path.join(jsDir, 'bundle.js')];
   let removed = 0;
   (function walk(dir) {
     for (const name of fs.readdirSync(dir)) {
