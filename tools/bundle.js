@@ -92,17 +92,20 @@ contentParts.push(
 
 const jsDir = path.join(outDir, 'js');
 fs.mkdirSync(jsDir, { recursive: true });
-fs.writeFileSync(path.join(jsDir, 'bundle-core.js'), coreParts.join('\n;\n'), 'utf8');
+// 首屏包也不写进 dist：由 Deno 域名提供（见下方 coreUrl）
 // 内容包不写进 dist：由 Deno 域名提供（见下方 contentUrl）
 
-/* 内容包体积大（3.4 MB），不放 Surge（上传慢、CDN 更慢），改由 Deno 后端域名托管；
-   经典 script 允许跨域加载，所以直接 <script src> 引过去即可。
+/* JS 全部放 Deno 域名：
+   - Surge 的上传/CDN 经常把 300KB 的包传成半截，页面直接白掉（这是「照明数据没了」的真因）；
+   - Deno 那边同时给 br/gzip 压缩，实测首屏包 90KB，一次请求就到。
+   经典 script 允许跨域加载，所以 <script src> 直接引过去即可。
    需要换地址时设环境变量 CONTENT_BASE。 */
-const contentBase = (process.env.CONTENT_BASE || 'https://challenge-cup-web.hangee-ai.deno.net').replace(/\/+$/, '');
-const contentUrl = contentBase + '/js/bundle-content.js?v=' + marker;
+const assetBase = (process.env.CONTENT_BASE || 'https://challenge-cup-web.hangee-ai.deno.net').replace(/\/+$/, '');
+const coreUrl = assetBase + '/js/bundle-core.js?v=' + marker;
+const contentUrl = assetBase + '/js/bundle-content.js?v=' + marker;
 
 const inject =
-  '<script src="js/bundle-core.js?v=' + marker + '"></script>\n' +
+  '<script src="' + coreUrl + '"></script>\n' +
   '<script>\n' +
   '(function(){function load(){var s=document.createElement("script");' +
   's.src="' + contentUrl + '";s.async=true;document.body.appendChild(s);}\n' +
@@ -120,7 +123,7 @@ console.log(
 
 // 清掉输出目录里已经不需要的零散 js，减小上传体积
 if (!keepOriginals) {
-  const keep = [path.join(jsDir, 'bundle-core.js'), path.join(jsDir, 'bundle-content.js')];
+  const keep = [];
   let removed = 0;
   (function walk(dir) {
     for (const name of fs.readdirSync(dir)) {
