@@ -1,10 +1,11 @@
 {
-  "name": "challenge-cup-web",
-  "main": "worker/main.js",
+  "name": "yinlu",
+  "pages_build_output_dir": "dist-cf",
   "compatibility_date": "2026-10-01",
-  "assets": {
-    "directory": "./dist-cf",
-    "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
-  }
+  "kv_namespaces": [
+    {
+      "binding": "YINLU_KV",
+      "id": "976dcc257b3f46bfbdff9dc6808c703b"
+    }
+  ]
 }

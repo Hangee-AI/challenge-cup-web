@@ -1,21 +1,17 @@
 /* ============================================================
  * 后端地址配置（唯一需要改的地方）
  * ------------------------------------------------------------
- * 前端是静态站（guoguan.surge.sh），账号/打卡/照明/小引这些接口跑在
- * 另一台公网后端上，这里填后端的公网地址（末尾不要带 /）。
+ * 前端和接口现在都在 Cloudflare Pages 上（同一个域名，无需跨域）：
+ *   站点 + 接口：https://yinlu.pages.dev
+ *   接口源码：functions/api/[[path]].js，数据存 Workers KV
  *
- * 当前后端：Deno Deploy（常驻，不依赖任何人开机）
- *   源码在 deno/main.ts，数据库是 Deno KV
- *   地址不会变；换机器/换平台时才需要改这里
+ * 本机打开（localhost / 127.0.0.1 / 双击 index.html）时自动走同源或本地模式，
+ * 不会调用这个公网地址，所以本地开发不受影响。
  *
- * 说明：
- *  - 本机打开（localhost / 127.0.0.1 / 双击 index.html）时自动走同源或本地模式，
- *    不会调用这个公网地址，所以本地开发不受影响。
- *  - 访问者也可以在自己的浏览器里临时指定：
- *    localStorage.setItem('yl_api_base', 'https://...')
- *    （优先级：本文件 > localStorage > 同源）
+ * 访问者也可以在浏览器里临时指定：
+ *   localStorage.setItem('yl_api_base', 'https://...')
  * ============================================================ */
 
-window.YL_API_BASE = 'https://conversion-pumps-flat-exams.trycloudflare.com';
+window.YL_API_BASE = 'https://yinlu.pages.dev';
 
-// ci-marker: 2026-10-23-tunnel
+// ci-marker: 2026-10-23-pages
