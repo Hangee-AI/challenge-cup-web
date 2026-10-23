@@ -76,7 +76,7 @@
         ],
         doc: { lead: '这一章是科学计算的日常工具。', sections: [
           { id: 'k1', title: '直接法', html: `<p>高斯消元与列主元；LU/Cholesky 分解；条件数刻画解对扰动的敏感性。</p>` },
-          { id: 'k2', title: '迭代法', html: `<ul><li>Jacobi、Gauss-Seidel、SOR。</li><li>收敛判定：迭代矩阵谱半径 < 1；对角占优是常用充分条件。</li></ul>` }
+          { id: 'k2', title: '迭代法', html: `<ul><li>Jacobi、Gauss-Seidel、SOR。</li><li>收敛判定：迭代矩阵谱半径 &lt; 1；对角占优是常用充分条件。</li></ul>` }
         ], refs: [REFS.moe] } }
     ],
     '操作系统': [
