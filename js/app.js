@@ -1753,9 +1753,11 @@
 
   /* ---------------- 事件绑定 ---------------- */
   document.addEventListener('click', function (e) {
+    if (!e.target.closest('#siteNav')) closeNavMenu();
     var go = e.target.closest('[data-go]');
     if (go) {
       e.preventDefault();
+      closeNavMenu();
       var target = go.getAttribute('data-go');
       if (target === 'pickFirst') target = state.majorId ? 'major' : 'browse';
       show(target);
@@ -1894,11 +1896,30 @@
     var ico = $('layoutIco'), txt = $('layoutText');
     if (ico) ico.textContent = state.layout === 'mobile' ? '📱' : state.layout === 'desktop' ? '💻' : '🖥️';
     if (txt) txt.textContent = state.layout === 'mobile' ? '手机版' : state.layout === 'desktop' ? '电脑版' : '版式';
+    syncNavMode();
   }
   function cycleLayout() {
     state.layout = state.layout === 'auto' ? 'mobile' : state.layout === 'mobile' ? 'desktop' : 'auto';
     save(); applyLayout();
     toast(state.layout === 'mobile' ? '已切换到手机版' : state.layout === 'desktop' ? '已切换到电脑版' : '已恢复自动版式');
+  }
+
+  /* ---------------- 手机版导航：三横杠菜单 ---------------- */
+  function closeNavMenu() {
+    var nav = $('siteNav');
+    if (nav) nav.classList.remove('is-open');
+    var btn = $('navToggle');
+    if (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-label', '打开菜单');
+    }
+  }
+  function syncNavMode() {
+    var nav = $('siteNav');
+    if (!nav) return;
+    var on = isMobileView();
+    nav.classList.toggle('nav-mobile', on);
+    if (!on) closeNavMenu();
   }
 
   /* ---------------- 学习时长 ---------------- */
@@ -2296,6 +2317,19 @@
   $('themeBtn').addEventListener('click', toggleTheme);
   if ($('themeBtn2')) $('themeBtn2').addEventListener('click', toggleTheme);
   if ($('layoutBtn')) $('layoutBtn').addEventListener('click', cycleLayout);
+  if ($('navToggle')) {
+    $('navToggle').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var nav = $('siteNav');
+      var open = nav.classList.toggle('is-open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+      this.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+    });
+  }
+  window.addEventListener('resize', syncNavMode);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeNavMenu();
+  });
   $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
   $('quoteNext').addEventListener('click', showQuote);
   if ($('homeCheckinBtn')) $('homeCheckinBtn').addEventListener('click', checkIn);

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -10,33 +10,38 @@
 <body>
 
 <!-- ==================== 顶部导航 ==================== -->
-<header class="nav">
+<header class="nav" id="siteNav">
   <a class="brand" href="#" data-go="home">
     <span class="brand-mark">引</span>
     <span class="brand-name">引路</span>
     <span class="brand-sub">大学新生学习导航</span>
   </a>
-  <nav class="nav-links" id="navLinks">
-    <a href="#" data-go="home">首页</a>
-    <a href="#" data-go="major" id="navPath" hidden>我的路径</a>
-    <a href="#" data-go="subjects" id="navMap" hidden>闯关地图</a>
-    <a href="#" data-go="report">学习报告</a>
-  </nav>
-  <div class="nav-right">
-    <span class="nav-major" id="navMajor" hidden></span>
-    <button class="theme-btn" id="layoutBtn" type="button" title="切换手机 / 电脑版式（自动 → 手机版 → 电脑版循环）">
-      <span class="theme-ico" id="layoutIco">🖥️</span><span id="layoutText">版式</span>
-    </button>
-    <button class="theme-btn" id="themeBtn" type="button" title="切换主题">
-      <span class="theme-ico" id="themeIco">🌙</span><span id="themeText">夜猫</span>
-    </button>
-    <a class="nav-me" href="#" data-go="profile" id="navMe">
-      <span class="nav-me-avatar" id="navMeAvatar">👤</span>
-      <span class="nav-me-name" id="navMeName">登录</span>
-    </a>
-    <a class="btn btn-primary btn-sm" href="#" data-go="browse" id="navPick">选专业</a>
-    <button class="btn btn-ghost btn-sm" id="reselectBtn" hidden>重新选择</button>
+  <div class="nav-menu" id="navMenu">
+    <nav class="nav-links" id="navLinks">
+      <a href="#" data-go="home">首页</a>
+      <a href="#" data-go="major" id="navPath" hidden>我的路径</a>
+      <a href="#" data-go="subjects" id="navMap" hidden>闯关地图</a>
+      <a href="#" data-go="report">学习报告</a>
+    </nav>
+    <div class="nav-right">
+      <span class="nav-major" id="navMajor" hidden></span>
+      <button class="theme-btn" id="layoutBtn" type="button" title="切换手机 / 电脑版式（自动 → 手机版 → 电脑版循环）">
+        <span class="theme-ico" id="layoutIco">🖥️</span><span id="layoutText">版式</span>
+      </button>
+      <button class="theme-btn" id="themeBtn" type="button" title="切换主题">
+        <span class="theme-ico" id="themeIco">🌙</span><span id="themeText">夜猫</span>
+      </button>
+      <a class="nav-me" href="#" data-go="profile" id="navMe">
+        <span class="nav-me-avatar" id="navMeAvatar">👤</span>
+        <span class="nav-me-name" id="navMeName">登录</span>
+      </a>
+      <a class="btn btn-primary btn-sm" href="#" data-go="browse" id="navPick">选专业</a>
+      <button class="btn btn-ghost btn-sm" id="reselectBtn" hidden>重新选择</button>
+    </div>
   </div>
+  <button class="nav-toggle" id="navToggle" type="button" aria-label="打开菜单" aria-controls="navMenu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <main id="main">
