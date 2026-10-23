@@ -1,7 +1,7 @@
 /* ==========================================================
    pet.js · 学习搭子「小引」（桌面宠物挂件）
    ----------------------------------------------------------
-   - 右下角一只猫头鹰：可拖动、会上下浮动、隔一会儿冒一句话
+   - 右下角一只小引（SVG 小玩偶）：可拖动、会上下浮动、隔一会儿冒一句话
    - 点它打开对话框，回答由后端 /api/chat 转给 DeepSeek
    - 没配 Key / 断网 / 静态站连不上后端时，自动退回「本地兜底回答」，
      页面照样能用，不会白屏
@@ -142,6 +142,8 @@
       '<svg class="pet-svg" viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">' +
       '<ellipse class="pet-foot" cx="38" cy="87" rx="10" ry="6"/>' +
       '<ellipse class="pet-foot" cx="62" cy="87" rx="10" ry="6"/>' +
+      '<ellipse class="pet-arm" cx="13" cy="58" rx="7.5" ry="12"/>' +
+      '<ellipse class="pet-arm" cx="87" cy="58" rx="7.5" ry="12"/>' +
       '<ellipse class="pet-body-shape" cx="50" cy="54" rx="35" ry="33"/>' +
       '<ellipse class="pet-belly" cx="50" cy="60" rx="22" ry="20"/>' +
       '<circle class="pet-blush" cx="29" cy="61" r="6"/>' +
@@ -211,6 +213,7 @@
       if (e.detail > 1) return;   // 双击不触发
       if (justDragged) { justDragged = false; return; }   // 刚拖完不触发
       petReact();                 // 点一下 = 蹦一下 + 撒爱心 + 冒一句可爱的话
+      if (el.panel.hidden) setMin(false);   // 关着的时候点一下直接弹出聊天框
     });
     // 点气泡就能打开聊天框
     el.bubble.addEventListener('click', function () {
@@ -229,7 +232,7 @@
 
     dragify();
     restorePos();
-    addMsg('ai', '我是小引，这只猫头鹰会跟着你。哪一关卡了就直接问我。');
+    addMsg('ai', '我是小引，你的学习搭子小玩偶～点我就能聊天，哪一关卡了直接问我。');
     setTimeout(function () { checkStatus(); }, 1200);
     scheduleTip(6000);
   }
@@ -239,6 +242,7 @@
     el.panel.hidden = !!min;
     hideBubble();
     el.wrap.classList.toggle('is-open', !min);
+    if (!min) setTimeout(clampPos, 0);   // 打开后把整体（含聊天框）收进屏幕内
   }
 
   function toggle() {
@@ -310,42 +314,69 @@
     }
   }
 
-  /* 拖动：按住猫头鹰可以拖着走，位置记在本地 */
+  /* 把挂件整体收回屏幕内（含聊天框打开后的高度） */
+  function clampPos() {
+    var w = el.wrap.offsetWidth || 100;
+    var h = el.wrap.offsetHeight || 100;
+    var r = el.wrap.getBoundingClientRect();
+    var left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left));
+    var top = Math.max(8, Math.min(window.innerHeight - h - 8, r.top));
+    el.wrap.style.left = left + 'px';
+    el.wrap.style.top = top + 'px';
+    el.wrap.style.right = 'auto';
+    el.wrap.style.bottom = 'auto';
+  }
+
+  /* 拖动：按住小引或聊天框标题栏都能拖着走，位置记在本地 */
   function dragify() {
     var dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    var head = el.panel.querySelector('.pet-head');
+    var handles = [el.body, head];
 
-    el.body.addEventListener('pointerdown', function (e) {
+    function onDown(e) {
+      if (e.target && e.target.closest && e.target.closest('.pet-x')) return;   // 关闭按钮不当拖把手
       dragging = true; moved = false; justDragged = false;
       sx = e.clientX; sy = e.clientY;
       var r = el.wrap.getBoundingClientRect();
       ox = r.left; oy = r.top;
-      el.body.classList.add('is-drag');
-      try { el.body.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-    });
+      handles.forEach(function (h) { if (h) h.classList.add('is-drag'); });
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    }
 
-    el.body.addEventListener('pointermove', function (e) {
+    function onMove(e) {
       if (!dragging) return;
       var dx = e.clientX - sx, dy = e.clientY - sy;
       if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
       if (!moved) return;
-      var left = Math.max(8, Math.min(window.innerWidth - 80, ox + dx));
-      var top = Math.max(8, Math.min(window.innerHeight - 80, oy + dy));
+      var w = el.wrap.offsetWidth || 100;
+      var h = el.wrap.offsetHeight || 100;
+      var left = Math.max(8, Math.min(window.innerWidth - w - 8, ox + dx));
+      var top = Math.max(8, Math.min(window.innerHeight - h - 8, oy + dy));
       el.wrap.style.left = left + 'px';
       el.wrap.style.top = top + 'px';
       el.wrap.style.right = 'auto';
       el.wrap.style.bottom = 'auto';
-    });
+      e.preventDefault();
+    }
 
-    el.body.addEventListener('pointerup', function (e) {
+    function onUp(e) {
       if (!dragging) return;
       dragging = false;
-      el.body.classList.remove('is-drag');
-      try { el.body.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      handles.forEach(function (h) { if (h) h.classList.remove('is-drag'); });
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
       if (moved) {
         justDragged = true;
         var r = el.wrap.getBoundingClientRect();
         setStore(K_POS, JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) }));
       }
+    }
+
+    handles.forEach(function (h) {
+      if (!h) return;
+      h.addEventListener('pointerdown', onDown);
+      h.addEventListener('pointermove', onMove);
+      h.addEventListener('pointerup', onUp);
+      h.addEventListener('pointercancel', onUp);
     });
   }
 
@@ -355,10 +386,11 @@
     try {
       var p = JSON.parse(raw);
       if (typeof p.left === 'number' && typeof p.top === 'number') {
-        el.wrap.style.left = Math.max(8, Math.min(window.innerWidth - 80, p.left)) + 'px';
-        el.wrap.style.top = Math.max(8, Math.min(window.innerHeight - 80, p.top)) + 'px';
+        el.wrap.style.left = p.left + 'px';
+        el.wrap.style.top = p.top + 'px';
         el.wrap.style.right = 'auto';
         el.wrap.style.bottom = 'auto';
+        clampPos();
       }
     } catch (e) { /* ignore */ }
   }
