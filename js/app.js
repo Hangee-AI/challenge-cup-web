@@ -843,13 +843,17 @@
     var major = path.major;
     var level = found.level;
 
+    // 选择本关对应的视频课程（高数/数分 → 宋浩高数，其余 → C 语言）
+    var vc = (typeof pickVideoCourse === 'function') ? pickVideoCourse(major, level, found) : VIDEO_LIBS.cs;
+    CUR_VC = vc;
+
     $('vCrumb').textContent = found.stage.title + ' / ' + found.module.name;
     $('vTitle').textContent = level.name;
     renderSyncBox($('videoSync'), level);
     $('videoStartQuiz').hidden = !(level.questions && level.questions.length);
 
-    // 没有按关卡细分集的专业：用本专业的零基础课程兜底（VIDEO_COURSES）
-    if (!VIDEO_MAP[level.id] && major.video) {
+    // 没有按关卡细分集的专业：用本专业的零基础课程兜底（major.video）
+    if (vc.id === 'cs' && !VIDEO_MAP[level.id] && major.video) {
       $('vSideTitle').textContent = major.video.title;
       $('vSideSub').textContent = '本专业推荐课程 · 暂未按关卡细分';
       $('vSideNow').textContent = '';
@@ -886,14 +890,17 @@
       return;
     }
 
+    // 换了课程（比如从 C 语言换到高数）：上一次看的集数作废，回到本关起点
+    if (renderVideo._vcId !== vc.id) { state.videoPage = null; renderVideo._vcId = vc.id; }
+
     var v = getVideo(level.id);
     var pages = videoPagesOf(level.id);
     var page = state.videoPage || firstVideoPage(level.id);
     state.videoPage = page;
 
-    $('vSideTitle').textContent = BV_TITLE;
-    $('vSideSub').textContent = '共 ' + BV_TOTAL + ' 集 · 约 26.5 小时';
-    $('vSideNow').textContent = '正在播放 P' + page + ' / ' + BV_TOTAL;
+    $('vSideTitle').textContent = vc.title;
+    $('vSideSub').textContent = vc.subtitle || ('共 ' + vc.total + ' 集');
+    $('vSideNow').textContent = '正在播放 P' + page + ' / ' + vc.total;
     renderVideoNav(level.id, page);
 
     $('vLead').textContent = v.note || '';

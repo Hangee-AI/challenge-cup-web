@@ -184,20 +184,7 @@ var BV_CHAPTERS = [
   ['文件-09-练习-拷贝文件',581]
 ];
 
-/* 章节分组：标题形如「流程控制语句-03-if的第二种格式」，取第一个 '-' 前面当章节名 */
-function bvSections() {
-  var out = [];
-  BV_CHAPTERS.forEach(function (ch, i) {
-    var name = String(ch[0]).split('-')[0];
-    var last = out[out.length - 1];
-    if (!last || last.name !== name) {
-      out.push({ name: name, from: i + 1, to: i + 1 });
-    } else {
-      last.to = i + 1;
-    }
-  });
-  return out;
-}
+/* 章节分组逻辑已移到文件末尾的 bvSections()（支持多课程） */
 
 /* 关卡 → 对应分集。main 是本关必看，extra 是想深挖再看 */
 var VIDEO_MAP = {
@@ -244,32 +231,79 @@ var VIDEO_DEFAULT = {
   extra: []
 };
 
+/* ============================================================
+   多课程支持
+   ------------------------------------------------------------
+   - VIDEO_LIBS.cs：CS 的 C 语言课程（本文件上面的全部数据）
+   - 其他课程（如宋浩高数）在各自的 js 文件里注册成同样结构：
+     { id, bvId, title, subtitle, total, url, chapters, sections, map, def }
+     sections 为 null 时按标题前缀自动分组。
+   - CUR_VC 是「当前正在渲染的课程」，由 app.js 的 renderVideo
+     通过 pickVideoCourse() 选择并赋值。
+   （注意：data.js 里已有 const VIDEO_COURSES（专业兜底课程表），
+    这里不能再叫这个名字，否则整文件报 SyntaxError。）
+   ============================================================ */
+var VIDEO_LIBS = {
+  cs: {
+    id: 'cs',
+    bvId: BV_ID,
+    title: BV_TITLE,
+    subtitle: '共 ' + BV_TOTAL + ' 集 · 约 26.5 小时',
+    total: BV_TOTAL,
+    url: BV_URL,
+    chapters: BV_CHAPTERS,
+    sections: null,
+    map: VIDEO_MAP,
+    def: VIDEO_DEFAULT
+  }
+};
+
+var CUR_VC = VIDEO_LIBS.cs;
+
 function getVideo(levelId) {
-  return VIDEO_MAP[levelId] || VIDEO_DEFAULT;
+  var c = CUR_VC || VIDEO_LIBS.cs;
+  if (c.getFor) return c.getFor(levelId);
+  return c.map[levelId] || c.def;
 }
 
 /* 播放器地址 */
 function bvPlayerUrl(page) {
-  return 'https://player.bilibili.com/player.html?bvid=' + BV_ID +
+  return 'https://player.bilibili.com/player.html?bvid=' + CUR_VC.bvId +
     '&page=' + page + '&autoplay=0&high_quality=1&danmaku=0&t=0';
 }
 
 /* 某一集在 B 站的跳转地址 */
 function bvPageUrl(page) {
-  return BV_URL + '?p=' + page;
+  return CUR_VC.url + '?p=' + page;
 }
 
 function bvTitle(page) {
-  var ch = BV_CHAPTERS[page - 1];
+  var ch = CUR_VC.chapters[page - 1];
   return ch ? ch[0] : '';
 }
 
 function bvDuration(page) {
-  var ch = BV_CHAPTERS[page - 1];
+  var ch = CUR_VC.chapters[page - 1];
   if (!ch) return '';
   var m = Math.floor(ch[1] / 60);
   var s = ch[1] % 60;
   return m + ':' + (s < 10 ? '0' + s : s);
+}
+
+/* 章节分组：课程自带 sections 就直接用；否则按标题前缀自动分组 */
+function bvSections() {
+  if (CUR_VC.sections) return CUR_VC.sections;
+  var out = [];
+  CUR_VC.chapters.forEach(function (ch, i) {
+    var name = String(ch[0]).split('-')[0];
+    var last = out[out.length - 1];
+    if (!last || last.name !== name) {
+      out.push({ name: name, from: i + 1, to: i + 1 });
+    } else {
+      last.to = i + 1;
+    }
+  });
+  return out;
 }
 
 /* 把任意 B 站链接转成官方播放器 iframe 地址（给 VIDEO_COURSES 里那些单门课程用） */
