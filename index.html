@@ -1,42 +1,48 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>引路 · 大学新生专业学习导航</title>
   <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
-  <link rel="stylesheet" href="css/style.css?v=20261024c" />
+  <link rel="stylesheet" href="css/style.css?v=20261027a" />
 </head>
 <body>
 
 <!-- ==================== 顶部导航 ==================== -->
-<header class="nav">
+<header class="nav" id="siteNav">
   <a class="brand" href="#" data-go="home">
     <span class="brand-mark">引</span>
     <span class="brand-name">引路</span>
     <span class="brand-sub">大学新生学习导航</span>
   </a>
-  <nav class="nav-links" id="navLinks">
-    <a href="#" data-go="home">首页</a>
-    <a href="#" data-go="major" id="navPath" hidden>我的路径</a>
-    <a href="#" data-go="subjects" id="navMap" hidden>闯关地图</a>
-    <a href="#" data-go="report">学习报告</a>
-  </nav>
-  <div class="nav-right">
-    <span class="nav-major" id="navMajor" hidden></span>
-    <button class="theme-btn" id="layoutBtn" type="button" title="切换手机 / 电脑版式（自动 → 手机版 → 电脑版循环）">
-      <span class="theme-ico" id="layoutIco">🖥️</span><span id="layoutText">版式</span>
-    </button>
-    <button class="theme-btn" id="themeBtn" type="button" title="切换主题">
-      <span class="theme-ico" id="themeIco">🌙</span><span id="themeText">夜猫</span>
-    </button>
-    <a class="nav-me" href="#" data-go="profile" id="navMe">
-      <span class="nav-me-avatar" id="navMeAvatar">👤</span>
-      <span class="nav-me-name" id="navMeName">登录</span>
-    </a>
-    <a class="btn btn-primary btn-sm" href="#" data-go="browse" id="navPick">选专业</a>
-    <button class="btn btn-ghost btn-sm" id="reselectBtn" hidden>重新选择</button>
+  <div class="nav-menu" id="navMenu">
+    <nav class="nav-links" id="navLinks">
+      <a href="#" data-go="home">首页</a>
+      <a href="#" data-go="major" id="navPath" hidden>我的路径</a>
+      <a href="#" data-go="subjects" id="navMap" hidden>闯关地图</a>
+      <a href="#" data-go="report">学习报告</a>
+      <a href="#" data-go="mistakes">错题集</a>
+    </nav>
+    <div class="nav-right">
+      <span class="nav-major" id="navMajor" hidden></span>
+      <button class="theme-btn" id="layoutBtn" type="button" title="切换手机 / 电脑版式（自动 → 手机版 → 电脑版循环）">
+        <span class="theme-ico" id="layoutIco">🖥️</span><span id="layoutText">版式</span>
+      </button>
+      <button class="theme-btn" id="themeBtn" type="button" title="切换主题">
+        <span class="theme-ico" id="themeIco">🌙</span><span id="themeText">夜猫</span>
+      </button>
+      <a class="nav-me" href="#" data-go="profile" id="navMe">
+        <span class="nav-me-avatar" id="navMeAvatar">👤</span>
+        <span class="nav-me-name" id="navMeName">登录</span>
+      </a>
+      <a class="btn btn-primary btn-sm" href="#" data-go="browse" id="navPick">选专业</a>
+      <button class="btn btn-ghost btn-sm" id="reselectBtn" hidden>重新选择</button>
+    </div>
   </div>
+  <button class="nav-toggle" id="navToggle" type="button" aria-label="打开菜单" aria-controls="navMenu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <main id="main">
@@ -73,6 +79,18 @@
           <p class="quote-text" id="homeQuote">慢慢来，比较快。</p>
           <button class="quote-next" type="button" id="quoteNext">换一句 ↻</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 搜索框 -->
+    <div class="section search-section">
+      <div class="search-wrap">
+        <div class="search-box">
+          <span class="search-ico">🔍</span>
+          <input type="text" id="homeSearch" class="search-input" placeholder="搜索专业、课程或关键词（如：计算机、C语言、数据结构）" autocomplete="off" />
+          <button class="search-clear" id="searchClear" type="button" hidden>✕</button>
+        </div>
+        <div class="search-results" id="searchResults" hidden></div>
       </div>
     </div>
 
@@ -342,12 +360,18 @@
 
       <aside class="doc-side fold">
         <a class="back" href="#" id="docBack">← 返回路径</a>
-        <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+        <div class="doc-side-head">
+          <div class="doc-side-title" id="docSideTitle">计算机科学与技术</div>
+          <button class="doc-side-hide" id="docSideHide" type="button" title="收起目录" aria-label="收起目录">⟨</button>
+        </div>
         <div class="doc-side-sub" id="docSideSub"></div>
         <button class="doc-fold-btn" type="button" data-fold aria-expanded="false">
           <span>📚 课程目录</span><span class="fold-arrow" aria-hidden="true">▾</span>
         </button>
         <nav class="doc-nav" id="docNav"></nav>
+        <button class="doc-side-show" id="docSideShow" type="button" title="展开目录" aria-label="展开目录">
+          <span class="doc-side-show-icon" aria-hidden="true">📚</span><span>目录</span>
+        </button>
       </aside>
 
       <article class="doc-main">
@@ -510,6 +534,24 @@
       <button class="btn btn-danger" id="resetBtn">重置全部进度</button>
     </div>
   </section>
+
+  <!-- ==================== 7.5 错题集 ==================== -->
+  <section id="view-mistakes" class="view" hidden>
+    <div class="page-head">
+      <a class="back" href="#" data-go="report">← 学习报告</a>
+      <h1>错题集</h1>
+      <p id="mistakesSub">答错的题会自动收进来，按学科整理，并给出同章节的同类题；之后再答对会自动移出。共 <b id="mistakesCount">0</b> 道。</p>
+    </div>
+    <div class="chips" id="mistakesFilters"></div>
+    <div id="mistakesBody">
+      <div id="mistakesList" class="mistakes-list"></div>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-ghost" href="#" data-go="map">回闯关地图</a>
+      <button class="btn btn-danger btn-sm" id="clearMistakesBtn">清空错题集</button>
+    </div>
+  </section>
+
       <!-- ==================== 8. 个人中心 ==================== -->
   <section id="view-profile" class="view" hidden>
     <div class="page-head">
@@ -667,7 +709,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20261024c"></script>
+<script src="js/data.js?v=20261024s"></script>
 <script src="js/course-common.js?v=20261024c"></script>
 <script src="js/docs.js?v=20261024c"></script>
 <script src="js/philosophy.js?v=20261024c"></script>
@@ -695,6 +737,7 @@
 <script src="js/philosophy-courses-more.js?v=20261024c"></script>
 <script src="js/logic-courses-more.js?v=20261024c"></script>
 <script src="js/law-courses-more2.js?v=20261024c"></script>
+<script src="js/law-falixue-docs.js?v=20261024e"></script>
 <script src="js/literature-courses-more.js?v=20261024c"></script>
 <script src="js/english-courses-more.js?v=20261024c"></script>
 <script src="js/journalism-courses-more.js?v=20261024c"></script>
@@ -712,6 +755,7 @@
 <script src="js/econ-courses-more.js?v=20261024c"></script>
 <script src="js/finance-courses.js?v=20261024c"></script>
 <script src="js/finance-courses-more.js?v=20261024c"></script>
+<script src="js/finance-courses-deep.js?v=20261024f"></script>
 <script src="js/trade-courses.js?v=20261024c"></script>
 <script src="js/trade-courses-more.js?v=20261024c"></script>
 <script src="js/fiscal-courses.js?v=20261024c"></script>
@@ -725,6 +769,9 @@
 <script src="js/edtech-courses-more.js?v=20261024c"></script>
 <script src="js/cs-intro-math.js?v=20261024c"></script>
 <script src="js/cs-math2-la.js?v=20261024c"></script>
+<script src="js/cs-courses-real.js?v=20261024k"></script>
+<script src="js/cs-courses-real2.js?v=20261024k"></script>
+<script src="js/cs-courses-real3.js?v=20261024k"></script>
 <script src="js/se-courses.js?v=20261024c"></script>
 <script src="js/se-courses-build.js?v=20261024c"></script>
 <script src="js/ee-courses.js?v=20261024c"></script>
@@ -732,10 +779,30 @@
 <script src="js/mech-courses.js?v=20261024c"></script>
 <script src="js/civil-courses.js?v=20261024c"></script>
 <script src="js/material-courses.js?v=20261024c"></script>
+<script src="js/cybersec-courses.js?v=20261024h"></script>
+<script src="js/comm-courses.js?v=20261024h"></script>
+<script src="js/measure-courses.js?v=20261024h"></script>
+<script src="js/smartmfg-courses.js?v=20261024h"></script>
+<script src="js/eee-courses.js?v=20261024h"></script>
+<script src="js/energy-courses.js?v=20261024h"></script>
+<script src="js/chemeng-courses.js?v=20261024h"></script>
+<script src="js/hydro-courses.js?v=20261024h"></script>
+<script src="js/environ-courses.js?v=20261024h"></script>
+<script src="js/bioeng-courses.js?v=20261024h"></script>
+<script src="js/pharmeng-courses.js?v=20261024h"></script>
 <script src="js/bm-courses.js?v=20261023e"></script>
 <script src="js/accounting-courses.js?v=20261023e"></script>
 <script src="js/mkt-courses.js?v=20261023f"></script>
 <script src="js/is-courses.js?v=20261023f"></script>
+<script src="js/visual-courses.js?v=20261024a"></script>
+<script src="js/envdesign-courses.js?v=20261024a"></script>
+<script src="js/envdesign-courses-more.js?v=20261024a"></script>
+<script src="js/music-courses.js?v=20261024b"></script>
+<script src="js/broadcast-courses.js?v=20261024b"></script>
+<script src="js/ai-courses.js?v=20261024c"></script>
+<script src="js/bigdata-courses.js?v=20261024c"></script>
+<script src="js/ic-courses.js?v=20261024d"></script>
+<script src="js/horticulture-courses.js?v=20261024e"></script>
 <script src="js/majors/food-courses.js?v=20261024c"></script>
 <script src="js/majors/food-courses-more.js?v=20261024c"></script>
 <script src="js/majors/clinical-medicine-courses.js?v=20261024c"></script>
@@ -763,14 +830,72 @@
 <script src="js/textbooks-chapters-p.js?v=20261024c"></script>
 <script src="js/textbooks-chapters-r.js?v=20261024c"></script>
 <script src="js/textbooks-books-q.js?v=20261024c"></script>
+<script src="js/textbooks-books-z1.js?v=20261026c"></script>
+<script src="js/textbooks-books-z2.js?v=20261026d"></script>
+<script src="js/textbooks-fin-deep.js?v=20261024f"></script>
+<script src="js/textbook-notes.js?v=20261025a"></script>
+<script src="js/textbook-notes-2.js?v=20261025b"></script>
+<script src="js/textbook-notes-3.js?v=20261025c"></script>
+<script src="js/textbook-notes-4.js?v=20261025d"></script>
+<script src="js/textbook-notes-5.js?v=20261026a"></script>
+<script src="js/textbook-notes-apply.js?v=20261025a"></script>
 <script src="js/majors/clinical-medicine-courses-more.js?v=20261024c"></script>
+<script src="js/majors/nursing-courses-more.js?v=20261024c"></script>
+<script src="js/majors/pharmacy-courses-more.js?v=20261024c"></script>
+<script src="js/majors/pharmacy-courses-more2.js?v=20261024c"></script>
+<script src="js/agriculture-courses.js?v=20261024c"></script>
+<script src="js/agriculture-courses-more.js?v=20261024c"></script>
+<script src="js/veterinary-courses.js?v=20261024g"></script>
+<script src="js/veterinary-courses-more.js?v=20261024g"></script>
+<script src="js/veterinary-courses-more2.js?v=20261024g"></script>
 <script src="js/videos.js?v=20261024c"></script>
+<script src="js/textbooks-books-s.js?v=20261024e"></script>
+<script src="js/textbooks-books-t.js?v=20261024h"></script>
+<script src="js/textbooks-books-u.js?v=20261024h"></script>
+<script src="js/textbooks-books-v.js?v=20261024i"></script>
+<script src="js/textbooks-books-w.js?v=20261024i"></script>
+<script src="js/textbooks-books-x.js?v=20261024i"></script>
+<script src="js/textbooks-books-y.js?v=20261024j"></script>
+<script src="js/textbooks-books-z.js?v=20261024j"></script>
+<script src="js/textbooks-books-aa.js?v=20261024j"></script>
+<script src="js/textbooks-books-ab.js?v=20261024n"></script>
+<script src="js/textbooks-books-ac.js?v=20261024n"></script>
+<script src="js/textbooks-books-ad.js?v=20261024n"></script>
+<script src="js/textbooks-books-ae.js?v=20261024n"></script>
+<script src="js/textbooks-books-af.js?v=20261024n"></script>
 <script src="js/code-offline.js?v=20261024c"></script>
 <script src="js/config.js?v=20261024c"></script>
 <script src="js/universities.js?v=20261024c"></script>
 <script src="js/school-pick.js?v=20261024c"></script>
-<script src="js/app.js?v=20261024c"></script>
+<script src="js/lecture-apply.js?v=20261028a"></script>
+<script src="js/accounting-lectures.js?v=20261028a"></script>
+<script src="js/visual-lectures.js?v=20261028a"></script>
+<script src="js/broadcast-lectures.js?v=20261028a"></script>
+<script src="js/ic-lectures.js?v=20261028a"></script>
+<script src="js/pad-real-biochem.js?v=20261028c"></script>
+<script src="js/pad-real-pharm.js?v=20261028d"></script>
+<script src="js/pad-real-inorg.js?v=20261028e"></script>
+<script src="js/pad-real-orgchem.js?v=20261028f"></script>
+<script src="js/pad-real-pchem.js?v=20261028g"></script>
+<script src="js/pad-real-digit.js?v=20261028h"></script>
+<script src="js/pad-real-signal.js?v=20261028h"></script>
+<script src="js/pad-real-mgmt.js?v=20261028h"></script>
+<script src="js/pad-real-botany.js?v=20261028i"></script>
+<script src="js/pad-real-stat.js?v=20261028i"></script>
+<script src="js/pad-real-ds.js?v=20261028j"></script>
+<script src="js/pad-real-paper.js?v=20261028j"></script>
+<script src="js/pad-real-clang.js?v=20261028j"></script>
+<script src="js/pad-real-math.js?v=20261028b"></script>
+<script src="js/pad-real-econ.js?v=20261028b"></script>
+<script src="js/pad-real-elec.js?v=20261028b"></script>
+<script src="js/pad-real-grad.js?v=20261028j"></script>
+<script src="js/pad-real-job.js?v=20261028j"></script>
+<script src="js/pad-real-intern.js?v=20261028j"></script>
+<script src="js/textbook-fit.js?v=20261024q"></script>
+<script src="js/docs-deepen.js?v=20261024o"></script>
+<script src="js/courses-database.js?v=20261023a"></script>
+<script src="js/app.js?v=20261026c"></script>
 <script src="js/cloud.js?v=20261024c"></script>
-<script src="js/pet.js?v=20261024c"></script>
+<script src="js/pet.js?v=20261024f"></script>
 </body>
 </html>

@@ -1,203 +1,220 @@
 /* ==========================================================
-   pet.js · 学习搭子「小引」（桌面宠物挂件）
+   pet.js · 学习搭子「小引」v3（图片版 · 圆环换装 + 海星展开）
    ----------------------------------------------------------
-   - 右下角一只猫头鹰：可拖动、会上下浮动、隔一会儿冒一句话
-   - 点它打开对话框，回答由后端 /api/chat 转给 DeepSeek
-   - 没配 Key / 断网 / 静态站连不上后端时，自动退回「本地兜底回答」，
-     页面照样能用，不会白屏
-   - 当前页面信息（专业/阶段/模块/关卡/讲解要点）会一起带给模型
-   依赖：js/app.js 暴露的 window.__YL、js/cloud.js 暴露的 window.Cloud
+   - 平时只显示一个小熊头（按时间自动白/黑，可拖动）
+   - 点头像：大熊 + 聊天框一起出现（大熊独立站在聊天框旁边，可拖）
+   - 点大熊：大熊周围圆环展开 4 个部位（肤色/眼镜/围巾/外套）
+             点某个部位后，该部位的选项沿同方向一条直线鱼骨状展开
+   - 选中的穿搭存 localStorage，刷新/下次进入保持
+   - 一段时间不聊天：说一句话 → 缩回只留小熊头
+   - 白天(6:00-18:00) / 夜里 不同鼓励语
    ========================================================== */
-
 (function () {
-  if (window.__PET_LOADED) return;
-  window.__PET_LOADED = true;
+  'use strict';
 
-  var K_POS = 'yl_pet_pos';
-  var K_MIN = 'yl_pet_min';
-  var K_TIP = 'yl_pet_tip';
+  var BASE = 'assets/pet/';
+  /* 待机用的 5 种卡通头像（用户素材图 5） */
+  var CARTOON = {
+    wave: BASE + 'cartoon-1.png',   /* 招手：白天默认 */
+    shy: BASE + 'cartoon-4.png',    /* 闭眼笑：被夸/答完 */
+    think: BASE + 'cartoon-8.png',  /* 黑色转圈：思考中 */
+    sleepy: BASE + 'cartoon-5.png', /* 犯困：夜间默认 */
+    ask: BASE + 'cartoon-7.png'     /* 疑问：等你说话 */
+  };
+  var headMood = '';
+  function setHeadMood(m) {
+    headMood = m || '';
+    if (built && el.headImg) el.headImg.src = CARTOON[headMood] || CARTOON.wave;
+  }
+  var K_LOOK = 'yl_pet_look3';
+  var K_MIN = 'yl_pet_min3';
+  var K_POS = 'yl_pet_pos3';
+  var K_BIGPOS = 'yl_pet_bigpos3_v2';
 
-  var TIPS = [
-    '今天想从哪一关开始？',
-    '卡住的时候可以点我，我陪你捋一遍。',
-    '一关 10 分钟，做完再走更稳。',
-    '不懂的概念，让我用大白话讲一遍？',
-    '先把这一关的题做完，再看下一关。',
-    '觉得自己笨的时候，往往只是还没拆小。',
-    '学不下去就先写三行代码，手感会回来。',
-    '要不要我出个小练习考考你？'
+  /* ---------------- 素材 ---------------- */
+  var SKINS = [
+    { id: 'black', name: '墨黑' },
+    { id: 'white', name: '雪白' },
+    { id: 'brown', name: '栗棕' },
+    { id: 'pink', name: '樱粉' }
+  ];
+  var GLASSES = [
+    { id: '', name: '不戴' },
+    { id: 'brown', name: '复古皮框', img: 'gl-brown.png' },
+    { id: 'purple', name: '星芒护目镜', img: 'gl-purple.png' },
+    { id: 'white', name: '白框护目镜', img: 'gl-white.png' },
+    { id: 'black', name: '黑框护目镜', img: 'gl-black.png' },
+    { id: 'blacksq', name: '黑框墨镜', img: 'gl-blacksq.png' },
+    { id: 'whitesq', name: '白框墨镜', img: 'gl-whitesq.png' }
+  ];
+  var SCARVES = [
+    { id: '', name: '不围' },
+    { id: 'black', name: '纯黑围巾', img: 'sc-black.png' },
+    { id: 'white', name: '纯白围巾', img: 'sc-white.png' },
+    { id: 'check', name: '黑白棋盘', img: 'sc-check.png' },
+    { id: 'tip', name: '白边黑巾', img: 'sc-tip.png' },
+    { id: 'neon', name: '荧光黑', img: 'sc-neon.png' }
+  ];
+  var JACKETS = [
+    { id: '', name: '不穿' },
+    { id: 'varsity', name: '红黑棒球服', img: 'jk-varsity.png' },
+    { id: 'denim', name: '牛仔拼棕', img: 'jk-denim.png' },
+    { id: 'leather', name: '黑皮夹克', img: 'jk-leather.png' },
+    { id: 'cardigan', name: '米白针织', img: 'jk-cardigan.png' }
   ];
 
-  /* 点一下宠物会冒出来的可爱碎碎念（纯前端，不调接口） */
-  var REACTS = [
-    '摸头成功！开心转圈圈～',
-    '嘿嘿，被你发现啦 🌟',
-    '今天也要加油呀！',
-    '陪你一起，就不孤单啦～',
-    '戳一下，元气 +1！',
-    '我在这儿呢，随时找我。',
-    '想知道什么？点我聊天呀～',
-    '学习累了？先伸个懒腰！',
-    '悄悄说：你比昨天厉害了。',
-    '我们一起把这关打通关！',
-    '叮～收到一份好心情 ✨',
-    '要不要听个冷笑话？点对话框问我～'
+  var DAY_TIPS = [
+    '勤奋的一天开始了，今天也要努力呀！',
+    '挑一个专业，先看清这学期该干什么。',
+    '一关十分钟，今天先来一关？',
+    '早上的脑子最好使，适合啃硬骨头。',
+    '别等有空才学，学会了才有更多空。'
   ];
-
+  var NIGHT_TIPS = [
+    '大王晚上努力奋斗时，要注意用眼哦！',
+    '夜深了，做两关就早点睡，眼睛要休息。',
+    '晚上学完记得远眺 20 秒，别硬撑。',
+    '今天已经比昨天多懂一点了，可以收工。',
+    '灯调暗一点，屏幕亮度调低一点。'
+  ];
   var CHIPS = [
-    { label: '这关重点是什么', text: '这一关的重点是什么？用三句话说。' },
-    { label: '给我一道练习', text: '根据这一关的内容，给我出一道小练习题，先别给答案。' },
-    { label: '我卡住了', text: '我卡在这一关了，给我一个提示，不要直接给答案。' },
-    { label: '讲个概念', text: '把这一关最重要的概念，用大一新生能听懂的话讲一遍。' },
-    { label: '今天学点什么', text: '我有点不知道从哪开始，给我一个今天 30 分钟能做完的安排。' }
+    { label: '这关重点是什么', text: '这关的重点是什么？用三句话讲。' },
+    { label: '给我一道练习', text: '给我出一道刚学内容的练习题，先别给答案。' },
+    { label: '我卡住了', text: '我卡住了，帮我按步骤拆开讲。' },
+    { label: '装什么环境', text: '学这个方向要装什么工具？最简单的一套。' },
+    { label: '学多久能上手', text: '大概要学多久才能自己写出小项目？' }
   ];
 
+  function isDay() { var h = new Date().getHours(); return h >= 6 && h < 18; }
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function tipList() { return isDay() ? DAY_TIPS : NIGHT_TIPS; }
+
+  /* ---------------- 状态 ---------------- */
+  var look = { skin: '', glasses: '', scarf: '', jacket: '' };
+  var built = false;
   var el = {};
-  var history = [];
+  var dragging = false, justDragged = false, dragMoved = 0;
+  var lastAct = Date.now();
   var waiting = false;
-  var ready = false;      // 后端是否配好了 Key
-  var checked = false;
-  var tipTimer = null;
-  var tipIndex = 0;
-  var justDragged = false;
+  var ringOpen = false, armCat = null;
+  var idleTimer = null;
 
-  /* ---------------- 小工具 ---------------- */
-  function apiBase() {
+  function getStore(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
+  function setStore(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+  function loadLook() {
     try {
-      if (window.Cloud && typeof window.Cloud.apiBase === 'function') return window.Cloud.apiBase() || '';
-    } catch (e) { /* ignore */ }
-    return '';
-  }
-
-  function apiUrl(p) {
-    var b = apiBase();
-    return b ? String(b).replace(/\/+$/, '') + p : p;
-  }
-
-  function getStore(k, d) {
-    try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; }
-  }
-  function setStore(k, v) {
-    try { localStorage.setItem(k, v); } catch (e) { /* ignore */ }
-  }
-
-  function viewName() {
-    var nodes = document.querySelectorAll('.view');
-    for (var i = 0; i < nodes.length; i++) {
-      if (!nodes[i].hidden) return nodes[i].id.replace('view-', '');
-    }
-    return '';
-  }
-
-  /* 当前页面上下文：给模型一点「你在哪一关」的信息 */
-  function collectContext() {
-    var out = { major: '', stage: '', module: '', level: '', view: viewName(), doc: '', topic: '' };
-    var st = (window.__YL && window.__YL.state) || {};
-    try {
-      if (st.majorId && typeof getPath === 'function') {
-        var major = (typeof getMajor === 'function') ? getMajor(st.majorId) : null;
-        if (major) out.major = major.name || '';
-        var path = getPath(st.majorId);
-        var found = (st.levelId && typeof findLevel === 'function') ? findLevel(path, st.levelId) : null;
-        if (found && found.level) {
-          out.stage = (found.stage && found.stage.title) || '';
-          out.module = (found.module && found.module.name) || '';
-          out.level = found.level.name || '';
-          if (typeof getDoc === 'function') {
-            try {
-              var d = getDoc(found.level, { major: major, module: found.module, stage: found.stage });
-              if (d && d.lead) out.doc = d.lead;
-            } catch (e) { /* ignore */ }
-          }
-          if (found.level.questions && found.level.questions[0]) {
-            out.topic = found.level.questions[0].stem || '';
-          }
+      var raw = localStorage.getItem(K_LOOK);
+      if (raw) {
+        var o = JSON.parse(raw);
+        if (o && o.skin) {
+          look = {
+            skin: o.skin,
+            glasses: o.glasses || '',
+            scarf: o.scarf || '',
+            jacket: o.jacket || ''
+          };
+          return look;
         }
       }
-    } catch (e) { /* 拿不到就算了，不影响对话 */ }
-    return out;
+    } catch (e) { }
+    look = { skin: isDay() ? 'white' : 'black', glasses: '', scarf: '', jacket: '' };
+    return look;
   }
+  function saveLook() { setStore(K_LOOK, JSON.stringify(look)); }
 
-  /* 本地兜底：没接大模型也能回答最关键的几个问题 */
-  function localAnswer(text) {
-    var c = collectContext();
-    var t = String(text || '');
-    if (/练习|出题|考考/.test(t)) {
-      if (c.topic) return '先试试这一关的第一题：' + c.topic + '\n（写完告诉我你的答案，我帮你对一对思路。）';
-      return '先去「闯关地图」点开一关，我把那关的题拿来考你。';
-    }
-    if (/重点|要点|讲什么/.test(t)) {
-      if (c.level) return '你现在看的是「' + c.level + '」。' + (c.doc ? '\n' + c.doc : '\n先把讲解里的第一段看懂，再做那 3 道题。');
-      return '先说你想学哪门课？选完专业我给你排一版路线。';
-    }
-    if (/卡|不会|不懂|难/.test(t)) {
-      return '卡住很正常。先把这一关的讲解读一遍，然后试着回答第一题；答错了我会告诉你为什么错。\n（想让我细讲，需要在服务器上配好 DeepSeek Key。）';
-    }
-    return '我还没接通大模型（服务器上缺 DeepSeek Key），现在只能回答几个基础问题：这关重点 / 给我一道练习 / 我卡住了。\n配好 Key 之后我就能正常聊天了。';
-  }
+  function findById(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+  function img(name) { return name ? BASE + name : ''; }
 
-  /* ---------------- 小引的样子（可爱 SVG 形象） ---------------- */
-  function mascotSVG() {
-    return '' +
-      '<svg class="pet-svg" viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">' +
-      '<ellipse class="pet-foot" cx="38" cy="87" rx="10" ry="6"/>' +
-      '<ellipse class="pet-foot" cx="62" cy="87" rx="10" ry="6"/>' +
-      '<ellipse class="pet-body-shape" cx="50" cy="54" rx="35" ry="33"/>' +
-      '<ellipse class="pet-belly" cx="50" cy="60" rx="22" ry="20"/>' +
-      '<circle class="pet-blush" cx="29" cy="61" r="6"/>' +
-      '<circle class="pet-blush" cx="71" cy="61" r="6"/>' +
-      '<g class="pet-eye pet-eye-l">' +
-        '<circle class="pet-eye-white" cx="38" cy="50" r="9.5"/>' +
-        '<circle class="pet-pupil" cx="39" cy="51" r="5.2"/>' +
-        '<circle class="pet-shine" cx="41" cy="48.5" r="1.9"/>' +
-      '</g>' +
-      '<g class="pet-eye pet-eye-r">' +
-        '<circle class="pet-eye-white" cx="62" cy="50" r="9.5"/>' +
-        '<circle class="pet-pupil" cx="61" cy="51" r="5.2"/>' +
-        '<circle class="pet-shine" cx="63" cy="48.5" r="1.9"/>' +
-      '</g>' +
-      '<path class="pet-mouth" d="M45 66 Q50 71 55 66"/>' +
-      '<path class="pet-sprout" d="M50 21 C50 12 43 9 39 12 C44 16 47 20 50 21 Z"/>' +
-      '<path class="pet-sprout pet-sprout2" d="M50 21 C50 12 57 9 61 12 C56 16 53 20 50 21 Z"/>' +
-      '</svg>';
-  }
-
-  /* ---------------- 渲染 ---------------- */
+  /* ---------------- 页面结构 ---------------- */
   function build() {
+    if (document.getElementById('petWrap')) { assignEls(); return; }
+
     var wrap = document.createElement('div');
     wrap.className = 'pet';
     wrap.id = 'petWrap';
+
+    var cats = [
+      { id: 'skin', name: '肤色', angle: -135 },
+      { id: 'glasses', name: '眼镜', angle: -45 },
+      { id: 'scarf', name: '围巾', angle: 45 },
+      { id: 'jacket', name: '外套', angle: 135 }
+    ];
+    var ringHtml = cats.map(function (c) {
+      return '<button class="ring-cat" type="button" data-cat="' + c.id + '" data-angle="' + c.angle +
+        '" style="--a:' + c.angle + 'deg">' + c.name + '</button>';
+    }).join('');
+
     wrap.innerHTML = [
+      /* 大熊舞台 */
+      '<div class="pet-stage" id="petStage" hidden>',
+      '  <div class="pet-dress" id="petDress">',
+      '    <img class="p-jacket" id="pJacket" alt="" />',
+      '    <img class="p-body" id="pBody" alt="" />',
+      '    <img class="p-scarf" id="pScarf" alt="" />',
+      '    <img class="p-glasses" id="pGlasses" alt="" />',
+      '  </div>',
+      '  <div class="pet-ring" id="petRing" hidden>' + ringHtml + '</div>',
+      '  <div class="pet-arm" id="petArm" hidden></div>',
+      '  <div class="pet-bigtip">点我换装</div>',
+      '</div>',
+
+      /* 只露头的小熊 */
+      '<button class="pet-head" id="petHead" type="button" aria-label="打开学习搭子小引">',
+      '  <img id="pHeadImg" alt="小引" />',
+      '</button>',
+
+      /* 气泡 */
       '<div class="pet-bubble" id="petBubble" hidden></div>',
+
+      /* 聊天框 */
       '<div class="pet-panel" id="petPanel" hidden>',
-      '  <div class="pet-head">',
-      '    <span class="pet-avatar">' + mascotSVG() + '</span>',
+      '  <div class="pet-head-row">',
+      '    <span class="pet-avatar" id="petAvatar"></span>',
       '    <div class="pet-title">小引 · 学习搭子<span class="pet-sub" id="petSub">正在连接…</span></div>',
       '    <button class="pet-x" id="petClose" type="button" aria-label="收起">✕</button>',
       '  </div>',
       '  <div class="pet-log" id="petLog"></div>',
       '  <div class="pet-chips" id="petChips"></div>',
       '  <form class="pet-inputrow" id="petForm">',
-      '    <input id="petInput" type="text" maxlength="300" placeholder="问点什么，比如：这关重点是什么" autocomplete="off" />',
+      '    <input id="petInput" type="text" maxlength="300" placeholder="问点什么，比如：这关重点是什么？" autocomplete="off" />',
       '    <button type="submit" id="petSend">发送</button>',
       '  </form>',
-      '</div>',
-      '<button class="pet-body" id="petBody" type="button" aria-label="打开学习搭子">',
-      '  ' + mascotSVG(),
-      '</button>'
+      '  <div class="pet-foot" id="petFoot">点大熊可以给我换装</div>',
+      '</div>'
     ].join('');
+
     document.body.appendChild(wrap);
+    assignEls();
 
-    el.wrap = wrap;
-    el.body = document.getElementById('petBody');
-    el.bubble = document.getElementById('petBubble');
-    el.panel = document.getElementById('petPanel');
-    el.log = document.getElementById('petLog');
-    el.chips = document.getElementById('petChips');
-    el.form = document.getElementById('petForm');
-    el.input = document.getElementById('petInput');
-    el.sub = document.getElementById('petSub');
+    el.bubble.addEventListener('click', function () { hideBubble(); });
 
+    el.head.addEventListener('click', function (e) {
+      if (justDragged) { justDragged = false; return; }
+      lastAct = Date.now();
+      if (el.panel.hidden) setMin(false); else setMin(true);
+    });
+
+    bindDrag(el.head, el.head, function () { savePos(); });
+    bindStageDrag();
+    el.stage.addEventListener('dblclick', function () { resetBigPos(); });
+
+    Array.prototype.forEach.call(wrap.querySelectorAll('.ring-cat'), function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var cat = btn.getAttribute('data-cat');
+        if (armCat === cat) { closeArm(); return; }
+        openArm(cat, parseFloat(btn.getAttribute('data-angle')));
+      });
+    });
+
+    wrap.querySelector('#petClose').addEventListener('click', function () { setMin(true); });
+    el.form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = el.input.value.trim();
+      if (!v) return;
+      el.input.value = '';
+      send(v);
+    });
     CHIPS.forEach(function (c) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -207,44 +224,404 @@
       el.chips.appendChild(b);
     });
 
-    el.body.addEventListener('click', function (e) {
-      if (e.detail > 1) return;   // 双击不触发
-      if (justDragged) { justDragged = false; return; }   // 刚拖完不触发
-      petReact();                 // 点一下 = 蹦一下 + 撒爱心 + 冒一句可爱的话
-    });
-    // 点气泡就能打开聊天框
-    el.bubble.addEventListener('click', function () {
-      hideBubble();
-      if (el.panel.hidden) setMin(false);
-    });
-    el.body.addEventListener('dblclick', function () { setMin(true); });
-    document.getElementById('petClose').addEventListener('click', function () { setMin(true); });
-    el.form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var v = el.input.value.trim();
-      if (!v) return;
-      el.input.value = '';
-      send(v);
-    });
-
-    dragify();
+    setHeadMood(isDay() ? 'wave' : 'sleepy');
+    applyLook();
     restorePos();
-    addMsg('ai', '我是小引，这只猫头鹰会跟着你。哪一关卡了就直接问我。');
-    setTimeout(function () { checkStatus(); }, 1200);
-    scheduleTip(6000);
+    scheduleTip(5000);
+    startIdleWatch();
   }
 
+  function assignEls() {
+    var wrap = document.getElementById('petWrap');
+    el.wrap = wrap;
+    el.stage = wrap.querySelector('#petStage');
+    el.dress = wrap.querySelector('#petDress');
+    el.body = wrap.querySelector('#pBody');
+    el.glasses = wrap.querySelector('#pGlasses');
+    el.scarf = wrap.querySelector('#pScarf');
+    el.jacket = wrap.querySelector('#pJacket');
+    el.ring = wrap.querySelector('#petRing');
+    el.arm = wrap.querySelector('#petArm');
+    el.head = wrap.querySelector('#petHead');
+    el.headImg = wrap.querySelector('#pHeadImg');
+    el.bubble = wrap.querySelector('#petBubble');
+    el.panel = wrap.querySelector('#petPanel');
+    el.log = wrap.querySelector('#petLog');
+    el.chips = wrap.querySelector('#petChips');
+    el.form = wrap.querySelector('#petForm');
+    el.input = wrap.querySelector('#petInput');
+    el.sub = wrap.querySelector('#petSub');
+    el.avatar = wrap.querySelector('#petAvatar');
+    built = true;
+  }
+
+  /* 让大熊站在聊天框左边 */
+  function geometry() {
+    if (!built) return;
+    var panelW = el.panel.hidden ? 0 : (el.panel.offsetWidth || 330);
+    el.stage.style.right = (panelW + 12) + 'px';
+  }
+
+  /* ---------------- 穿搭 ---------------- */
+  function applyLook() {
+    if (!built) return;
+    var skin = look.skin || (isDay() ? 'white' : 'black');
+    el.body.src = BASE + 'body-' + skin + '.png';
+    setHeadMood(headMood || (isDay() ? 'wave' : 'sleepy'));
+
+    var g = findById(GLASSES, look.glasses);
+    if (g && g.img) { el.glasses.src = img(g.img); el.glasses.hidden = false; } else { el.glasses.hidden = true; }
+
+    var s = findById(SCARVES, look.scarf);
+    if (s && s.img) { el.scarf.src = img(s.img); el.scarf.hidden = false; } else { el.scarf.hidden = true; }
+
+    var j = findById(JACKETS, look.jacket);
+    if (j && j.img) { el.jacket.src = img(j.img); el.jacket.hidden = false; } else { el.jacket.hidden = true; }
+
+    if (el.avatar) {
+      el.avatar.innerHTML = '<img src="' + (CARTOON[headMood] || CARTOON.wave) + '" alt="" />';
+    }
+  }
+
+  function thumbFor(cat, id) {
+    if (cat === 'skin') return BASE + 'head-' + id + '.png';
+    var list = cat === 'glasses' ? GLASSES : cat === 'scarf' ? SCARVES : JACKETS;
+    var it = findById(list, id);
+    return it && it.img ? img(it.img) : '';
+  }
+
+  function openArm(cat, angle) {
+    armCat = cat;
+    var list = cat === 'skin' ? SKINS : cat === 'glasses' ? GLASSES : cat === 'scarf' ? SCARVES : JACKETS;
+    var cur = look[cat] || '';
+    el.arm.hidden = false;
+    el.arm.className = 'pet-arm arm-' + cat;
+    el.arm.innerHTML = list.map(function (it, i) {
+      var t = thumbFor(cat, it.id);
+      var on = it.id === cur ? ' is-on' : '';
+      return '<button class="arm-item' + on + '" type="button" data-cat="' + cat + '" data-id="' + it.id + '" data-i="' + i + '" title="' + it.name + '">' +
+        (t ? '<img src="' + t + '" alt="" />' : '<span class="arm-none">无</span>') +
+        '</button>';
+    }).join('');
+    positionArm(cat, angle, list.length);
+
+    Array.prototype.forEach.call(el.arm.querySelectorAll('.arm-item'), function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var id = b.getAttribute('data-id');
+        look[cat] = id;
+        saveLook();
+        applyLook();
+        Array.prototype.forEach.call(el.arm.querySelectorAll('.arm-item'), function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        react();
+      });
+    });
+
+    Array.prototype.forEach.call(el.ring.querySelectorAll('.ring-cat'), function (b) {
+      b.classList.toggle('is-active', b.getAttribute('data-cat') === cat);
+    });
+  }
+
+  function positionArm(cat, angle, n) {
+    var rad = angle * Math.PI / 180;
+    var r0 = 112;   /* 圆心到分类按钮 */
+    var gap = 58;   /* 相邻选项间距 */
+    var cx = 130, cy = 150;  /* 与 CSS 里 .pet-stage 的中心一致 */
+    for (var i = 0; i < n; i++) {
+      var btn = el.arm.querySelector('.arm-item[data-i="' + i + '"]');
+      if (!btn) continue;
+      var d = r0 + 26 + i * gap;
+      btn.style.left = (cx + Math.cos(rad) * d) + 'px';
+      btn.style.top = (cy + Math.sin(rad) * d) + 'px';
+      btn.style.transitionDelay = (i * 26) + 'ms';
+    }
+  }
+
+  function closeArm() {
+    armCat = null;
+    if (el.arm) el.arm.hidden = true;
+    if (el.ring) Array.prototype.forEach.call(el.ring.querySelectorAll('.ring-cat'), function (b) { b.classList.remove('is-active'); });
+  }
+
+  /* 圆环按钮按熊身中心排一圈，自动避开聊天框和屏幕边缘 */
+  function layoutRing() {
+    if (!built || !el.ring) return;
+    var sr = el.stage.getBoundingClientRect();
+    var cx = sr.left + sr.width / 2, cy = sr.top + sr.height - 118;
+    var cats = Array.prototype.slice.call(el.ring.querySelectorAll('.ring-cat'));
+    var R = Math.min(118, Math.max(96, sr.width / 2 - 8));
+    var pts = cats.map(function (b) {
+      var a = parseFloat(b.getAttribute('data-angle') || '0') * Math.PI / 180;
+      return { b: b, x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R };
+    });
+    var minX = Math.min.apply(null, pts.map(function (o) { return o.x; }));
+    var maxX = Math.max.apply(null, pts.map(function (o) { return o.x; }));
+    var dx = 0;
+    if (minX < 34) dx = 34 - minX;
+    else if (maxX > window.innerWidth - 34) dx = (window.innerWidth - 34) - maxX;
+    pts.forEach(function (o) {
+      o.b.style.left = Math.round(o.x + dx - cx) + 'px';
+      o.b.style.top = Math.round(o.y - cy) + 'px';
+      o.b.style.transform = 'translate(-50%, -50%)';
+    });
+    var centerX = Math.round(cx + dx - sr.left), centerY = Math.round(cy - sr.top);
+    el.ring.style.left = centerX + 'px';
+    el.ring.style.top = centerY + 'px';
+  }
+  function toggleRing() {
+    ringOpen = !ringOpen;
+    el.ring.hidden = !ringOpen;
+    closeArm();
+    if (ringOpen) layoutRing();
+  }
+
+  function ringClose() {
+    if (ringOpen) { ringOpen = false; if (el.ring) el.ring.hidden = true; }
+    closeArm();
+  }
+
+  /* ---------------- 展开 / 收起 ---------------- */
   function setMin(min) {
+    if (!built) build();
+    if (!built) return;
     setStore(K_MIN, min ? '1' : '0');
     el.panel.hidden = !!min;
-    hideBubble();
+    el.stage.hidden = !!min;
+    ringClose();
+    if (!min) {
+      el.head.classList.add('is-big');
+      lastAct = Date.now();
+      geometry();
+      restoreBigPos();
+      autoGreet();
+    } else {
+      el.head.classList.remove('is-big');
+      hideBubble();
+    }
     el.wrap.classList.toggle('is-open', !min);
   }
 
-  function toggle() {
-    hideBubble();
-    if (el.panel.hidden) { setMin(false); setTimeout(function () { el.input.focus(); }, 60); }
-    else setMin(true);
+  function autoGreet() {
+    if (!el.log) return;
+    if (el.log.children.length <= 1) addMsg('ai', pick(tipList()));
+  }
+
+  function showBubble(text, ms) {
+    if (!built) return;
+    if (!text) { hideBubble(); return; }
+    el.bubble.textContent = text;
+    el.bubble.hidden = false;
+    el.bubble.classList.add('is-on');
+    clearTimeout(el.bubble._t);
+    el.bubble._t = setTimeout(function () { hideBubble(); }, ms || 6000);
+  }
+  function hideBubble() {
+    if (!built || !el.bubble) return;
+    el.bubble.classList.remove('is-on');
+    el.bubble.hidden = true;
+  }
+  function scheduleTip(delay) {
+    clearTimeout(el._tipT);
+    el._tipT = setTimeout(function () {
+      if (!built) return;
+      if (!el.panel.hidden) { scheduleTip(60000); return; }
+      showBubble(pick(tipList()), 7000);
+      scheduleTip(42000 + Math.random() * 30000);
+    }, delay || 40000);
+  }
+
+  function react() {
+    el.head.classList.remove('is-bounce');
+    void el.head.offsetWidth;
+    el.head.classList.add('is-bounce');
+    setTimeout(function () { el.head.classList.remove('is-bounce'); }, 700);
+  }
+
+
+  function saveBigPos() {
+    if (!built) return;
+    var r = el.stage.getBoundingClientRect();
+    var w = el.wrap.getBoundingClientRect();
+    setStore(K_BIGPOS, JSON.stringify({ dx: Math.round(r.left - w.left), dy: Math.round(r.top - w.top) }));
+  }
+  function restoreBigPos() {
+    var raw = getStore(K_BIGPOS, '');
+    if (!raw) return false;
+    try {
+      var p = JSON.parse(raw);
+      if (typeof p.dx !== 'number' || typeof p.dy !== 'number') return false;
+      var w = el.wrap.getBoundingClientRect();
+      var vw = document.documentElement.clientWidth || window.innerWidth;
+      var vh = document.documentElement.clientHeight || window.innerHeight;
+      var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
+      var left = Math.max(6, Math.min(vw - sw - 6, w.left + p.dx));
+      var top = Math.max(6, Math.min(vh - sh - 6, w.top + p.dy));
+      el.stage.style.left = Math.round(left - w.left) + 'px';
+      el.stage.style.top = Math.round(top - w.top) + 'px';
+      el.stage.style.right = 'auto';
+      el.stage.style.bottom = 'auto';
+      return true;
+    } catch (e) { }
+    return false;
+  }
+
+  /* 大熊单独拖拽：只移动大熊本体，聊天框/头像不动 */
+  function bindStageDrag() {
+    var startX = 0, startY = 0, ox = 0, oy = 0, active = false, moved = 0;
+    el.stage.addEventListener('pointerdown', function (e) {
+      if (e.target && e.target.closest && e.target.closest('.ring-cat, .arm-item')) return;
+      if (e.button != null && e.button !== 0) return;
+      active = true; moved = 0; justDragged = false;
+      var r = el.stage.getBoundingClientRect();
+      var wr = el.wrap.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY; ox = r.left - wr.left; oy = r.top - wr.top;
+      try { el.stage.setPointerCapture(e.pointerId); } catch (err) { }
+    });
+    el.stage.addEventListener('pointermove', function (e) {
+      if (!active) return;
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+      if (moved < 5) return;
+      justDragged = true;
+      var w = el.wrap.getBoundingClientRect();
+      var vw = document.documentElement.clientWidth || window.innerWidth;
+      var vh = document.documentElement.clientHeight || window.innerHeight;
+      var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
+      var l = Math.max(6 - w.left, Math.min(vw - sw - 6 - w.left, ox + dx));
+      var t = Math.max(6 - w.top, Math.min(vh - sh - 6 - w.top, oy + dy));
+      el.stage.style.left = Math.round(l) + 'px';
+      el.stage.style.top = Math.round(t) + 'px';
+      el.stage.style.right = 'auto';
+      el.stage.style.bottom = 'auto';
+    });
+    function end(e) {
+      if (!active) return;
+      active = false;
+      try { el.stage.releasePointerCapture(e.pointerId); } catch (err) { }
+      if (moved > 6) {
+        justDragged = true;
+        var w = el.wrap.getBoundingClientRect();
+        var vw = document.documentElement.clientWidth || window.innerWidth;
+        var vh = document.documentElement.clientHeight || window.innerHeight;
+        var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
+        var cur = el.stage.getBoundingClientRect();
+        var l = Math.max(6, Math.min(vw - sw - 6, cur.left));
+        var t = Math.max(6, Math.min(vh - sh - 6, cur.top));
+        el.stage.style.left = Math.round(l - w.left) + 'px';
+        el.stage.style.top = Math.round(t - w.top) + 'px';
+        saveBigPos();
+      }
+      else { justDragged = false; lastAct = Date.now(); toggleRing(); }
+      setTimeout(function () { justDragged = false; }, 60);
+    }
+    el.stage.addEventListener('pointerup', end);
+    el.stage.addEventListener('pointercancel', function () { active = false; });
+  }
+  /* ---------------- 拖动 ---------------- */
+  function bindDrag(handle, surface, onDragEnd, onClick) {
+    var startX = 0, startY = 0, ox = 0, oy = 0, active = false, moved = 0;
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button != null && e.button !== 0) return;
+      active = true; moved = 0; justDragged = false;
+      var r = el.wrap.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY; ox = r.left; oy = r.top;
+      try { handle.setPointerCapture(e.pointerId); } catch (err) { }
+    });
+    handle.addEventListener('pointermove', function (e) {
+      if (!active) return;
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+      if (moved < 5) return;
+      justDragged = true;
+      moveWrap(ox + dx, oy + dy);
+    });
+    function end(e) {
+      if (!active) return;
+      active = false;
+      try { handle.releasePointerCapture(e.pointerId); } catch (err) { }
+      if (moved > 6) { justDragged = true; if (onDragEnd) onDragEnd(); }
+      else { justDragged = false; if (onClick) onClick(); }
+      setTimeout(function () { justDragged = false; }, 60);
+    }
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', function () { active = false; });
+  }
+
+  function moveWrap(l, t) {
+    var w = el.wrap.offsetWidth || 300, h = el.wrap.offsetHeight || 320;
+    l = Math.max(6, Math.min(window.innerWidth - w - 6, l));
+    t = Math.max(6, Math.min(window.innerHeight - h - 6, t));
+    el.wrap.style.left = l + 'px';
+    el.wrap.style.top = t + 'px';
+    el.wrap.style.right = 'auto';
+    el.wrap.style.bottom = 'auto';
+  }
+
+  /* 双击大熊：回到默认位置（聊天框左边） */
+  function resetBigPos() {
+    setStore(K_BIGPOS, '');
+    el.stage.style.left = '';
+    el.stage.style.top = '';
+    el.stage.style.right = '';
+    el.stage.style.bottom = '';
+    geometry();
+  }
+  function clampPos() {
+    var r = el.wrap.getBoundingClientRect();
+    if (r.left < 0 || r.top < 0 || r.left + r.width > window.innerWidth || r.top + r.height > window.innerHeight) {
+      moveWrap(r.left, r.top);
+    }
+  }
+  function savePos() {
+    var r = el.wrap.getBoundingClientRect();
+    setStore(K_POS, JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) }));
+  }
+  function restorePos() {
+    var raw = getStore(K_POS, '');
+    if (!raw) return;
+    try {
+      var p = JSON.parse(raw);
+      if (typeof p.left === 'number' && typeof p.top === 'number') {
+        el.wrap.style.left = p.left + 'px';
+        el.wrap.style.top = p.top + 'px';
+        el.wrap.style.right = 'auto';
+        el.wrap.style.bottom = 'auto';
+        setTimeout(clampPos, 0);
+      }
+    } catch (e) { }
+  }
+
+  /* ---------------- AI 聊天 ---------------- */
+  function apiBase() {
+    if (window.Cloud && typeof window.Cloud.apiBase === 'function') {
+      try { return window.Cloud.apiBase() || ''; } catch (e) { }
+    }
+    return '';
+  }
+  function apiUrl(p) { return (apiBase() || '') + p; }
+
+  function ctxLine() {
+    var s = '';
+    try {
+      var st = window.__YL && window.__YL.state;
+      if (st) {
+        if (window.MAJORS) {
+          var major = window.MAJORS.filter(function (m) { return m.id === st.majorId; })[0];
+          if (major) s += '专业：' + major.name + '；';
+        }
+        if (st.levelId) s += '当前关卡：' + st.levelId + '；';
+      }
+    } catch (e) { }
+    return s;
+  }
+
+  function localAnswer(q) {
+    if (/换装|衣服|穿|围巾|眼镜/.test(q)) return '点我旁边的大熊，圆环里选肤色、眼镜、围巾、外套，选完会记住～';
+    if (/重点|怎么学|方法/.test(q)) return '先把这一关的目标说清楚：看懂什么、动手做什么。不确定就点「这关重点是什么」，我按三句话讲。';
+    if (/卡住|不会|难/.test(q)) return '卡住时先把问题缩小：哪一行报错、哪一步不懂。把报错发我，我陪你拆。';
+    if (/多久|时间/.test(q)) return '一天 10 分钟，一学期就是一门课的量。先别追进度，先别断。';
+    return '我在。你可以问这一关的重点、要装什么工具，或者告诉我卡在哪一步。';
   }
 
   function addMsg(role, text) {
@@ -256,198 +633,95 @@
     return d;
   }
 
-  var bubbleTimer = null;
-  function showBubble(text) {
-    el.bubble.textContent = text;
-    el.bubble.hidden = false;
-    el.bubble.classList.add('is-on');
-    clearTimeout(bubbleTimer);
-    bubbleTimer = setTimeout(function () { if (el.panel.hidden) hideBubble(); }, 4500);
-  }
-  function hideBubble() {
-    el.bubble.hidden = true;
-    el.bubble.classList.remove('is-on');
-  }
-
-  function scheduleTip(delay) {
-    clearTimeout(tipTimer);
-    tipTimer = setTimeout(function () {
-      if (document.visibilityState === 'visible' && el.panel.hidden) {
-        var i = Number(getStore(K_TIP, '-1'));
-        tipIndex = (i + 1 + Math.floor(Math.random() * (TIPS.length - 1))) % TIPS.length;
-        setStore(K_TIP, String(tipIndex));
-        showBubble(TIPS[tipIndex]);
-      }
-      scheduleTip(90000 + Math.random() * 60000);
-    }, delay);
-  }
-
-  /* 点一下宠物：蹦一下 + 冒一句可爱的话 + 撒小爱心（纯前端互动，不调接口） */
-  function petReact() {
-    el.body.classList.remove('is-bounce');
-    void el.body.offsetWidth;            // 重排以重启动画
-    el.body.classList.add('is-bounce');
-    if (el.panel.hidden) {
-      var line = REACTS[Math.floor(Math.random() * REACTS.length)];
-      showBubble(line);
-    }
-    spawnParticles();
-    setTimeout(function () { el.body.classList.remove('is-bounce'); }, 650);
-  }
-
-  function spawnParticles() {
-    var emojis = ['💖', '✨', '🌟', '💕', '⭐', '🍀'];
-    for (var i = 0; i < 6; i++) {
-      (function (i) {
-        var p = document.createElement('span');
-        p.className = 'pet-particle';
-        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        p.style.setProperty('--dx', (Math.random() * 36 - 18) + 'px');
-        p.style.animationDelay = (i * 55) + 'ms';
-        el.wrap.appendChild(p);
-        setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1700);
-      })(i);
-    }
-  }
-
-  /* 拖动：按住猫头鹰可以拖着走，位置记在本地 */
-  function dragify() {
-    var dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
-
-    el.body.addEventListener('pointerdown', function (e) {
-      dragging = true; moved = false; justDragged = false;
-      sx = e.clientX; sy = e.clientY;
-      var r = el.wrap.getBoundingClientRect();
-      ox = r.left; oy = r.top;
-      el.body.classList.add('is-drag');
-      try { el.body.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-    });
-
-    el.body.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
-      var dx = e.clientX - sx, dy = e.clientY - sy;
-      if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
-      if (!moved) return;
-      var left = Math.max(8, Math.min(window.innerWidth - 80, ox + dx));
-      var top = Math.max(8, Math.min(window.innerHeight - 80, oy + dy));
-      el.wrap.style.left = left + 'px';
-      el.wrap.style.top = top + 'px';
-      el.wrap.style.right = 'auto';
-      el.wrap.style.bottom = 'auto';
-    });
-
-    el.body.addEventListener('pointerup', function (e) {
-      if (!dragging) return;
-      dragging = false;
-      el.body.classList.remove('is-drag');
-      try { el.body.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-      if (moved) {
-        justDragged = true;
-        var r = el.wrap.getBoundingClientRect();
-        setStore(K_POS, JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) }));
-      }
-    });
-  }
-
-  function restorePos() {
-    var raw = getStore(K_POS, '');
-    if (!raw) return;
-    try {
-      var p = JSON.parse(raw);
-      if (typeof p.left === 'number' && typeof p.top === 'number') {
-        el.wrap.style.left = Math.max(8, Math.min(window.innerWidth - 80, p.left)) + 'px';
-        el.wrap.style.top = Math.max(8, Math.min(window.innerHeight - 80, p.top)) + 'px';
-        el.wrap.style.right = 'auto';
-        el.wrap.style.bottom = 'auto';
-      }
-    } catch (e) { /* ignore */ }
-  }
-
-  /* ---------------- 后端状态 ---------------- */
-  /* 把 nvidia/nemotron-3-super-120b-a12b:free 缩成 nemotron-3-super-120b-a12b，状态栏才放得下 */
-  function shortModel(m) {
-    var s = String(m || '');
-    if (s.indexOf(':') > -1) s = s.split(':')[0];
-    var parts = s.split('/');
-    if (parts.length > 1) s = parts[parts.length - 1];
-    return s.length > 24 ? s.slice(0, 24) + '…' : s;
-  }
-
-  function checkStatus() {
-    checked = true;
-    fetch(apiUrl('/api/chat/status'), { cache: 'no-store' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        ready = !!(j && j.ready);
-        var label = j && j.providerLabel ? j.providerLabel : '';
-        var name = shortModel(j && j.model);
-        el.sub.textContent = ready
-          ? '在线 · ' + (label ? label + ' / ' : '') + (name || 'deepseek')
-          : '只连着本地（未配大模型）';
-        el.wrap.classList.toggle('is-offline', !ready);
-      })
-      .catch(function () {
-        ready = false;
-        el.sub.textContent = '连不上后端';
-        el.wrap.classList.add('is-offline');
-      });
-  }
-
-  /* ---------------- 对话 ---------------- */
   function send(text) {
-    if (waiting) return;
-    if (el.panel.hidden) setMin(false);
-    hideBubble();
-
+    if (!built) return;
     addMsg('me', text);
-    var t = addMsg('ai', '…');
-    t.classList.add('is-typing');
+    lastAct = Date.now();
+    if (waiting) return;
     waiting = true;
-    el.wrap.classList.add('is-thinking');
-
-    if (!history.length) history.push({ role: 'assistant', content: '我是小引，学习搭子。' });
-    history.push({ role: 'user', content: text });
-    if (history.length > 8) history = history.slice(-8);
-
-    var body = { messages: history.slice(-6), context: collectContext() };
-
+    var t = addMsg('ai', '想想…');
+    setHeadMood('think');
+    t.classList.add('is-typing');
     fetch(apiUrl('/api/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ message: text, context: ctxLine() })
     }).then(function (r) {
-      return r.json().then(function (j) { return { status: r.status, j: j || {} }; });
-    }).then(function (res) {
-      var j = res.j || {};
-      if (j.ok && j.reply) {
-        t.textContent = j.reply;
-        history.push({ role: 'assistant', content: j.reply });
-      } else if (j.reason === 'login-required') {
-        t.textContent = j.hint || '先去个人中心用学号登录一下，就能跟我聊天了。';
-      } else if (j.reason === 'rate-limit' || j.reason === 'quota-day') {
-        t.textContent = j.hint || '问得有点快，等我缓一缓。';
-      } else {
-        ready = false;
-        el.sub.textContent = '只连着本地（未配大模型）';
-        t.textContent = localAnswer(text);
-      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      t.textContent = j.reply || j.text || localAnswer(text);
+      if (el.sub && j.provider) el.sub.textContent = '在线 · ' + (j.model || j.provider);
     }).catch(function () {
-      ready = false;
-      el.sub.textContent = '连不上后端';
       t.textContent = localAnswer(text);
+      if (el.sub) el.sub.textContent = '只连着本地（未接大模型）';
     }).then(function () {
       t.classList.remove('is-typing');
       waiting = false;
-      el.wrap.classList.remove('is-thinking');
       el.log.scrollTop = el.log.scrollHeight;
+      setHeadMood('shy');
+      setTimeout(function () { setHeadMood(isDay() ? 'wave' : 'sleepy'); }, 4000);
+      lastAct = Date.now();
     });
   }
 
-  /* ---------------- 起步 ---------------- */
+  function checkStatus() {
+    fetch(apiUrl('/api/chat/status')).then(function (r) { return r.json(); }).then(function (j) {
+      if (!el.sub) return;
+      if (j && j.ready) el.sub.textContent = '在线 · ' + (j.model || j.provider || 'AI');
+      else el.sub.textContent = '只连着本地（未接大模型）';
+    }).catch(function () {
+      if (el.sub) el.sub.textContent = '只连着本地';
+    });
+  }
+
+
+  /* 不定时冒一句鼓励（不打断聊天输入） */
+  var cheerTimer = null;
+  function startCheer() {
+    clearTimeout(cheerTimer);
+    (function loop() {
+      var wait = 45000 + Math.floor(Math.random() * 35000);
+      cheerTimer = setTimeout(function () {
+        try {
+          if (built && !waiting) {
+            var text = pick(tipList());
+            if (!el.bubble.hidden) { /* 已有气泡，跳过这回 */ }
+            else showBubble(text, 6000);
+          }
+        } catch (e) { }
+        loop();
+      }, wait);
+    })();
+  }
+  function startIdleWatch() {
+    clearInterval(idleTimer);
+    idleTimer = setInterval(function () {
+      if (!built) return;
+      if (!el.panel.hidden && Date.now() - lastAct > 120000) {
+        showBubble(pick(tipList()), 2600);
+        setTimeout(function () { if (!el.panel.hidden) setMin(true); }, 2600);
+      }
+    }, 15000);
+  }
+
+  /* ---------------- 启动 ---------------- */
   function boot() {
     if (!document.body) return;
+    loadLook();
     build();
-    if (getStore(K_MIN, '0') === '1') setMin(true);
+    if (!built) return;
+    applyLook();
+    if (getStore(K_MIN, '1') === '1') {
+      el.panel.hidden = true;
+      el.stage.hidden = true;
+    } else {
+      el.panel.hidden = false;
+      el.stage.hidden = false;
+      geometry();
+    }
+    restorePos();
+    checkStatus();
   }
 
   if (document.readyState === 'loading') {
@@ -460,8 +734,35 @@
   window.Pet = {
     open: function () { setMin(false); },
     close: function () { setMin(true); },
-    ask: send,
-    status: function () { return { ready: ready, checked: checked }; },
-    context: collectContext
+    ask: function (q) { setMin(false); send(q); },
+    wardrobe: function (on) { if (on) { if (!ringOpen) toggleRing(); } else ringClose(); },
+    ring: function () { toggleRing(); },
+    arm: function (cat, angle) { openArm(cat, angle || -45); },
+    look: function () { return JSON.parse(JSON.stringify(look)); },
+    setLook: function (o) {
+      if (!o) return;
+      if (o.skin) look.skin = o.skin;
+      if ('glasses' in o) look.glasses = o.glasses;
+      if ('scarf' in o) look.scarf = o.scarf;
+      if ('jacket' in o) look.jacket = o.jacket;
+      saveLook(); applyLook();
+    },
+    random: function () {
+      var g = GLASSES.filter(function (x) { return x.id; });
+      var s = SCARVES.filter(function (x) { return x.id; });
+      var j = JACKETS.filter(function (x) { return x.id; });
+      look = {
+        skin: pick(SKINS).id,
+        glasses: Math.random() < 0.75 ? pick(g).id : '',
+        scarf: Math.random() < 0.75 ? pick(s).id : '',
+        jacket: Math.random() < 0.75 ? pick(j).id : ''
+      };
+      saveLook(); applyLook();
+      return JSON.parse(JSON.stringify(look));
+    },
+    reset: function () {
+      look = { skin: isDay() ? 'white' : 'black', glasses: '', scarf: '', jacket: '' };
+      saveLook(); applyLook();
+    }
   };
 })();

@@ -59,6 +59,20 @@ fs.writeFileSync(path.join(out, 'index.html'), newHtml, 'utf8');
 // 3. 样式
 fs.copyFileSync(path.join(root, 'css', 'style.css'), path.join(out, 'css', 'style.css'));
 
+// 4. 静态资源（assets/：小引的图片、图标等）
+function copyDirSync(src, dest) {
+  if (!fs.existsSync(src)) return;
+  fs.mkdirSync(dest, { recursive: true });
+  for (const name of fs.readdirSync(src)) {
+    const s = path.join(src, name);
+    const d = path.join(dest, name);
+    const st = fs.statSync(s);
+    if (st.isDirectory()) copyDirSync(s, d);
+    else fs.copyFileSync(s, d);
+  }
+}
+copyDirSync(path.join(root, 'assets'), path.join(out, 'assets'));
+
 const size = fs.statSync(path.join(out, 'js', 'bundle.js')).size;
 console.log(
   'Cloudflare 构建完成：' + srcs.length + ' 个脚本 → dist-cf/js/bundle.js（' +

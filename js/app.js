@@ -34,7 +34,8 @@
     layout: 'auto',       // 'auto' | 'mobile' | 'desktop' 版式切换
     pendingAvatar: '',    // 云端注册时待提交的头像
     caro: 0,
-    quote: 0
+    quote: 0,
+    mistakes: []          // 错题集：见 recordMistake()，随 yinlu_v1 持久化
   };
 
   function $(id) { return document.getElementById(id); }
@@ -62,6 +63,7 @@
       state.last = data.last || null;
       state.theme = data.theme === 'night' ? 'night' : 'morning';
       state.layout = (data.layout === 'mobile' || data.layout === 'desktop') ? data.layout : 'auto';
+      state.mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
     } catch (e) { /* 忽略损坏数据 */ }
   }
   function save() {
@@ -70,14 +72,22 @@
         majorId: state.majorId, style: state.style, done: state.done,
         code: state.code, drafts: state.drafts,
         profile: state.profile, study: state.study, checkins: state.checkins,
-        last: state.last, theme: state.theme, layout: state.layout
+        last: state.last, theme: state.theme, layout: state.layout,
+        mistakes: state.mistakes
       }));
     } catch (e) { /* 隐私模式下可能不可写 */ }
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'profile', 'course'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'mistakes', 'profile', 'course'];
   var curView = 'home';
+
+  /* 离开视频页即停止播放：B 站 iframe 无跨域暂停接口，清空 src 最可靠；
+     再次进入视频页时 renderVideo() 会重新设置 src，不受影响 */
+  function stopVideo() {
+    var p = $('vPlayer');
+    if (p && p.src) p.src = '';
+  }
 
   function show(name) {
     // 需要专业身份的页面，没选专业就先回选专业
@@ -86,6 +96,7 @@
     if (name === 'video' && !state.majorId) name = 'browse';
     if (name === 'level' && !state.levelId) name = 'map';
     if (name === 'course' && !state.courseId) name = 'home';
+    if (name !== 'video') stopVideo();
     curView = name;
 
     VIEWS.forEach(function (v) {
@@ -109,6 +120,7 @@
     if (name === 'video') renderVideo();
     if (name === 'course') renderCourse();
     if (name === 'report') renderReport();
+    if (name === 'mistakes') renderMistakes();
     if (name === 'profile') { renderProfile(); renderCheckin(); }
   }
 
@@ -1259,12 +1271,14 @@
       });
     });
 
+    var desktopNav = !isMobileView();
     path.stages.forEach(function (stage, si) {
-      var group = el('div', 'doc-nav-group fold' + (si === curStage ? ' is-open' : ''));
+      var groupOpen = desktopNav || si === curStage;
+      var group = el('div', 'doc-nav-group fold' + (groupOpen ? ' is-open' : ''));
       var stageHead = el('button', 'doc-nav-stage');
       stageHead.type = 'button';
       stageHead.setAttribute('data-fold', '');
-      stageHead.setAttribute('aria-expanded', si === curStage ? 'true' : 'false');
+      stageHead.setAttribute('aria-expanded', groupOpen ? 'true' : 'false');
       stageHead.innerHTML =
         '<span class="doc-nav-stage-txt">' + stage.title + '</span>' +
         '<span class="fold-arrow" aria-hidden="true">▾</span>';
@@ -1272,7 +1286,7 @@
 
       var groupBody = el('div', 'doc-nav-group-body');
       stage.modules.forEach(function (mod, mi) {
-        var open = si === curStage && mi === curModule;
+        var open = desktopNav || (si === curStage && mi === curModule);
         var sub = el('div', 'doc-nav-sub fold' + (open ? ' is-open' : ''));
         var modHead = el('button', 'doc-nav-label');
         modHead.type = 'button';
@@ -1301,6 +1315,9 @@
       group.appendChild(groupBody);
       nav.appendChild(group);
     });
+
+    // 桌面端默认全展开（可点大标题收起）；手机端只展开当前阶段/课程
+    applyDocSideState();
 
     // 正文
     $('docCrumb').textContent = found.stage.title + ' / ' + found.module.name;
@@ -1427,6 +1444,9 @@
     });
     var ok = userChoice === serverAnswer;
     if (ok) state.levelCorrect++;
+    // 错题集：答错记入，答对自动移出（视为已掌握）
+    if (ok) removeMistakeByLevelQi(state.levelId, state.qi);
+    else recordMistake(currentLevel(), q, userChoice);
     $('feedback').hidden = false;
     $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[serverAnswer];
     $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
@@ -1496,6 +1516,185 @@
     toast('🎉 本关已点亮：' + state.levelCorrect + '/' + total + ' 题正确' +
       (found.level.code ? '，代码任务已通过' : '') + ' ' + starsText(stars));
     show(state.fromMap ? 'map' : 'major');
+  }
+
+  /* ---------------- 错题集 ----------------
+     答错的题自动收进来，按学科分组，并给出同章节的同类题。
+     数据存在 state.mistakes，随 yinlu_v1 一起持久化。 */
+  function recordMistake(found, q, wrongChoice) {
+    if (!found || !found.level || !found.level.questions) return;
+    var lv = found.level;
+    var qi = state.qi;
+    var id = lv.id + '#' + qi;
+    var major = getMajor(state.majorId);
+    var entry = {
+      id: id,
+      majorId: major ? major.id : '',
+      subject: major ? major.name : '其他',
+      stageTitle: found.stage ? found.stage.title : '',
+      moduleName: found.module ? found.module.name : '',
+      levelId: lv.id,
+      levelName: lv.name,
+      qi: qi,
+      stem: q.stem,
+      options: q.options.slice(),
+      answer: q.answer,
+      explain: q.explain,
+      wrongChoice: wrongChoice,
+      ts: Date.now()
+    };
+    // 去重：同一道题只保留一条，更新时间戳与错误选项
+    for (var i = 0; i < state.mistakes.length; i++) {
+      if (state.mistakes[i].id === id) { state.mistakes[i] = entry; save(); return; }
+    }
+    state.mistakes.push(entry);
+    save();
+  }
+  function removeMistake(id) {
+    state.mistakes = state.mistakes.filter(function (m) { return m.id !== id; });
+    save();
+  }
+  function removeMistakeByLevelQi(levelId, qi) {
+    var id = levelId + '#' + qi;
+    var before = state.mistakes.length;
+    state.mistakes = state.mistakes.filter(function (m) { return m.id !== id; });
+    if (state.mistakes.length !== before) save();
+  }
+  function clearMistakes() {
+    if (!state.mistakes.length) return;
+    state.mistakes = [];
+    save();
+  }
+  // 取同章节（同模块）的其它题作为「同类题」，优先同关卡内的其它题
+  function similarOf(m) {
+    var major = getMajor(m.majorId);
+    if (!major) return [];
+    var path = getPath(m.majorId);
+    if (!path) return [];
+    var out = [];
+    path.stages.forEach(function (st) {
+      st.modules.forEach(function (mod) {
+        if (mod.name !== m.moduleName) return;
+        (mod.levels || []).forEach(function (lv) {
+          (lv.questions || []).forEach(function (q, idx) {
+            if (lv.id === m.levelId && idx === m.qi) return;
+            out.push({
+              levelId: lv.id, levelName: lv.name,
+              stem: q.stem, options: q.options.slice(), answer: q.answer,
+              explain: q.explain,
+              sameLevel: lv.id === m.levelId
+            });
+          });
+        });
+      });
+    });
+    out.sort(function (a, b) { return (a.sameLevel === b.sameLevel) ? 0 : (a.sameLevel ? -1 : 1); });
+    return out.slice(0, 4);
+  }
+
+  function renderMistakes() {
+    var wrap = $('mistakesBody');
+    if (!wrap) return;
+    var ms = state.mistakes;
+    $('mistakesCount').textContent = ms.length;
+    if ($('clearMistakesBtn')) {
+      $('clearMistakesBtn').onclick = function () {
+        if (!state.mistakes.length) return;
+        if (confirm('确定清空整个错题集吗？此操作不可恢复。')) { clearMistakes(); renderMistakes(); }
+      };
+    }
+    if (!ms.length) {
+      $('mistakesFilters').innerHTML = '';
+      wrap.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div>' +
+        '<h2>还没有错题</h2><p>在闯关里答错的题会自动收进这里；之后再答对，就会自动移出。</p>' +
+        '<a class="btn btn-primary btn-sm" href="#" data-go="map">去闯关地图 →</a></div>';
+      return;
+    }
+    // 按学科分组，生成过滤器
+    var groups = {};
+    ms.forEach(function (m) { (groups[m.subject] = groups[m.subject] || []).push(m); });
+    var subjects = Object.keys(groups);
+    var fhtml = '<button class="chip is-on" data-subject="__all">全部 ' + ms.length + '</button>';
+    subjects.forEach(function (s) {
+      fhtml += '<button class="chip" data-subject="' + esc(s) + '">' + esc(s) + ' ' + groups[s].length + '</button>';
+    });
+    $('mistakesFilters').innerHTML = fhtml;
+    Array.prototype.forEach.call($('mistakesFilters').querySelectorAll('.chip'), function (c) {
+      c.addEventListener('click', function () {
+        Array.prototype.forEach.call($('mistakesFilters').querySelectorAll('.chip'), function (x) { x.classList.remove('is-on'); });
+        c.classList.add('is-on');
+        var key = c.getAttribute('data-subject');
+        renderMistakesList(key === '__all' ? ms : (groups[key] || []));
+      });
+    });
+    renderMistakesList(ms);
+  }
+
+  function renderMistakesList(list) {
+    var wrap = $('mistakesList');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    list.forEach(function (m) {
+      var card = el('div', 'mistake-card');
+
+      var head = el('div', 'mistake-head');
+      head.innerHTML =
+        '<span class="mistake-subject">' + esc(m.subject) + '</span>' +
+        '<span class="mistake-loc">' + esc(m.moduleName || '—') + ' · ' + esc(m.levelName || '') + '</span>' +
+        '<span class="mistake-time">' + new Date(m.ts).toLocaleDateString('zh-CN') + '</span>';
+      card.appendChild(head);
+
+      var q = el('div', 'mistake-q');
+      q.innerHTML = '<p class="mistake-stem">' + esc(m.stem) + '</p>';
+      var opts = el('div', 'mistake-opts');
+      m.options.forEach(function (opt, i) {
+        var o = el('div', 'mopt');
+        if (i === m.answer) o.classList.add('is-correct');
+        if (i === m.wrongChoice) o.classList.add('is-wrong');
+        o.innerHTML = '<span class="mopt-key">' + 'ABCD'[i] + '</span><span class="mopt-txt">' + esc(opt) + '</span>';
+        opts.appendChild(o);
+      });
+      q.appendChild(opts);
+      var exp = el('div', 'mistake-exp');
+      exp.innerHTML = '<span class="mistake-exp-label">解析</span>' + esc(m.explain || '（暂无解析）');
+      q.appendChild(exp);
+      card.appendChild(q);
+
+      // 右侧：同章节同类题
+      var aside = el('div', 'mistake-similar');
+      aside.innerHTML = '<div class="mistake-similar-title">📎 同章节 · 同类题再练</div>';
+      var sims = similarOf(m);
+      if (!sims.length) {
+        aside.innerHTML += '<p class="mistake-similar-empty">这一章暂时没有更多题可以练。</p>';
+      } else {
+        sims.forEach(function (s) {
+          var sc = el('div', 'similar-card');
+          sc.innerHTML =
+            '<div class="similar-loc">' + esc(s.levelName) + (s.sameLevel ? ' · 本关' : '') + '</div>' +
+            '<div class="similar-stem">' + esc(s.stem) + '</div>';
+          var ans = el('div', 'similar-ans', '正确答案：' + 'ABCD'[s.answer] + ' · ' + esc(s.options[s.answer]));
+          ans.hidden = true;
+          var btn = el('button', 'btn btn-ghost btn-xs', '看答案');
+          btn.addEventListener('click', function () { ans.hidden = !ans.hidden; });
+          var go = el('button', 'btn btn-primary btn-xs', '去这关练');
+          go.addEventListener('click', function () { startLevelQuiz(s.levelId, true); });
+          sc.appendChild(btn);
+          sc.appendChild(go);
+          sc.appendChild(ans);
+          aside.appendChild(sc);
+        });
+      }
+      card.appendChild(aside);
+
+      // 操作
+      var act = el('div', 'mistake-act');
+      var done = el('button', 'btn btn-ghost btn-xs', '✓ 我会了，移出');
+      done.addEventListener('click', function () { removeMistake(m.id); renderMistakes(); });
+      act.appendChild(done);
+      card.appendChild(act);
+
+      wrap.appendChild(card);
+    });
   }
 
   /* ---------------- 代码任务：运行与判题 ---------------- */
@@ -1753,9 +1952,11 @@
 
   /* ---------------- 事件绑定 ---------------- */
   document.addEventListener('click', function (e) {
+    if (!e.target.closest('#siteNav')) closeNavMenu();
     var go = e.target.closest('[data-go]');
     if (go) {
       e.preventDefault();
+      closeNavMenu();
       var target = go.getAttribute('data-go');
       if (target === 'pickFirst') target = state.majorId ? 'major' : 'browse';
       show(target);
@@ -1778,6 +1979,13 @@
     if (st) { e.preventDefault(); selectStyle(st.getAttribute('data-style')); return; }
     var sw = e.target.closest('[data-switch-style]');
     if (sw) { e.preventDefault(); switchStyle(sw.getAttribute('data-switch-style')); return; }
+    // 文档页：左侧目录整栏收起 / 展开
+    var sideToggle = e.target.closest('#docSideHide, #docSideShow');
+    if (sideToggle) {
+      e.preventDefault();
+      setDocSideMini(sideToggle.id === 'docSideHide', true);
+      return;
+    }
     // 多级折叠：阶段 / 模块 / 目录分组（必须排在 data-level 之前，否则会被关卡点击吃掉）
     var fold = e.target.closest('[data-fold]');
     if (fold) {
@@ -1881,6 +2089,23 @@
     var node = document.querySelector(sel);
     if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+  /* 文档页左侧目录：整栏收起成一条窄栏（记住状态） */
+  function setDocSideMini(mini, persist) {
+    var wrap = document.querySelector('#view-doc .doc-wrap');
+    var side = document.querySelector('#view-doc .doc-side');
+    if (!wrap || !side) return;
+    mini = !!mini && !isMobileView();
+    wrap.classList.toggle('side-mini', mini);
+    side.classList.toggle('is-mini', mini);
+    if (persist) {
+      try { localStorage.setItem('yinlu_doc_side', mini ? 'mini' : 'full'); } catch (e) {}
+    }
+  }
+  function applyDocSideState() {
+    var mini = false;
+    try { mini = localStorage.getItem('yinlu_doc_side') === 'mini'; } catch (e) {}
+    setDocSideMini(mini, false);
+  }
 
   function applyLayout() {
     var html = document.documentElement;
@@ -1894,11 +2119,31 @@
     var ico = $('layoutIco'), txt = $('layoutText');
     if (ico) ico.textContent = state.layout === 'mobile' ? '📱' : state.layout === 'desktop' ? '💻' : '🖥️';
     if (txt) txt.textContent = state.layout === 'mobile' ? '手机版' : state.layout === 'desktop' ? '电脑版' : '版式';
+    if (typeof applyDocSideState === 'function') applyDocSideState();
+    syncNavMode();
   }
   function cycleLayout() {
     state.layout = state.layout === 'auto' ? 'mobile' : state.layout === 'mobile' ? 'desktop' : 'auto';
     save(); applyLayout();
     toast(state.layout === 'mobile' ? '已切换到手机版' : state.layout === 'desktop' ? '已切换到电脑版' : '已恢复自动版式');
+  }
+
+  /* ---------------- 手机版导航：三横杠菜单 ---------------- */
+  function closeNavMenu() {
+    var nav = $('siteNav');
+    if (nav) nav.classList.remove('is-open');
+    var btn = $('navToggle');
+    if (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-label', '打开菜单');
+    }
+  }
+  function syncNavMode() {
+    var nav = $('siteNav');
+    if (!nav) return;
+    var on = isMobileView();
+    nav.classList.toggle('nav-mobile', on);
+    if (!on) closeNavMenu();
   }
 
   /* ---------------- 学习时长 ---------------- */
@@ -2286,6 +2531,11 @@
   load();
   applyTheme();
   applyLayout();
+  var sideResizeTimer = 0;
+  window.addEventListener('resize', function () {
+    clearTimeout(sideResizeTimer);
+    sideResizeTimer = setTimeout(applyDocSideState, 120);
+  });
   renderHomeCats();
   renderHomeCommon();
   renderCarousel();
@@ -2296,6 +2546,19 @@
   $('themeBtn').addEventListener('click', toggleTheme);
   if ($('themeBtn2')) $('themeBtn2').addEventListener('click', toggleTheme);
   if ($('layoutBtn')) $('layoutBtn').addEventListener('click', cycleLayout);
+  if ($('navToggle')) {
+    $('navToggle').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var nav = $('siteNav');
+      var open = nav.classList.toggle('is-open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+      this.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+    });
+  }
+  window.addEventListener('resize', syncNavMode);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeNavMenu();
+  });
   $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
   $('quoteNext').addEventListener('click', showQuote);
   if ($('homeCheckinBtn')) $('homeCheckinBtn').addEventListener('click', checkIn);
@@ -2357,6 +2620,119 @@
       remember({ docY: Math.round(window.scrollY) });
     }
   });
+
+  /* ---------------- 搜索功能 ---------------- */
+  function initSearch() {
+    var input = $('homeSearch');
+    var results = $('searchResults');
+    var clearBtn = $('searchClear');
+    if (!input || !results) return;
+
+    var debounceTimer = null;
+    input.addEventListener('input', function () {
+      clearBtn.hidden = !input.value.trim();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () { doSearch(input.value.trim()); }, 200);
+    });
+
+    input.addEventListener('focus', function () {
+      if (input.value.trim()) doSearch(input.value.trim());
+    });
+
+    clearBtn.addEventListener('click', function () {
+      input.value = '';
+      clearBtn.hidden = true;
+      results.hidden = true;
+      results.innerHTML = '';
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.search-wrap')) {
+        results.hidden = true;
+      }
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        results.hidden = true;
+        input.blur();
+      }
+    });
+  }
+
+  function doSearch(query) {
+    var results = $('searchResults');
+    if (!results) return;
+    if (!query) { results.hidden = true; results.innerHTML = ''; return; }
+    if (typeof COURSES_DATABASE === 'undefined') return;
+
+    var q = query.toLowerCase();
+    var matches = COURSES_DATABASE.filter(function (c) {
+      if (c.name && c.name.toLowerCase().indexOf(q) > -1) return true;
+      if (c.desc && c.desc.toLowerCase().indexOf(q) > -1) return true;
+      if (c.category && c.category.toLowerCase().indexOf(q) > -1) return true;
+      if (c.tags && c.tags.some(function (t) { return t.toLowerCase().indexOf(q) > -1; })) return true;
+      if (c.videoTitle && c.videoTitle.toLowerCase().indexOf(q) > -1) return true;
+      if (c.school && c.school.toLowerCase().indexOf(q) > -1) return true;
+      return false;
+    }).slice(0, 10);
+
+    if (!matches.length) {
+      results.innerHTML = '<div class="search-empty">没有找到相关课程，换个关键词试试</div>';
+      results.hidden = false;
+      return;
+    }
+
+    results.innerHTML = matches.map(function (c, i) {
+      var icon = c.emoji || (c.type === 'external' ? '🔗' : '📚');
+      var badge = c.type === 'major' ? '专业' : c.type === 'common' ? '公共课' : '推荐';
+      var badgeCls = 'search-badge-' + c.type;
+      var subtitle = '';
+      if (c.type === 'major') {
+        subtitle = '<span class="search-sub">' + icon + ' ' + (c.videoTitle || c.desc) + '</span>';
+      } else if (c.type === 'external') {
+        subtitle = '<span class="search-sub">' + (c.school || '') + ' · ' + (c.desc || '') + '</span>';
+      } else {
+        subtitle = '<span class="search-sub">' + (c.desc || '') + '</span>';
+      }
+      return '<a class="search-item" href="#" data-search-idx="' + COURSES_DATABASE.indexOf(c) + '">' +
+        '<span class="search-item-top">' +
+        '<span class="search-badge ' + badgeCls + '">' + badge + '</span>' +
+        '<span class="search-cat">' + (c.category || '') + '</span>' +
+        '</span>' +
+        '<span class="search-name">' + icon + ' ' + c.name + '</span>' +
+        subtitle +
+        '</a>';
+    }).join('');
+    results.hidden = false;
+  }
+
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-search-idx]');
+    if (!item) return;
+    e.preventDefault();
+    if (typeof COURSES_DATABASE === 'undefined') return;
+    var c = COURSES_DATABASE[parseInt(item.getAttribute('data-search-idx'), 10)];
+    if (!c) return;
+    $('searchResults').hidden = true;
+    $('homeSearch').value = '';
+    $('searchClear').hidden = true;
+
+    if (c.type === 'major') {
+      var major = null;
+      for (var i = 0; i < MAJORS.length; i++) {
+        if (MAJORS[i].name === c.majorName) { major = MAJORS[i]; break; }
+      }
+      if (major) { selectMajor(major.id); }
+    } else if (c.type === 'common') {
+      if (c.courseId) { openCourse(c.courseId); }
+      else if (c.externalUrl) { window.open(c.externalUrl, '_blank', 'noopener'); }
+    } else if (c.type === 'external') {
+      window.open(c.url, '_blank', 'noopener');
+    }
+  });
+
+  initSearch();
 
   // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题（首次可能被网络抖动打断，自动重试）
   function detectBackend(attempt) {
