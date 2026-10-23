@@ -2427,6 +2427,119 @@
     }
   });
 
+  /* ---------------- 搜索功能 ---------------- */
+  function initSearch() {
+    var input = $('homeSearch');
+    var results = $('searchResults');
+    var clearBtn = $('searchClear');
+    if (!input || !results) return;
+
+    var debounceTimer = null;
+    input.addEventListener('input', function () {
+      clearBtn.hidden = !input.value.trim();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () { doSearch(input.value.trim()); }, 200);
+    });
+
+    input.addEventListener('focus', function () {
+      if (input.value.trim()) doSearch(input.value.trim());
+    });
+
+    clearBtn.addEventListener('click', function () {
+      input.value = '';
+      clearBtn.hidden = true;
+      results.hidden = true;
+      results.innerHTML = '';
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.search-wrap')) {
+        results.hidden = true;
+      }
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        results.hidden = true;
+        input.blur();
+      }
+    });
+  }
+
+  function doSearch(query) {
+    var results = $('searchResults');
+    if (!results) return;
+    if (!query) { results.hidden = true; results.innerHTML = ''; return; }
+    if (typeof COURSES_DATABASE === 'undefined') return;
+
+    var q = query.toLowerCase();
+    var matches = COURSES_DATABASE.filter(function (c) {
+      if (c.name && c.name.toLowerCase().indexOf(q) > -1) return true;
+      if (c.desc && c.desc.toLowerCase().indexOf(q) > -1) return true;
+      if (c.category && c.category.toLowerCase().indexOf(q) > -1) return true;
+      if (c.tags && c.tags.some(function (t) { return t.toLowerCase().indexOf(q) > -1; })) return true;
+      if (c.videoTitle && c.videoTitle.toLowerCase().indexOf(q) > -1) return true;
+      if (c.school && c.school.toLowerCase().indexOf(q) > -1) return true;
+      return false;
+    }).slice(0, 10);
+
+    if (!matches.length) {
+      results.innerHTML = '<div class="search-empty">没有找到相关课程，换个关键词试试</div>';
+      results.hidden = false;
+      return;
+    }
+
+    results.innerHTML = matches.map(function (c, i) {
+      var icon = c.emoji || (c.type === 'external' ? '🔗' : '📚');
+      var badge = c.type === 'major' ? '专业' : c.type === 'common' ? '公共课' : '推荐';
+      var badgeCls = 'search-badge-' + c.type;
+      var subtitle = '';
+      if (c.type === 'major') {
+        subtitle = '<span class="search-sub">' + icon + ' ' + (c.videoTitle || c.desc) + '</span>';
+      } else if (c.type === 'external') {
+        subtitle = '<span class="search-sub">' + (c.school || '') + ' · ' + (c.desc || '') + '</span>';
+      } else {
+        subtitle = '<span class="search-sub">' + (c.desc || '') + '</span>';
+      }
+      return '<a class="search-item" href="#" data-search-idx="' + COURSES_DATABASE.indexOf(c) + '">' +
+        '<span class="search-item-top">' +
+        '<span class="search-badge ' + badgeCls + '">' + badge + '</span>' +
+        '<span class="search-cat">' + (c.category || '') + '</span>' +
+        '</span>' +
+        '<span class="search-name">' + icon + ' ' + c.name + '</span>' +
+        subtitle +
+        '</a>';
+    }).join('');
+    results.hidden = false;
+  }
+
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-search-idx]');
+    if (!item) return;
+    e.preventDefault();
+    if (typeof COURSES_DATABASE === 'undefined') return;
+    var c = COURSES_DATABASE[parseInt(item.getAttribute('data-search-idx'), 10)];
+    if (!c) return;
+    $('searchResults').hidden = true;
+    $('homeSearch').value = '';
+    $('searchClear').hidden = true;
+
+    if (c.type === 'major') {
+      var major = null;
+      for (var i = 0; i < MAJORS.length; i++) {
+        if (MAJORS[i].name === c.majorName) { major = MAJORS[i]; break; }
+      }
+      if (major) { selectMajor(major.id); }
+    } else if (c.type === 'common') {
+      if (c.courseId) { openCourse(c.courseId); }
+      else if (c.externalUrl) { window.open(c.externalUrl, '_blank', 'noopener'); }
+    } else if (c.type === 'external') {
+      window.open(c.url, '_blank', 'noopener');
+    }
+  });
+
+  initSearch();
+
   // 检测后端是否可用：在线模式下判题走 POST，离线模式本地判题（首次可能被网络抖动打断，自动重试）
   function detectBackend(attempt) {
     fetch(apiUrl('/api/health'), { cache: 'no-store' }).then(function (r) {
