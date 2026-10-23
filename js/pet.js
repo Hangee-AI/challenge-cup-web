@@ -28,6 +28,22 @@
     '要不要我出个小练习考考你？'
   ];
 
+  /* 点一下宠物会冒出来的可爱碎碎念（纯前端，不调接口） */
+  var REACTS = [
+    '摸头成功！开心转圈圈～',
+    '嘿嘿，被你发现啦 🌟',
+    '今天也要加油呀！',
+    '陪你一起，就不孤单啦～',
+    '戳一下，元气 +1！',
+    '我在这儿呢，随时找我。',
+    '想知道什么？点我聊天呀～',
+    '学习累了？先伸个懒腰！',
+    '悄悄说：你比昨天厉害了。',
+    '我们一起把这关打通关！',
+    '叮～收到一份好心情 ✨',
+    '要不要听个冷笑话？点对话框问我～'
+  ];
+
   var CHIPS = [
     { label: '这关重点是什么', text: '这一关的重点是什么？用三句话说。' },
     { label: '给我一道练习', text: '根据这一关的内容，给我出一道小练习题，先别给答案。' },
@@ -43,6 +59,7 @@
   var checked = false;
   var tipTimer = null;
   var tipIndex = 0;
+  var justDragged = false;
 
   /* ---------------- 小工具 ---------------- */
   function apiBase() {
@@ -119,6 +136,32 @@
     return '我还没接通大模型（服务器上缺 DeepSeek Key），现在只能回答几个基础问题：这关重点 / 给我一道练习 / 我卡住了。\n配好 Key 之后我就能正常聊天了。';
   }
 
+  /* ---------------- 小引的样子（可爱 SVG 形象） ---------------- */
+  function mascotSVG() {
+    return '' +
+      '<svg class="pet-svg" viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">' +
+      '<ellipse class="pet-foot" cx="38" cy="87" rx="10" ry="6"/>' +
+      '<ellipse class="pet-foot" cx="62" cy="87" rx="10" ry="6"/>' +
+      '<ellipse class="pet-body-shape" cx="50" cy="54" rx="35" ry="33"/>' +
+      '<ellipse class="pet-belly" cx="50" cy="60" rx="22" ry="20"/>' +
+      '<circle class="pet-blush" cx="29" cy="61" r="6"/>' +
+      '<circle class="pet-blush" cx="71" cy="61" r="6"/>' +
+      '<g class="pet-eye pet-eye-l">' +
+        '<circle class="pet-eye-white" cx="38" cy="50" r="9.5"/>' +
+        '<circle class="pet-pupil" cx="39" cy="51" r="5.2"/>' +
+        '<circle class="pet-shine" cx="41" cy="48.5" r="1.9"/>' +
+      '</g>' +
+      '<g class="pet-eye pet-eye-r">' +
+        '<circle class="pet-eye-white" cx="62" cy="50" r="9.5"/>' +
+        '<circle class="pet-pupil" cx="61" cy="51" r="5.2"/>' +
+        '<circle class="pet-shine" cx="63" cy="48.5" r="1.9"/>' +
+      '</g>' +
+      '<path class="pet-mouth" d="M45 66 Q50 71 55 66"/>' +
+      '<path class="pet-sprout" d="M50 21 C50 12 43 9 39 12 C44 16 47 20 50 21 Z"/>' +
+      '<path class="pet-sprout pet-sprout2" d="M50 21 C50 12 57 9 61 12 C56 16 53 20 50 21 Z"/>' +
+      '</svg>';
+  }
+
   /* ---------------- 渲染 ---------------- */
   function build() {
     var wrap = document.createElement('div');
@@ -128,7 +171,7 @@
       '<div class="pet-bubble" id="petBubble" hidden></div>',
       '<div class="pet-panel" id="petPanel" hidden>',
       '  <div class="pet-head">',
-      '    <span class="pet-avatar">🦉</span>',
+      '    <span class="pet-avatar">' + mascotSVG() + '</span>',
       '    <div class="pet-title">小引 · 学习搭子<span class="pet-sub" id="petSub">正在连接…</span></div>',
       '    <button class="pet-x" id="petClose" type="button" aria-label="收起">✕</button>',
       '  </div>',
@@ -140,7 +183,7 @@
       '  </form>',
       '</div>',
       '<button class="pet-body" id="petBody" type="button" aria-label="打开学习搭子">',
-      '  <span class="pet-face">🦉</span>',
+      '  ' + mascotSVG(),
       '</button>'
     ].join('');
     document.body.appendChild(wrap);
@@ -166,7 +209,13 @@
 
     el.body.addEventListener('click', function (e) {
       if (e.detail > 1) return;   // 双击不触发
-      toggle();
+      if (justDragged) { justDragged = false; return; }   // 刚拖完不触发
+      petReact();                 // 点一下 = 蹦一下 + 撒爱心 + 冒一句可爱的话
+    });
+    // 点气泡就能打开聊天框
+    el.bubble.addEventListener('click', function () {
+      hideBubble();
+      if (el.panel.hidden) setMin(false);
     });
     el.body.addEventListener('dblclick', function () { setMin(true); });
     document.getElementById('petClose').addEventListener('click', function () { setMin(true); });
@@ -207,10 +256,13 @@
     return d;
   }
 
+  var bubbleTimer = null;
   function showBubble(text) {
     el.bubble.textContent = text;
     el.bubble.hidden = false;
     el.bubble.classList.add('is-on');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function () { if (el.panel.hidden) hideBubble(); }, 4500);
   }
   function hideBubble() {
     el.bubble.hidden = true;
@@ -230,12 +282,40 @@
     }, delay);
   }
 
+  /* 点一下宠物：蹦一下 + 冒一句可爱的话 + 撒小爱心（纯前端互动，不调接口） */
+  function petReact() {
+    el.body.classList.remove('is-bounce');
+    void el.body.offsetWidth;            // 重排以重启动画
+    el.body.classList.add('is-bounce');
+    if (el.panel.hidden) {
+      var line = REACTS[Math.floor(Math.random() * REACTS.length)];
+      showBubble(line);
+    }
+    spawnParticles();
+    setTimeout(function () { el.body.classList.remove('is-bounce'); }, 650);
+  }
+
+  function spawnParticles() {
+    var emojis = ['💖', '✨', '🌟', '💕', '⭐', '🍀'];
+    for (var i = 0; i < 6; i++) {
+      (function (i) {
+        var p = document.createElement('span');
+        p.className = 'pet-particle';
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.setProperty('--dx', (Math.random() * 36 - 18) + 'px');
+        p.style.animationDelay = (i * 55) + 'ms';
+        el.wrap.appendChild(p);
+        setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1700);
+      })(i);
+    }
+  }
+
   /* 拖动：按住猫头鹰可以拖着走，位置记在本地 */
   function dragify() {
     var dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
 
     el.body.addEventListener('pointerdown', function (e) {
-      dragging = true; moved = false;
+      dragging = true; moved = false; justDragged = false;
       sx = e.clientX; sy = e.clientY;
       var r = el.wrap.getBoundingClientRect();
       ox = r.left; oy = r.top;
@@ -262,6 +342,7 @@
       el.body.classList.remove('is-drag');
       try { el.body.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
       if (moved) {
+        justDragged = true;
         var r = el.wrap.getBoundingClientRect();
         setStore(K_POS, JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) }));
       }
@@ -367,7 +448,6 @@
     if (!document.body) return;
     build();
     if (getStore(K_MIN, '0') === '1') setMin(true);
-    el.body.addEventListener('click', function () { hideBubble(); });
   }
 
   if (document.readyState === 'loading') {

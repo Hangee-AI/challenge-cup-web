@@ -56,9 +56,12 @@ if (onlyScripts.length > 0) {
   console.warn('提示：script 标签之间还有其它内容（' + onlyScripts.length + ' 字节），已一并移除，请确认没删掉有用标记');
 }
 
-/* 哪些文件属于「内容层」：课程 / 教材 / 章节数据，只有进专业页、关卡页才需要 */
+/* 哪些文件属于「内容层」：课程 / 教材 / 章节数据，只有进专业页、关卡页才需要。
+   注意：cs-intro-math / cs-math2-la 看着像界面代码，其实在加载时就要调
+   philosophy.js 里的 stageTitlesOf()，必须跟着内容层一起加载，
+   否则首屏包里会先报 ReferenceError，把后面的 app.js 一起带崩（整页点不动）。 */
 function isContentFile(rel) {
-  return /(courses|textbooks|chapters|majors\/|philosophy\.js|logic\.js|law\.js|economics\.js|education\.js)/.test(rel);
+  return /(courses|textbooks|chapters|majors\/|philosophy\.js|logic\.js|law\.js|economics\.js|education\.js|cs-intro-math\.js|cs-math2-la\.js)/.test(rel);
 }
 
 const coreParts = [];
@@ -92,16 +95,31 @@ contentParts.push(
 
 const jsDir = path.join(outDir, 'js');
 fs.mkdirSync(jsDir, { recursive: true });
-fs.writeFileSync(path.join(jsDir, 'bundle.js'), coreParts.concat(contentParts).join('\n;\n'), 'utf8');
+fs.writeFileSync(path.join(jsDir, 'bundle-core.js'), coreParts.join('\n;\n'), 'utf8');
+fs.writeFileSync(path.join(jsDir, 'bundle-content.js'), contentParts.join('\n;\n'), 'utf8');
 
+/* 内容包两个来源，按顺序试：
+   1) 后端域名（Deno/Surge 都是快的那条路，正常时用它）
+   2) 站点自己的 js/bundle-content.js（后端被暂停/断网时的兜底，Surge 慢但能下完）
+   每个地址失败会重试一次再换下一个，避免一次抖动就丢内容。 */
+const contentBase = (process.env.CONTENT_BASE || 'https://challenge-cup-web.hangee-ai.deno.net').replace(/\/+$/, '');
+const contentUrls = [];
+if (/^https?:\/\//.test(contentBase)) contentUrls.push(contentBase + '/js/bundle-content.js?v=' + marker);
+contentUrls.push('js/bundle-content.js?v=' + marker);
 
-/* JS 全部放 Deno 域名：
-   - Surge 的上传/CDN 经常把 300KB 的包传成半截，页面直接白掉（这是「照明数据没了」的真因）；
-   - Deno 那边同时给 br/gzip 压缩，实测首屏包 90KB，一次请求就到。
-   经典 script 允许跨域加载，所以 <script src> 直接引过去即可。
-   需要换地址时设环境变量 CONTENT_BASE。 */
-// 单文件放本域（Surge）：Deno 免费额度会被大包流量打爆，不能把 JS 挂过去。
-const inject = '<script src="js/bundle.js?v=' + marker + '"></script>\n';
+const inject =
+  '<script src="js/bundle-core.js?v=' + marker + '"></script>\n' +
+  '<script>\n' +
+  '(function(){var urls=' + JSON.stringify(contentUrls) + ';var i=0,tries=0;' +
+  'function done(){window.__CONTENT_LOADED=true;try{window.dispatchEvent(new Event("content-ready"));}catch(e){}}' +
+  'function load(){if(i>=urls.length){done();return;}' +
+  'var s=document.createElement("script");s.src=urls[i];s.async=true;' +
+  's.onload=function(){done();};' +
+  's.onerror=function(){s.parentNode&&s.parentNode.removeChild(s);tries++;' +
+  'if(tries<2){setTimeout(load,1200);}else{i++;tries=0;load();}};' +
+  'document.body.appendChild(s);}\n' +
+  'if(document.readyState==="complete")setTimeout(load,60);else window.addEventListener("load",function(){setTimeout(load,60);});})();\n' +
+  '</script>\n';
 
 const newHtml = html.slice(0, firstIdx) + inject + html.slice(lastEnd);
 fs.writeFileSync(path.join(outDir, 'index.html'), newHtml, 'utf8');
@@ -114,7 +132,7 @@ console.log(
 
 // 清掉输出目录里已经不需要的零散 js，减小上传体积
 if (!keepOriginals) {
-  const keep = [path.join(jsDir, 'bundle.js')];
+  const keep = [path.join(jsDir, 'bundle-core.js'), path.join(jsDir, 'bundle-content.js')];
   let removed = 0;
   (function walk(dir) {
     for (const name of fs.readdirSync(dir)) {

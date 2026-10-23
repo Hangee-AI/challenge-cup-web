@@ -517,6 +517,15 @@
     tryOnline(0);
   }
 
+  /* 后端连不上时：看板留着，只把数字标成「—」并说明原因，方便判断是网络还是服务挂了 */
+  function showOfflineBoard() {
+    if ($('pToday')) $('pToday').textContent = '—';
+    if ($('pLights')) $('pLights').textContent = '—';
+    if ($('pStreakTop')) $('pStreakTop').textContent = '—';
+    if ($('pCheckinHint')) $('pCheckinHint').textContent = '服务器暂时连不上，稍后会自动重试';
+    if ($('pStreakHint')) $('pStreakHint').textContent = '服务器暂时连不上';
+  }
+
   /* 首屏看板：直接请求 /api/stats（一次请求同时拿到“能不能连上”和数字），
      不要先等 ping——跨国链路 + 冷启动很容易让 ping 超时，看板就会一直显示「—」。
      ping 只当作预热，不参与判断。 */
@@ -540,8 +549,9 @@
           setTimeout(function () { tryOnline(attempt + 1); }, 800 + attempt * 700);
           return;
         }
-        var pulse = $('pulse');
-        if (pulse) pulse.hidden = true;
+        // 还是连不上：别把整块看板藏起来（那样看着像页面坏了），标成「—」并每 30 秒重试
+        showOfflineBoard();
+        setTimeout(function () { tryOnline(0); }, 30000);
       });
   }
 

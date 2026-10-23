@@ -2252,6 +2252,52 @@ html[data-layout="mobile"] .doc-foot .btn { width: 100%; }
 .pet.is-thinking .pet-body { animation: petThink 1s ease-in-out infinite; }
 .pet.is-offline .pet-body { filter: saturate(.65); }
 
+/* 小引的可爱 SVG 形象 + 互动动画 */
+.pet-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.pet-body-shape { fill: #ffffff; stroke: #e4e9f2; stroke-width: 2; }
+.pet-belly { fill: #eef4ff; }
+.pet-foot { fill: #e7eef9; }
+.pet-blush { fill: #ffb3c4; opacity: .85; }
+.pet-eye-white { fill: #ffffff; stroke: #dfe5ee; stroke-width: 1.2; }
+.pet-pupil { fill: #2b2f3a; }
+.pet-shine { fill: #ffffff; }
+.pet-mouth { fill: none; stroke: #2b2f3a; stroke-width: 2.4; stroke-linecap: round; }
+.pet-sprout { fill: #7fd6a4; stroke: #5cbf8a; stroke-width: 1; }
+.pet-sprout2 { opacity: .85; }
+.pet-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: petEyeBlink 5.6s ease-in-out infinite;
+}
+@keyframes petEyeBlink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(.12); }
+  97% { transform: scaleY(1); }
+}
+.pet-body.is-bounce { animation: petBob 3.4s ease-in-out infinite, petBounce .6s ease; }
+@keyframes petBounce {
+  0%   { transform: translateY(0) scale(1, 1); }
+  28%  { transform: translateY(-12px) scale(.9, 1.12); }
+  58%  { transform: translateY(0) scale(1.1, .9); }
+  78%  { transform: translateY(0) scale(.98, 1.02); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.pet-particle {
+  position: absolute; right: 16px; bottom: 52px;
+  font-size: 15px; line-height: 1; pointer-events: none; z-index: 1;
+  animation: petPop 1.5s ease-out forwards;
+}
+@keyframes petPop {
+  0%   { opacity: 0; transform: translate(0, 0) scale(.5); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx, 0), -52px) scale(1.15); }
+}
+/* 夜猫模式：把小引的皮肤调暗一点，免得在深色背景上太刺眼 */
+html[data-theme="night"] .pet-body-shape { fill: #2a3350; stroke: #3a4566; }
+html[data-theme="night"] .pet-belly { fill: #313c5c; }
+html[data-theme="night"] .pet-foot { fill: #2a3350; }
+html[data-theme="night"] .pet-eye-white { fill: #c9d4ee; stroke: #3a4566; }
+
 .pet-bubble {
   max-width: 240px;
   background: var(--card);

@@ -614,9 +614,11 @@ async function readRepoFile(name: string): Promise<Uint8Array | null> {
   }
 }
 
-/* 哪些文件属于「内容层」：课程/教材/章节数据，只有进专业页、关卡页才需要 */
+/* 哪些文件属于「内容层」：课程/教材/章节数据，只有进专业页、关卡页才需要。
+   cs-intro-math / cs-math2-la 加载时就会调 philosophy.js 的 stageTitlesOf()，
+   必须归到内容层，否则首屏包先报 ReferenceError，连带 app.js 一起挂掉。 */
 function isContentFile(rel: string): boolean {
-  return /(courses|textbooks|chapters|majors\/|philosophy\.js|logic\.js|law\.js|economics\.js|education\.js)/.test(rel);
+  return /(courses|textbooks|chapters|majors\/|philosophy\.js|logic\.js|law\.js|economics\.js|education\.js|cs-intro-math\.js|cs-math2-la\.js)/.test(rel);
 }
 
 function pack(srcs: string[], code: string): Promise<Asset> {
