@@ -1435,6 +1435,16 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  // 解析展示兜底：部分课程数据里的 explain 很简短（如「生产力。」），
+  // 单独一句看起来像没有解析，这里自动补上正确答案内容
+  function fullExplain(explain, options, answer) {
+    var ans = 'ABCD'[answer] + ' · ' + (options && options[answer] != null ? options[answer] : '');
+    var ex = (explain || '').trim();
+    if (!ex) return '正确答案是 ' + ans + '。';
+    if (ex.length < 8) return ex + '（正确答案：' + ans + '）';
+    return ex;
+  }
+
   function revealResult(q, userChoice, serverAnswer) {
     var opts = $('optionList').querySelectorAll('.option');
     opts.forEach(function (b, idx) {
@@ -1450,7 +1460,7 @@
     $('feedback').hidden = false;
     $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[serverAnswer];
     $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
-    $('feedbackExplain').textContent = q.explain;
+    $('feedbackExplain').textContent = fullExplain(q.explain, q.options, serverAnswer);
   }
 
   function chooseOption(i) {
@@ -1605,7 +1615,8 @@
     }
     if (!ms.length) {
       $('mistakesFilters').innerHTML = '';
-      wrap.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div>' +
+      var list = $('mistakesList');
+      if (list) list.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div>' +
         '<h2>还没有错题</h2><p>在闯关里答错的题会自动收进这里；之后再答对，就会自动移出。</p>' +
         '<a class="btn btn-primary btn-sm" href="#" data-go="map">去闯关地图 →</a></div>';
       return;
@@ -1656,7 +1667,7 @@
       });
       q.appendChild(opts);
       var exp = el('div', 'mistake-exp');
-      exp.innerHTML = '<span class="mistake-exp-label">解析</span>' + esc(m.explain || '（暂无解析）');
+      exp.innerHTML = '<span class="mistake-exp-label">解析</span>' + esc(fullExplain(m.explain, m.options, m.answer));
       q.appendChild(exp);
       card.appendChild(q);
 
