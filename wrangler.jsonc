@@ -1,0 +1,10 @@
+{
+  "name": "challenge-cup-web",
+  "main": "worker/main.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist-cf",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  }
+}
