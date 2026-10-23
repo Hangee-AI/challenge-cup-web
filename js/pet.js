@@ -263,10 +263,35 @@
   }
 
   /* ---------------- 穿搭 ---------------- */
+  var ANCHOR = {
+    black: { glasses: { y: 15, w: 34 }, scarf: { y: 27, w: 46 }, jacket: { y: 31, w: 50 } },
+    white: { glasses: { y: 11, w: 46 }, scarf: { y: 20, w: 58 }, jacket: { y: 33, w: 68 } },
+    brown: { glasses: { y: 11, w: 46 }, scarf: { y: 20, w: 58 }, jacket: { y: 33, w: 68 } },
+    pink:  { glasses: { y: 11, w: 46 }, scarf: { y: 20, w: 58 }, jacket: { y: 33, w: 68 } }
+  };
+
+  function fitOverlays() {
+    if (!built || !el.body) return;
+    var skin = look.skin || (isDay() ? 'white' : 'black');
+    var a = ANCHOR[skin] || ANCHOR.black;
+    var bw = el.body.offsetWidth || 0;
+    var bh = el.body.offsetHeight || 0;
+    if (!bw || !bh) return;
+    function apply(node, cfg) {
+      if (!node) return;
+      if (!cfg || node.hidden) return;
+      node.style.width = Math.round(bw * cfg.w / 100) + 'px';
+      node.style.top = Math.round(bh * cfg.y / 100) + 'px';
+    }
+    apply(el.glasses, a.glasses);
+    apply(el.scarf, a.scarf);
+    apply(el.jacket, a.jacket);
+  }
   function applyLook() {
     if (!built) return;
     var skin = look.skin || (isDay() ? 'white' : 'black');
     el.body.src = BASE + 'body-' + skin + '.png';
+    el.body.onload = function () { fitOverlays(); };
     setHeadMood(headMood || (isDay() ? 'wave' : 'sleepy'));
 
     var g = findById(GLASSES, look.glasses);
@@ -281,6 +306,9 @@
     if (el.avatar) {
       el.avatar.innerHTML = '<img src="' + (CARTOON[headMood] || CARTOON.wave) + '" alt="" />';
     }
+    fitOverlays();
+    setTimeout(fitOverlays, 60);
+    setTimeout(fitOverlays, 260);
   }
 
   function thumbFor(cat, id) {
