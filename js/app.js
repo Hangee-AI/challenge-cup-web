@@ -82,6 +82,13 @@
   var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'mistakes', 'profile', 'course'];
   var curView = 'home';
 
+  /* 离开视频页即停止播放：B 站 iframe 无跨域暂停接口，清空 src 最可靠；
+     再次进入视频页时 renderVideo() 会重新设置 src，不受影响 */
+  function stopVideo() {
+    var p = $('vPlayer');
+    if (p && p.src) p.src = '';
+  }
+
   function show(name) {
     // 需要专业身份的页面，没选专业就先回选专业
     if (['style', 'major', 'subjects', 'map'].indexOf(name) > -1 && !state.majorId) name = 'browse';
@@ -89,6 +96,7 @@
     if (name === 'video' && !state.majorId) name = 'browse';
     if (name === 'level' && !state.levelId) name = 'map';
     if (name === 'course' && !state.courseId) name = 'home';
+    if (name !== 'video') stopVideo();
     curView = name;
 
     VIEWS.forEach(function (v) {
