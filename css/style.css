@@ -2555,3 +2555,127 @@ html[data-layout="mobile"] .pet-log { max-height: 44vh; }
   font-weight: 400;
   color: var(--text-2, #6b748f);
 }
+
+/* ==================== 科目选择页 ==================== */
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.subjects-stage-header {
+  grid-column: 1 / -1;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--line, #e5e7eb);
+}
+
+.subjects-stage-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text, #1f2937);
+  margin: 0;
+}
+
+.subject-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: var(--card, #fff);
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.subject-card:hover {
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.subject-card-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.subject-card-icon {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-soft, #f3f4f6);
+  border-radius: 10px;
+}
+
+.subject-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.subject-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text, #1f2937);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subject-card-course {
+  font-size: 13px;
+  color: var(--text-2, #6b7280);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subject-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-soft, #e5e7eb);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.subject-card-progress span {
+  font-size: 13px;
+  color: var(--text-2, #6b7280);
+  white-space: nowrap;
+}
+
+.subject-card-arrow {
+  font-size: 20px;
+  color: var(--text-2, #9ca3af);
+  margin-left: 12px;
+  transition: transform 0.2s ease;
+}
+
+.subject-card:hover .subject-card-arrow {
+  transform: translateX(4px);
+  color: var(--primary, #3b82f6);
+}

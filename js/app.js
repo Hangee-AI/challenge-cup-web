@@ -23,6 +23,7 @@
     done: {},             // levelId -> { ok, total, stars, name, majorId, ts }
     code: {},             // levelId -> true（代码任务已通过）
     drafts: {},           // levelId -> 用户写过的代码
+    selectedSubject: null, // 闯关地图当前选择的科目（module name）
     quizDone: false,      // 本关选择题是否已全部答完
     profile: null,        // { mode:'guest'|'member', sid, nickname, avatar, since }
     study: {},            // 'YYYY-MM-DD' -> 秒
@@ -75,12 +76,12 @@
   }
 
   /* ---------------- 视图切换 ---------------- */
-  var VIEWS = ['home', 'browse', 'style', 'major', 'map', 'doc', 'video', 'level', 'report', 'profile', 'course'];
+  var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'profile', 'course'];
   var curView = 'home';
 
   function show(name) {
     // 需要专业身份的页面，没选专业就先回选专业
-    if (['style', 'major', 'map'].indexOf(name) > -1 && !state.majorId) name = 'browse';
+    if (['style', 'major', 'subjects', 'map'].indexOf(name) > -1 && !state.majorId) name = 'browse';
     if (name === 'doc' && (!state.majorId || !state.levelId)) name = 'map';
     if (name === 'video' && !state.majorId) name = 'browse';
     if (name === 'level' && !state.levelId) name = 'map';
@@ -102,6 +103,7 @@
     if (name === 'browse') renderBrowse();
     if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
+    if (name === 'subjects') renderSubjects();
     if (name === 'map') renderMap();
     if (name === 'doc') renderDoc();
     if (name === 'video') renderVideo();
@@ -467,6 +469,75 @@
     });
   }
 
+  /* ---------------- 科目选择页 ---------------- */
+  function renderSubjects() {
+    if (!state.majorId) { show('browse'); return; }
+    var path = getPath(state.majorId);
+    if (!path) { show('browse'); return; }
+
+    var box = $('subjectsList');
+    box.innerHTML = '';
+
+    // 收集所有课程（每个 module 对应一门课）
+    var courses = [];
+    path.stages.forEach(function (stage) {
+      stage.modules.forEach(function (mod) {
+        var levels = mod.levels.filter(function (lv) { return lv.ready; });
+        if (levels.length > 0) {
+          var doneN = levels.filter(function (lv) { return !!state.done[lv.id]; }).length;
+          courses.push({
+            name: mod.name || mod.title,
+            courseName: mod.courseName || '',
+            levels: levels,
+            total: levels.length,
+            done: doneN,
+            stage: stage.title
+          });
+        }
+      });
+    });
+
+    if (courses.length === 0) {
+      box.innerHTML = '<div class="card empty-card"><div class="empty-icon"></div><h2>暂无可用科目</h2><p>这个专业的课程还在建设中。</p></div>';
+      return;
+    }
+
+    // 按阶段分组显示
+    var currentStage = '';
+    courses.forEach(function (course) {
+      if (course.stage !== currentStage) {
+        currentStage = course.stage;
+        var stageHeader = el('div', 'subjects-stage-header');
+        stageHeader.innerHTML = '<h3>' + esc(currentStage) + '</h3>';
+        box.appendChild(stageHeader);
+      }
+
+      var card = el('button', 'subject-card');
+      card.type = 'button';
+      var progress = course.total > 0 ? Math.round((course.done / course.total) * 100) : 0;
+      card.innerHTML =
+        '<div class="subject-card-head">' +
+          '<div class="subject-card-icon">📖</div>' +
+          '<div class="subject-card-info">' +
+            '<div class="subject-card-name">' + esc(course.name) + '</div>' +
+            (course.courseName ? '<div class="subject-card-course">' + esc(course.courseName) + '</div>' : '') +
+            '<div class="subject-card-progress">' +
+              '<div class="progress-bar"><div class="progress-fill" style="width:' + progress + '%"></div></div>' +
+              '<span>' + course.done + '/' + course.total + ' 关</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="subject-card-arrow">→</div>';
+
+      card.addEventListener('click', function () {
+        state.selectedSubject = course.name;
+        show('map');
+      });
+
+      box.appendChild(card);
+    });
+  }
+
   /* ---------------- 闯关地图 ---------------- */
   function readyLevels(path) {
     var out = [];
@@ -484,11 +555,27 @@
     if (!state.majorId) { show('browse'); return; }
     var path = getPath(state.majorId);
     if (!path) { show('browse'); return; }
+
+    // 如果没有选择科目，先跳转到科目选择页
+    if (!state.selectedSubject) {
+      show('subjects');
+      return;
+    }
+
     var list = readyLevels(path);
+    list = list.filter(function (x) {
+      return (x.module.name || x.module.title) === state.selectedSubject;
+    });
+
     var doneN = list.filter(function (x) { return !!state.done[x.level.id]; }).length;
     $('mapSub').textContent = list.length
       ? '共 ' + list.length + ' 个可闯关卡，已点亮 ' + doneN + ' 个。拖动或滚动查看整条路线，点圆点进入关卡；选择题和代码任务都完成才算通关。'
       : '这个专业的题目还在建设中，先去看看它的学习路径。';
+
+    // 更新地图标题
+    if ($('mapTitle')) {
+      $('mapTitle').textContent = state.selectedSubject + ' · 闯关地图';
+    }
 
     var box = $('mapList');
     box.innerHTML = '';
