@@ -29,7 +29,7 @@
   var K_LOOK = 'yl_pet_look3';
   var K_MIN = 'yl_pet_min3';
   var K_POS = 'yl_pet_pos3';
-  var K_BIGPOS = 'yl_pet_bigpos3';
+  var K_BIGPOS = 'yl_pet_bigpos3_v2';
 
   /* ---------------- 素材 ---------------- */
   var SKINS = [
@@ -442,18 +442,26 @@
   function saveBigPos() {
     if (!built) return;
     var r = el.stage.getBoundingClientRect();
-    setStore(K_BIGPOS, JSON.stringify({ right: Math.round(window.innerWidth - r.right), bottom: Math.round(window.innerHeight - r.bottom) }));
+    var w = el.wrap.getBoundingClientRect();
+    setStore(K_BIGPOS, JSON.stringify({ dx: Math.round(r.left - w.left), dy: Math.round(r.top - w.top) }));
   }
   function restoreBigPos() {
     var raw = getStore(K_BIGPOS, '');
     if (!raw) return false;
     try {
       var p = JSON.parse(raw);
-      if (typeof p.right === 'number' && typeof p.bottom === 'number') {
-        el.stage.style.right = Math.max(0, p.right) + 'px';
-        el.stage.style.bottom = Math.max(0, p.bottom) + 'px';
-        return true;
-      }
+      if (typeof p.dx !== 'number' || typeof p.dy !== 'number') return false;
+      var w = el.wrap.getBoundingClientRect();
+      var vw = document.documentElement.clientWidth || window.innerWidth;
+      var vh = document.documentElement.clientHeight || window.innerHeight;
+      var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
+      var left = Math.max(6, Math.min(vw - sw - 6, w.left + p.dx));
+      var top = Math.max(6, Math.min(vh - sh - 6, w.top + p.dy));
+      el.stage.style.left = Math.round(left - w.left) + 'px';
+      el.stage.style.top = Math.round(top - w.top) + 'px';
+      el.stage.style.right = 'auto';
+      el.stage.style.bottom = 'auto';
+      return true;
     } catch (e) { }
     return false;
   }
@@ -466,7 +474,8 @@
       if (e.button != null && e.button !== 0) return;
       active = true; moved = 0; justDragged = false;
       var r = el.stage.getBoundingClientRect();
-      startX = e.clientX; startY = e.clientY; ox = r.left; oy = r.top;
+      var wr = el.wrap.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY; ox = r.left - wr.left; oy = r.top - wr.top;
       try { el.stage.setPointerCapture(e.pointerId); } catch (err) { }
     });
     el.stage.addEventListener('pointermove', function (e) {
@@ -475,13 +484,14 @@
       moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
       if (moved < 5) return;
       justDragged = true;
+      var w = el.wrap.getBoundingClientRect();
       var vw = document.documentElement.clientWidth || window.innerWidth;
       var vh = document.documentElement.clientHeight || window.innerHeight;
       var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
-      var l = Math.max(6, Math.min(vw - sw - 6, ox + dx));
-      var t = Math.max(6, Math.min(vh - sh - 6, oy + dy));
-      el.stage.style.left = l + 'px';
-      el.stage.style.top = t + 'px';
+      var l = Math.max(6 - w.left, Math.min(vw - sw - 6 - w.left, ox + dx));
+      var t = Math.max(6 - w.top, Math.min(vh - sh - 6 - w.top, oy + dy));
+      el.stage.style.left = Math.round(l) + 'px';
+      el.stage.style.top = Math.round(t) + 'px';
       el.stage.style.right = 'auto';
       el.stage.style.bottom = 'auto';
     });
@@ -491,14 +501,15 @@
       try { el.stage.releasePointerCapture(e.pointerId); } catch (err) { }
       if (moved > 6) {
         justDragged = true;
+        var w = el.wrap.getBoundingClientRect();
         var vw = document.documentElement.clientWidth || window.innerWidth;
         var vh = document.documentElement.clientHeight || window.innerHeight;
         var sw = el.stage.offsetWidth || 240, sh = el.stage.offsetHeight || 268;
         var cur = el.stage.getBoundingClientRect();
-        el.stage.style.left = Math.max(6, Math.min(vw - sw - 6, cur.left)) + 'px';
-        el.stage.style.top = Math.max(6, Math.min(vh - sh - 6, cur.top)) + 'px';
-        el.stage.style.right = 'auto';
-        el.stage.style.bottom = 'auto';
+        var l = Math.max(6, Math.min(vw - sw - 6, cur.left));
+        var t = Math.max(6, Math.min(vh - sh - 6, cur.top));
+        el.stage.style.left = Math.round(l - w.left) + 'px';
+        el.stage.style.top = Math.round(t - w.top) + 'px';
         saveBigPos();
       }
       else { justDragged = false; lastAct = Date.now(); toggleRing(); }
