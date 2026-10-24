@@ -108,7 +108,7 @@
   function startExpr() {
     stopTimer('expr');
     (function loop() {
-      var wait = 7000 + Math.random() * 7000;
+      var wait = 3200 + Math.random() * 2600;
       timers.expr = setTimeout(function () {
         if (!document.hidden) {
           var p = pool();
@@ -139,7 +139,7 @@
     (function loop() {
       var wait = 2400 + Math.random() * 3600;
       timers.blink0 = setTimeout(function () {
-        if (!document.hidden) blinkOnce();
+        if (!document.hidden && Date.now() >= quietUntil) blinkOnce();
         loop();
       }, wait);
     })();
@@ -236,6 +236,80 @@
       if (mode === 'big') resetIdle();
     }, { passive: true });
 
+    /* ---- 双击：说一句鼓励（不需要新素材，但"有反应"） ---- */
+    el.orb.addEventListener('dblclick', function (e) {
+      e.preventDefault();
+      var lines = [
+        '慢一点也没关系，你还在走。',
+        '今天已经比昨天多懂一点了。',
+        '卡住的时候，先做最小的那一步。',
+        '歇一会儿，眼睛也要休息。',
+        '我在右下角，随时喊我。'
+      ];
+      play('wobble');
+      say(lines[Math.floor(Math.random() * lines.length)]);
+    });
+
+    /* ---- 右键菜单：像桌面宠物一样"可操作" ---- */
+    var MENU = [
+      { t: '💬 说句话', f: function () { say(['加油！', '别硬撑，先歇 10 分钟。', '把这关做完就休息。'][Math.floor(Math.random() * 3)]); play('hop'); } },
+      { t: '🎯 随机换个表情', f: function () { var p = pool(); curFace = p[Math.floor(Math.random() * p.length)]; paint(); play('squash'); } },
+      { t: '👀 看你一眼', f: function () { play('wobble'); say('我在看你呢。'); } },
+      { t: '↕️ 变大 / 变小', f: function () { setMode(mode === 'big' ? 'mini' : 'big'); } },
+      { t: '🙈 安静 10 分钟', f: function () { quietUntil = Date.now() + 10 * 60 * 1000; el.root.style.opacity = '.45'; say('好，我先安静一会儿。'); } },
+      { t: '👋 藏起来', f: function () { el.root.style.display = 'none'; setTimeout(function () { el.root.style.display = ''; say('我回来了。'); }, 20000); } }
+    ];
+    var quietUntil = 0;
+
+    el.orb.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      openMenu(e.clientX, e.clientY);
+    });
+
+    function openMenu(x, y) {
+      closeMenu();
+      var m = document.createElement('div');
+      m.className = 'pet4-menu';
+      m.id = 'pet4Menu';
+      MENU.forEach(function (it) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = it.t;
+        b.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          closeMenu();
+          if (it.t.indexOf('安静') === 0) { quietUntil = Date.now() + 10 * 60 * 1000; el.root.style.opacity = '.45'; say('好，我先安静一会儿。'); return; }
+          it.f();
+        });
+        m.appendChild(b);
+      });
+      m.style.left = Math.min(x, innerWidth - 190) + 'px';
+      m.style.top = Math.min(y, innerHeight - 240) + 'px';
+      document.body.appendChild(m);
+      setTimeout(function () {
+        document.addEventListener('click', closeMenu, { once: true });
+      }, 0);
+    }
+    function closeMenu() {
+      var m = document.getElementById('pet4Menu');
+      if (m) m.remove();
+    }
+
+    /* ---- 喝水 / 休息提醒（像 pink-bear 的定时提醒） ---- */
+    var waterAt = Date.now() + 40 * 60 * 1000;
+    var restAt = Date.now() + 70 * 60 * 1000;
+    setInterval(function () {
+      if (document.hidden || Date.now() < quietUntil) return;
+      var now = Date.now();
+      if (now > waterAt) {
+        waterAt = now + 40 * 60 * 1000;
+        openBubble('该喝水啦，一口也行。'); play('hop');
+      } else if (now > restAt) {
+        restAt = now + 70 * 60 * 1000;
+        openBubble('坐太久了，站起来走两步。'); play('wobble');
+      }
+    }, 30000);
+
     window.addEventListener('resize', followMouse);
   }
 
@@ -259,6 +333,7 @@
     blink: blinkOnce,
     play: play,
     say: say,
+    menu: function () { openMenu(innerWidth - 200, innerHeight - 240); },
     nextFace: function () { var p = pool(); curFace = p[(p.indexOf(curFace) + 1) % p.length]; paint(); return curFace; }
   };
 })();

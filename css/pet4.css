@@ -158,3 +158,33 @@ html[data-theme="night"] .pet4-shadow {
   .pet4-orb.is-big { width: 132px; height: 132px; }
   .pet4-bubble { max-width: 170px; }
 }
+/* 右键菜单（像桌面宠物那样可操作） */
+.pet4-menu {
+  position: fixed;
+  z-index: 2147483400;
+  min-width: 168px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 12px 32px rgba(20, 28, 46, .22), 0 2px 6px rgba(20, 28, 46, .12);
+  border: 1px solid rgba(20, 28, 46, .06);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.pet4-menu button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #2a3142;
+  font: inherit;
+}
+.pet4-menu button:hover { background: rgba(79, 110, 247, .1); color: #2a3a7a; }
+html[data-theme="night"] .pet4-menu { background: rgba(30, 36, 54, .98); border-color: rgba(255,255,255,.08); }
+html[data-theme="night"] .pet4-menu button { color: #e8ebf6; }
+html[data-theme="night"] .pet4-menu button:hover { background: rgba(125, 149, 255, .18); color: #fff; }
