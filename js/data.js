@@ -96,32 +96,32 @@ const CET_ZONE = {
       name: '四级历年真题（CET-4）',
       tag: '四级真题',
       emoji: '📃',
-      desc: '2015–2026 共 76 套 · 在线看整卷 + 下载 PDF/Word 解析',
-      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      desc: '历年真题试卷与解析 · 点开跳转外站搜索',
+      url: 'https://www.baidu.com/s?wd=英语四级历年真题PDF下载',
       type: 'web'
     },
     {
       name: '六级历年真题（CET-6）',
       tag: '六级真题',
       emoji: '📄',
-      desc: '2015–2026 共 76 套 · 在线看整卷 + 下载 PDF/Word 解析',
-      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      desc: '历年真题试卷与解析 · 点开跳转外站搜索',
+      url: 'https://www.baidu.com/s?wd=英语六级历年真题PDF下载',
       type: 'web'
     },
     {
       name: '考研英语（一）真题',
       tag: '考研真题',
       emoji: '📕',
-      desc: '2010–2026 共 17 套 · 整卷详情 + 分题型解析',
-      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      desc: '历年真题试卷与解析 · 点开跳转外站搜索',
+      url: 'https://www.baidu.com/s?wd=考研英语一历年真题PDF下载',
       type: 'web'
     },
     {
       name: '考研英语（二）真题',
       tag: '考研真题',
       emoji: '📙',
-      desc: '2010–2026 共 17 套 · 另含 1998–2009 旧卷 12 套',
-      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      desc: '历年真题试卷与解析 · 点开跳转外站搜索',
+      url: 'https://www.baidu.com/s?wd=考研英语二历年真题PDF下载',
       type: 'web'
     }
   ]
