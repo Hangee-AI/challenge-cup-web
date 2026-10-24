@@ -3064,7 +3064,7 @@ html[data-theme="night"] .pw-random { box-shadow: 0 6px 16px rgba(0, 0, 0, .4); 
   height: 300px;
   cursor: grab;
   touch-action: none;
-}
+ z-index: 10000; }
 .pet-stage:active { cursor: grabbing; }
 .pet-stage[hidden] { display: none !important; }
 
@@ -3090,9 +3090,9 @@ html[data-theme="night"] .pw-random { box-shadow: 0 6px 16px rgba(0, 0, 0, .4); 
   z-index: 3;
   pointer-events: none;
 }
-.p-jacket  { top: 33.5%; width: 86%; z-index: 2; }
-.p-scarf   { top: 23.5%; width: 52%; z-index: 3; }
-.p-glasses { top: 14.5%; width: 42%; z-index: 4; }
+.p-jacket  { top: 35%; width: 62%; z-index: 2; }
+.p-scarf   { top: 21%; width: 54%; z-index: 3; }
+.p-glasses { top: 11%; width: 44%; z-index: 4; }
 
 .pet-bigtip {
   position: absolute;

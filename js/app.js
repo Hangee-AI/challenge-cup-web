@@ -1435,6 +1435,25 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  // 解析展示兜底：部分课程数据里的 explain 很简短（如「生产力。」），
+  // 单独一句看起来像没有解析，这里自动补上正确答案与考点
+  function fullExplain(explain, options, answer, userChoice, found) {
+    var raw = String(explain || '').trim();
+    if (raw.length >= 18) return raw;
+    var ansKey = 'ABCD'[answer];
+    var ansText = options && options[answer] != null ? options[answer] : '';
+    var key = raw.replace(/[。．.；;]+$/, '').trim();
+    var parts = [];
+    if (typeof userChoice === 'number' && userChoice !== answer && options) {
+      parts.push('你选的是 ' + 'ABCD'[userChoice] + '「' + options[userChoice] + '」，');
+    }
+    parts.push('正确答案是 ' + ansKey + '「' + ansText + '」。');
+    if (key && !/^[A-D]$/i.test(key)) parts.push('核心考点：' + key + '。');
+    var chap = found ? String(found.level.name || '').replace(/^第\s*\d+\s*[章关]\s*[·:：\-]?\s*/, '').trim() : '';
+    if (chap) parts.push('本题考查「' + chap + '」的基本概念，可回到讲义对应小节复习。');
+    return parts.join('');
+  }
+
   function revealResult(q, userChoice, serverAnswer) {
     var opts = $('optionList').querySelectorAll('.option');
     opts.forEach(function (b, idx) {
@@ -1450,7 +1469,7 @@
     $('feedback').hidden = false;
     $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[serverAnswer];
     $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
-    $('feedbackExplain').textContent = q.explain;
+    $('feedbackExplain').textContent = '📘 解析：' + fullExplain(q.explain, q.options, serverAnswer, userChoice, currentLevel());
   }
 
   function chooseOption(i) {
@@ -1605,7 +1624,8 @@
     }
     if (!ms.length) {
       $('mistakesFilters').innerHTML = '';
-      wrap.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div>' +
+      var list = $('mistakesList');
+      if (list) list.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div>' +
         '<h2>还没有错题</h2><p>在闯关里答错的题会自动收进这里；之后再答对，就会自动移出。</p>' +
         '<a class="btn btn-primary btn-sm" href="#" data-go="map">去闯关地图 →</a></div>';
       return;
@@ -1656,7 +1676,7 @@
       });
       q.appendChild(opts);
       var exp = el('div', 'mistake-exp');
-      exp.innerHTML = '<span class="mistake-exp-label">解析</span>' + esc(m.explain || '（暂无解析）');
+      exp.innerHTML = '<span class="mistake-exp-label">解析</span>' + esc(fullExplain(m.explain, m.options, m.answer));
       q.appendChild(exp);
       card.appendChild(q);
 
