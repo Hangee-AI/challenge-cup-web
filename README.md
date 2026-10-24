@@ -7,6 +7,8 @@
 
 线上演示地址：<https://yinlu.pages.dev/>
 
+介绍 / 转站页（拖拽互动 + 实时数字，独立部署在 Qoder Sites）：<https://yinlu-cw2fa4vjmmb.qoder.zone/>，源码就是仓库根的 `intro.html` 和 `intro-fn/index.ts`。
+
 ## 当前版本做了什么（v9 改版）
 
 体验主线：**首页 → 选专业 → 选讲解方式 → 我的路径 → 闯关地图 → 讲解（文档 / 视频）→ 答题 → 学习报告 / 个人中心**
@@ -95,6 +97,8 @@ $env:DEEPSEEK_API_KEY="sk-xxxx"; npm start
 ```
 challenge-cup-web/
 ├─ index.html          入口页（首页 / 选专业 / 选方式 / 路径 / 地图 / 文档 / 视频 / 关卡 / 报告 / 个人中心 十个视图）
+├─ intro.html          介绍 / 转站页：单文件，13 门类图标可拖拽碰撞 + 滚动特效，数字实时读主站（部署在 Qoder Sites，不进 dist-cf）
+├─ intro-fn/index.ts   intro.html 的同源数据代理（Deno / Sites Functions）：抓主站 /api/stats 与 js/bundle.js 数据层，绕开 Origin 白名单
 ├─ css/style.css       全部样式
 ├─ js/data.js          数据层：学科门类、专业、路径模板、讲解方式、示例关卡、公告 ANNOUNCEMENTS、鼓励语 HOME_QUOTES、头像 AVATARS
 ├─ js/docs.js          内容层：每关的文档正文（DOCS）+ 通用模板 + csdiy 延伸资源

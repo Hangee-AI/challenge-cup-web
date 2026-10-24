@@ -57,7 +57,12 @@ const newHtml = html.slice(0, firstIdx) + inject + html.slice(lastEnd);
 fs.writeFileSync(path.join(out, 'index.html'), newHtml, 'utf8');
 
 // 3. 样式
-fs.copyFileSync(path.join(root, 'css', 'style.css'), path.join(out, 'css', 'style.css'));
+// 样式：css/ 下所有 .css 都复制（style.css / pet2.css ...）
+for (const f of fs.readdirSync(path.join(root, 'css'))) {
+  if (f.endsWith('.css')) {
+    fs.copyFileSync(path.join(root, 'css', f), path.join(out, 'css', f));
+  }
+}
 
 // 4. 静态资源（assets/：小引的图片、图标等）
 function copyDirSync(src, dest) {

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>桌面小熊宠物 · 阶段 1（基础形态交互）</title>
+
+<!--
+================================================================================
+  小熊桌面宠物 · 阶段 1：只做基础形态交互
+  --------------------------------------------------------------------------------
+  ✅ 本文件实现（也只有这些）：
+     1. 右下角圆形迷你小熊头像（两个圆耳朵 + 脸部轮廓）
+     2. 点迷你头像 → 切换成完整大熊（圆头、双耳、双眼、鼻、嘴、身体、四肢；
+        不是把迷你头像放大）
+     3. 大熊双眼独立成层，眼珠随页面鼠标方向转动
+     4. 迷你头像 / 大熊 均可拖拽到页面任意位置
+     5. 鼠标连续 20 秒无操作 → 大熊自动隐藏，退回迷你头像
+     6. 宠物固定在页面最上层（z-index 极高）
+
+  ❌ 本文件刻意【不做】（留给后续阶段）：
+     · 换装面板 / 肤色切换 / 随机搭配
+     · localStorage 或任何持久化
+     · 时间判断 / 早晚自动换皮
+     · 鼓励文案 / 唤醒台词 / AI 聊天框
+
+  ================================================================================
+  【图片替换位置 · 全部为注释占位，当前用 CSS 绘制小熊】
+  --------------------------------------------------------------------------------
+  当前版本用纯 CSS 画出小熊（结构在 HTML 里看得见：耳朵 / 头 / 眼白 / 眼珠 /
+  鼻子 / 嘴 / 身体 / 四肢）。你要换成 PNG 时，按下面四处的注释填 src 即可：
+
+    ① 【这里放迷你头像PNG】      —— 圆形小头像整图（建议 128×128 透明 PNG）
+    ② 【这里放大熊本体PNG】      —— 大熊身体（不含眼睛；建议 512×600 透明 PNG）
+    ③ 【这里放左眼素材】         —— 左眼（眼白+眼珠或仅眼珠，独立一层）
+    ④ 【这里放右眼素材】         —— 右眼（同上）
+
+  ★ 关键约束：眼睛必须是【独立图层】，不能把眼睛画进大熊本体图里一起切换，
+    否则没法做“眼珠跟随鼠标”。所以②只放耳朵+头+身体，③④单独放眼睛。
+
+  ★ 换成 PNG 后：给对应元素加一个 class="use-img"（或直接把 CSS 绘制部分删掉），
+    并在该元素的 <img> 上填 src。文件里每处都写了具体怎么做。
+================================================================================
+-->
+
+<style>
+  /* ============================================================
+     0. 基础
+     ============================================================ */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f6f8ff 0%, #eef2fb 100%);
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: #1b2140;
+  }
+  /* 页面示例内容，接入你自己的网站时整段删掉即可 */
+  .demo { max-width: 660px; margin: 0 auto; padding: 90px 24px; }
+  .demo h1 { font-size: 26px; margin: 0 0 14px; }
+  .demo p { color: #5b6480; line-height: 2; margin: 0 0 8px; }
+  .demo kbd {
+    background: #fff; border: 1px solid #e3e8f4; border-bottom-width: 2px;
+    border-radius: 6px; padding: 1px 6px; font-size: 12px; color: #3d4560;
+  }
+
+  /* ============================================================
+     1. 宠物根节点：fixed 悬浮、层级最高
+     ============================================================ */
+  .pet {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    z-index: 2147483000;   /* 足够高，压在页面任何内容之上 */
+    width: 0;              /* 本身不占位，子元素用绝对定位挂上去 */
+    height: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* 小熊配色（想换色只改这里） */
+  .pet {
+    --fur: #a9765a;          /* 主体毛色 */
+    --fur-dark: #8e5f47;     /* 暗部 */
+    --fur-light: #c99a7d;    /* 肚皮/脸盘 */
+    --ink: #2b2118;          /* 眼睛、鼻子、嘴线 */
+    --eye-white: #ffffff;
+  }
+
+  /* ============================================================
+     2. 迷你小熊头像（圆形小图标）
+     ============================================================ */
+  .pet-mini {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 84px;
+    height: 84px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(30, 43, 90, .20);
+    cursor: grab;
+    overflow: hidden;
+    transition: transform .16s ease, box-shadow .16s ease;
+  }
+  .pet-mini:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 16px 32px rgba(30, 43, 90, .26);
+  }
+  .pet-mini:active { cursor: grabbing; }
+
+  /* ---- 2.1 迷你头像的 CSS 小熊 ----
+     结构：耳朵 ×2 + 头（含脸盘、眼、鼻、嘴）。全部按 84px 画布等比缩放。 */
+  .mini-bear {
+    position: absolute;
+    inset: 0;
+  }
+  /* 两只圆耳朵 */
+  .mini-bear .m-ear {
+    position: absolute;
+    top: 14px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--fur);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .06);
+  }
+  .mini-bear .m-ear.left  { left: 12px; }
+  .mini-bear .m-ear.right { right: 12px; }
+  /* 耳朵内圈 */
+  .mini-bear .m-ear::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--fur-light);
+    opacity: .75;
+  }
+  /* 头部：圆形脸盘 */
+  .mini-bear .m-head {
+    position: absolute;
+    left: 50%;
+    top: 24px;
+    width: 58px;
+    height: 54px;
+    transform: translateX(-50%);
+    background: var(--fur);
+    border-radius: 50%;
+  }
+  /* 脸盘（浅色口鼻区） */
+  .mini-bear .m-face {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 34px;
+    height: 26px;
+    transform: translateX(-50%);
+    background: var(--fur-light);
+    border-radius: 50%;
+  }
+  /* 迷你版的两只眼睛（小圆点，暂无跟随） */
+  .mini-bear .m-eye {
+    position: absolute;
+    top: 8px;
+    width: 6px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .mini-bear .m-eye.left  { left: 12px; }
+  .mini-bear .m-eye.right { right: 12px; }
+  /* 迷你版的鼻子 + 嘴 */
+  .mini-bear .m-nose {
+    position: absolute;
+    left: 50%;
+    top: 14px;
+    width: 8px;
+    height: 6px;
+    transform: translateX(-50%);
+    background: var(--ink);
+    border-radius: 50% 50% 45% 45%;
+  }
+  .mini-bear .m-mouth {
+    position: absolute;
+    left: 50%;
+    top: 19px;
+    width: 12px;
+    height: 6px;
+    transform: translateX(-50%);
+    border-bottom: 1.6px solid var(--ink);
+    border-left: 1.6px solid var(--ink);
+    border-right: 1.6px solid var(--ink);
+    border-radius: 0 0 8px 8px;
+  }
+
+  /* ---- 2.2 换成 PNG 后：.pet-mini 加 is-img，隐藏 CSS 小熊 ----
+     用法：<button class="pet-mini is-img"> <img src="mini-bear.png"> </button> */
+  .pet-mini.is-img .mini-bear { display: none; }
+  .pet-mini .mini-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+  }
+  .pet-mini.is-img .mini-img { display: block; }
+
+  /* ============================================================
+     3. 大熊形态（点击迷你头像后出现）
+     ============================================================ */
+  .pet-big {
+    position: absolute;
+    right: 0;
+    bottom: 100px;          /* 站在迷你头像上方 */
+    width: 250px;
+    height: 300px;
+    cursor: grab;
+    touch-action: none;
+  }
+  .pet-big:active { cursor: grabbing; }
+  .pet-big[hidden] { display: none !important; }
+
+  /* ---- 3.1 大熊的 CSS 造型 ----
+     层级（从下到上）：腿 → 身体 → 手臂 → 肚皮 → 耳朵 → 头 → 脸盘 → 眼 → 鼻嘴
+     坐标系：整个 .big-bear 铺满 250×300 的画布。 */
+  .big-bear {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* 耳朵（在头后面） */
+  .big-bear .b-ear {
+    position: absolute;
+    top: 12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--fur);
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .07);
+  }
+  .big-bear .b-ear.left  { left: 26px; }
+  .big-bear .b-ear.right { right: 26px; }
+  .big-bear .b-ear::after {
+    content: "";
+    position: absolute;
+    inset: 15px;
+    border-radius: 50%;
+    background: var(--fur-light);
+    opacity: .8;
+  }
+
+  /* 身体（胖胖的，盖住头的下半部分） */
+  .big-bear .b-body {
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    width: 176px;
+    height: 152px;
+    transform: translateX(-50%);
+    background: var(--fur);
+    border-radius: 50% 50% 44% 44% / 46% 46% 54% 54%;
+  }
+  /* 肚皮（浅色区域） */
+  .big-bear .b-belly {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    width: 104px;
+    height: 88px;
+    transform: translateX(-50%);
+    background: var(--fur-light);
+    border-radius: 50%;
+    opacity: .9;
+  }
+  /* 手臂 */
+  .big-bear .b-arm {
+    position: absolute;
+    bottom: 58px;
+    width: 46px;
+    height: 86px;
+    border-radius: 50%;
+    background: var(--fur);
+    box-shadow: inset -3px -6px 0 rgba(0, 0, 0, .05);
+  }
+  .big-bear .b-arm.left  { left: 20px;  transform: rotate(8deg); }
+  .big-bear .b-arm.right { right: 20px; transform: rotate(-8deg); }
+  /* 脚 */
+  .big-bear .b-foot {
+    position: absolute;
+    bottom: 0;
+    width: 56px;
+    height: 30px;
+    border-radius: 50% 50% 44% 44%;
+    background: var(--fur);
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .06);
+  }
+  .big-bear .b-foot.left  { left: 56px; }
+  .big-bear .b-foot.right { right: 56px; }
+
+  /* 头 */
+  .big-bear .b-head {
+    position: absolute;
+    left: 50%;
+    top: 26px;
+    width: 172px;
+    height: 150px;
+    transform: translateX(-50%);
+    background: var(--fur);
+    border-radius: 50%;
+    box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .05);
+  }
+  /* 脸盘（浅色口鼻区） */
+  .big-bear .b-face {
+    position: absolute;
+    left: 50%;
+    top: 106px;                 /* 脸盘落在头部下半（头占 26–176） */
+    width: 100px;
+    height: 64px;
+    transform: translateX(-50%);
+    background: var(--fur-light);
+    border-radius: 50%;
+    opacity: .95;
+  }
+
+  /* ============================================================
+     4. 独立眼睛层（★ 关键：不能和本体图合并）
+     ============================================================
+     每只眼睛 = .b-eye（眼白容器） + .b-pupil（眼珠） + 高光
+     眼珠的位移由 JS 写入 --px / --py（单位 px），跟随鼠标方向。
+     ============================================================ */
+  .big-bear .b-eye {
+    position: absolute;
+    top: 74px;
+    width: 40px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--eye-white);
+    box-shadow: inset 0 0 0 2px rgba(43, 33, 24, .08);
+    overflow: hidden;           /* 保证眼珠不会跑出眼眶 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .big-bear .b-eye.left  { left: 46px; }
+  .big-bear .b-eye.right { right: 46px; }
+
+  .big-bear .b-pupil {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+    /* --px / --py 由 JS 设置，最大 ±7px，避免眼珠出眶 */
+    transform: translate(var(--px, 0px), var(--py, 0px));
+    transition: transform .06s linear;
+  }
+  /* 眼珠高光（让眼睛有神） */
+  .big-bear .b-pupil::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: .9;
+  }
+
+  /* 眉毛（可选，让表情更明确） */
+  .big-bear .b-brow {
+    position: absolute;
+    top: 60px;
+    width: 26px;
+    height: 6px;
+    border-radius: 6px;
+    background: var(--fur-dark);
+    opacity: .55;
+  }
+  .big-bear .b-brow.left  { left: 54px; transform: rotate(-8deg); }
+  .big-bear .b-brow.right { right: 54px; transform: rotate(8deg); }
+
+  /* 鼻子 */
+  .big-bear .b-nose {
+    position: absolute;
+    left: 50%;
+    top: 122px;
+    width: 26px;
+    height: 18px;
+    transform: translateX(-50%);
+    background: var(--ink);
+    border-radius: 52% 52% 46% 46% / 58% 58% 42% 42%;
+  }
+  /* 鼻子下方的竖线 */
+  .big-bear .b-nose::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 17px;
+    width: 2px;
+    height: 9px;
+    transform: translateX(-50%);
+    background: var(--ink);
+    opacity: .85;
+  }
+  /* 嘴：左右两段弧 */
+  .big-bear .b-mouth {
+    position: absolute;
+    left: 50%;
+    top: 146px;
+    width: 44px;
+    height: 16px;
+    transform: translateX(-50%);
+  }
+  .big-bear .b-mouth::before,
+  .big-bear .b-mouth::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 23px;
+    height: 14px;
+    border-bottom: 2.4px solid var(--ink);
+    border-radius: 0 0 60% 60%;
+    opacity: .9;
+  }
+  .big-bear .b-mouth::before { left: 0; }
+  .big-bear .b-mouth::after  { right: 0; }
+
+  /* 腮红（可删） */
+  .big-bear .b-blush {
+    position: absolute;
+    top: 116px;
+    width: 26px;
+    height: 14px;
+    border-radius: 50%;
+    background: #f0a7a7;
+    opacity: .45;
+    filter: blur(3px);
+  }
+  .big-bear .b-blush.left  { left: 36px; }
+  .big-bear .b-blush.right { right: 36px; }
+
+  /* ============================================================
+     5. 换成 PNG 后的图层开关
+     ============================================================
+     .big-bear 加 is-img 时：隐藏所有 CSS 造型，只显示 3 张图：
+        body（大熊本体，不含眼睛） / eyeLeft / eyeRight（独立眼睛层）
+     —— 这正是"独立眼睛层"的要求：本体一张图 + 眼睛两张图。
+     ============================================================ */
+  .big-bear .b-img {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+  }
+  /* 本体图铺满整张画布 */
+  .big-bear .b-img.body {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  /* 眼睛图：位置与 CSS 眼睛完全一致，替换后无需重新调坐标 */
+  .big-bear .b-img.eye {
+    top: 74px;
+    width: 40px;
+    height: 42px;
+    object-fit: contain;
+  }
+  .big-bear .b-img.eye.left  { left: 46px; }
+  .big-bear .b-img.eye.right { right: 46px; }
+
+  .big-bear.is-img .b-ear,
+  .big-bear.is-img .b-body,
+  .big-bear.is-img .b-belly,
+  .big-bear.is-img .b-arm,
+  .big-bear.is-img .b-foot,
+  .big-bear.is-img .b-head,
+  .big-bear.is-img .b-face,
+  .big-bear.is-img .b-brow,
+  .big-bear.is-img .b-blush,
+  .big-bear.is-img .b-nose,
+  .big-bear.is-img .b-mouth {
+    display: none;
+  }
+  .big-bear.is-img .b-img { display: block; }
+
+  /* 换成 PNG 眼睛后，眼睛的"跟随"改由整体位移实现（见 JS: movePupils） */
+  .big-bear.is-img .b-img.eye {
+    transform: translate(var(--px, 0px), var(--py, 0px));
+    transition: transform .06s linear;
+  }
+
+  /* ============================================================
+     6. 小提示（首次出现，点一下就消失；不放任何鼓励文案）
+     ============================================================ */
+  .pet-hint {
+    position: absolute;
+    right: 4px;
+    bottom: 96px;
+    padding: 8px 11px;
+    background: #1b2140;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.7;
+    border-radius: 10px;
+    white-space: nowrap;
+    box-shadow: 0 12px 26px rgba(27, 33, 64, .26);
+  }
+  .pet-hint::after {
+    content: "";
+    position: absolute;
+    right: 34px;
+    bottom: -5px;
+    width: 10px;
+    height: 10px;
+    background: #1b2140;
+    transform: rotate(45deg);
+  }
+  .pet-hint[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- =================== 页面示例内容（接入你的网站时删掉） =================== -->
+<div class="demo">
+  <h1>桌面小熊宠物 · 阶段 1</h1>
+  <p>右下角是迷你小熊头像，点一下变成大熊。</p>
+  <p>移动鼠标，看大熊的<b>两只眼睛跟着你转</b>。</p>
+  <p>按住头像或大熊都能拖动；鼠标 <kbd>20 秒</kbd> 不动，大熊会自动缩回小头像。</p>
+</div>
+
+<!-- ============================================================================
+     宠物挂件（固定悬浮、层级最高）
+     ============================================================================ -->
+<div class="pet" id="pet">
+
+  <!-- ==========================================================================
+       ① 迷你小熊头像（圆形小图标）
+       ==========================================================================
+       【这里放迷你头像PNG】
+       替换方法：
+         1. 给下面 <button> 加 class="is-img"
+         2. 把 <img class="mini-img"> 的 src 填上你的 PNG（建议 128×128 透明底）
+       现在用的是 CSS 绘制：两只圆耳朵 + 圆脸 + 眼睛 + 鼻子 + 嘴
+       ========================================================================== -->
+  <button class="pet-mini" id="petMini" type="button" title="点我变成大熊（可拖动）">
+    <!-- 迷你头像的 PNG 占位（换成图片时把 src 填上、并给 button 加 is-img） -->
+    <!-- <img class="mini-img" src="【这里放迷你头像PNG】" alt="迷你小熊头像" /> -->
+    <img class="mini-img" alt="迷你小熊头像" />
+
+    <!-- 迷你头像的 CSS 小熊（PNG 版会自动隐藏这一块） -->
+    <span class="mini-bear" aria-hidden="true">
+      <span class="m-ear left"></span>
+      <span class="m-ear right"></span>
+      <span class="m-head">
+        <span class="m-eye left"></span>
+        <span class="m-eye right"></span>
+        <span class="m-face"></span>
+        <span class="m-nose"></span>
+        <span class="m-mouth"></span>
+      </span>
+    </span>
+  </button>
+
+  <!-- ==========================================================================
+       ② 大熊形态（点击迷你头像后出现）
+       ==========================================================================
+       结构（从下到上）：
+         耳朵 → 身体 → 肚皮 → 手臂 → 脚 → 头 → 脸盘 → 眼睛（独立层）→ 鼻嘴
+       注意：眼睛是【独立图层】，绝对不画进本体图里，否则无法做跟随。
+       ========================================================================== -->
+  <div class="pet-big" id="petBig" hidden title="拖动我；点迷你头像可收起">
+    <div class="big-bear" id="bigBear">
+
+      <!-- ---- 本体 PNG 占位（★ 不含眼睛！）----
+           【这里放大熊本体PNG】
+           替换方法：给 #bigBear 加 class="is-img"，并填下面的 src
+           建议 512×600 透明 PNG，耳朵/头/身体/四肢都画在这一张里 -->
+      <!-- <img class="b-img body" src="【这里放大熊本体PNG】" alt="大熊本体" /> -->
+      <img class="b-img body" alt="大熊本体" />
+
+      <!-- ---- CSS 绘制的身体部件（PNG 版会自动隐藏）---- -->
+      <span class="b-ear left"></span>
+      <span class="b-ear right"></span>
+      <span class="b-foot left"></span>
+      <span class="b-foot right"></span>
+      <span class="b-body"></span>
+      <span class="b-belly"></span>
+      <span class="b-arm left"></span>
+      <span class="b-arm right"></span>
+      <span class="b-head"></span>
+      <span class="b-face"></span>
+      <span class="b-brow left"></span>
+      <span class="b-brow right"></span>
+      <span class="b-blush left"></span>
+      <span class="b-blush right"></span>
+
+      <!-- ---- ★ 独立眼睛层：左眼 ---- -->
+      <!-- 【这里放左眼素材】
+           替换方法：给 #bigBear 加 class="is-img" 并填 src（建议 80×84 透明 PNG）；
+           PNG 版会隐藏下面的 CSS 眼睛，用这层图片做整体位移来"看向"鼠标 -->
+      <!-- <img class="b-img eye left" src="【这里放左眼素材】" alt="左眼" /> -->
+      <img class="b-img eye left" alt="左眼" />
+
+      <!-- CSS 左眼：眼白 + 眼珠（眼珠由 JS 位移） -->
+      <span class="b-eye left" id="eyeLeft" aria-hidden="true">
+        <span class="b-pupil" id="pupilLeft"></span>
+      </span>
+
+      <!-- ---- ★ 独立眼睛层：右眼 ---- -->
+      <!-- 【这里放右眼素材】 -->
+      <!-- <img class="b-img eye right" src="【这里放右眼素材】" alt="右眼" /> -->
+      <img class="b-img eye right" alt="右眼" />
+
+      <!-- CSS 右眼 -->
+      <span class="b-eye right" id="eyeRight" aria-hidden="true">
+        <span class="b-pupil" id="pupilRight"></span>
+      </span>
+
+      <!-- ---- 鼻子 + 嘴（结构必须清楚，所以单独成元素）---- -->
+      <span class="b-nose"></span>
+      <span class="b-mouth"></span>
+    </div>
+  </div>
+
+  <!-- 首次提示（点迷你头像后消失；没有任何鼓励文案） -->
+  <div class="pet-hint" id="petHint">点我变成大熊 · 可拖动</div>
+</div>
+
+<script>
+/* ==============================================================================
+   小熊桌面宠物 · 阶段 1 逻辑
+   ------------------------------------------------------------------------------
+   只做四件事：
+     A. 形态切换：迷你头像 ⇄ 大熊
+     B. 眼睛跟随：根据鼠标位置算方向，位移两只眼珠
+     C. 拖拽：迷你头像拖整个挂件；大熊单独拖
+     D. 闲置：鼠标 20 秒无操作 → 大熊缩回迷你头像
+   （本阶段不做任何存储，刷新后回到默认位置与迷你形态）
+   ============================================================================== */
+
+(function () {
+  'use strict';
+
+  /* ---------------- 0. 可调参数（都在这里，方便你改） ---------------- */
+  var IDLE_MS = 20000;        /* 闲置多久缩回小头像（20 秒） */
+  var PUPIL_MAX = 7;          /* 眼珠最大位移像素（别超过眼眶） */
+  var DRAG_THRESHOLD = 4;     /* 位移超过多少 px 算"拖动"而不是"点击" */
+
+  /* ---------------- 1. DOM ---------------- */
+  var pet      = document.getElementById('pet');
+  var mini     = document.getElementById('petMini');
+  var big      = document.getElementById('petBig');
+  var bigBear  = document.getElementById('bigBear');
+  var hint     = document.getElementById('petHint');
+  var pupilL   = document.getElementById('pupilLeft');
+  var pupilR   = document.getElementById('pupilRight');
+  var eyeL     = document.getElementById('eyeLeft');
+  var eyeR     = document.getElementById('eyeRight');
+
+  /* ---------------- 2. 状态 ---------------- */
+  var form = 'mini';                              /* 'mini' | 'big' */
+  var miniPos = { right: 28, bottom: 28 };        /* 挂件位置（相对视口右下角） */
+  var bigPos  = { dx: 0, dy: 0 };                 /* 大熊相对挂件的偏移 */
+  var idleTimer = null;
+  var mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+  /* ================= A. 形态切换 ================= */
+  function setForm(next) {
+    form = next;
+
+    if (next === 'big') {
+      big.hidden = false;
+      mini.style.display = 'none';   /* 大熊出现时先把小头像藏起来，避免重叠 */
+      applyBigPos();
+      hideHint();
+      resetIdle();
+      movePupils();                  /* 立刻按当前鼠标位置对一次焦 */
+    } else {
+      big.hidden = true;
+      mini.style.display = '';
+      stopIdle();
+    }
+  }
+
+  function hideHint() {
+    if (hint) hint.hidden = true;
+  }
+
+  /* ================= B. 眼睛跟随 =================
+     原理：
+       1. 取每只眼睛的中心点（页面坐标）
+       2. 算"眼睛中心 → 鼠标"的方向向量并归一化
+       3. 把方向量 × PUPIL_MAX 写进 --px / --py
+     因为眼眶是 overflow:hidden，所以眼珠永远不会跑出去。
+     ================================================= */
+  function pupilOffsetFor(eyeEl) {
+    var r = eyeEl.getBoundingClientRect();
+    var cx = r.left + r.width / 2;
+    var cy = r.top + r.height / 2;
+    var dx = mouse.x - cx;
+    var dy = mouse.y - cy;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    return {
+      x: (dx / len) * PUPIL_MAX,
+      y: (dy / len) * PUPIL_MAX
+    };
+  }
+
+  function movePupils() {
+    if (form !== 'big' || big.hidden) return;
+
+    /* CSS 眼睛：移动眼珠 */
+    if (pupilL && pupilR) {
+      var oL = pupilOffsetFor(eyeL);
+      var oR = pupilOffsetFor(eyeR);
+      pupilL.style.setProperty('--px', oL.x.toFixed(2) + 'px');
+      pupilL.style.setProperty('--py', oL.y.toFixed(2) + 'px');
+      pupilR.style.setProperty('--px', oR.x.toFixed(2) + 'px');
+      pupilR.style.setProperty('--py', oR.y.toFixed(2) + 'px');
+    }
+
+    /* PNG 眼睛：整只眼睛图做同样的位移（视觉上等价于眼珠看过去） */
+    if (bigBear.classList.contains('is-img')) {
+      var rL = bigBear.querySelector('.b-img.eye.left');
+      var rR = bigBear.querySelector('.b-img.eye.right');
+      if (rL && rR) {
+        var aL = pupilOffsetFor(rL);
+        var aR = pupilOffsetFor(rR);
+        rL.style.setProperty('--px', (aL.x * 0.55).toFixed(2) + 'px');
+        rL.style.setProperty('--py', (aL.y * 0.55).toFixed(2) + 'px');
+        rR.style.setProperty('--px', (aR.x * 0.55).toFixed(2) + 'px');
+        rR.style.setProperty('--py', (aR.y * 0.55).toFixed(2) + 'px');
+      }
+    }
+  }
+
+  /* 鼠标移动：记录坐标并立即更新眼睛（用时间戳节流到约 60fps）
+     注意：这里不用 requestAnimationFrame——页面在后台/无渲染帧时 rAF 不触发，
+     会导致眼睛卡住；直接写 transform 只动两个小元素，开销可以忽略。 */
+  var lastEyeUpdate = 0;
+  document.addEventListener('mousemove', function (e) {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    resetIdle();                       /* 有鼠标活动就重置闲置计时 */
+
+    var now = Date.now();
+    if (now - lastEyeUpdate < 16) return;   /* 约 60fps，够顺滑也不浪费 */
+    lastEyeUpdate = now;
+    movePupils();
+  }, { passive: true });
+
+  /* ================= C. 拖拽 ================= */
+  /* 通用拖拽：handle 上按下，移动时回调 onMove(dx, dy)，松开回调 onEnd */
+  function enableDrag(handle, onStart, onMove, onEnd) {
+    var dragging = false;
+    var sx = 0, sy = 0, origin = null;
+
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      dragging = true;
+      sx = e.clientX;
+      sy = e.clientY;
+      origin = onStart();
+      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      onMove(e.clientX - sx, e.clientY - sy, origin);
+      resetIdle();
+    });
+
+    function end(e) {
+      if (!dragging) return;
+      dragging = false;
+      try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (onEnd) onEnd();
+    }
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  }
+
+  /* ---- 迷你头像：拖动 = 移动整个挂件 ---- */
+  var miniMoved = false;
+
+  enableDrag(mini,
+    function () {                    /* 记录起点 */
+      miniMoved = false;
+      return { right: miniPos.right, bottom: miniPos.bottom };
+    },
+    function (dx, dy, o) {
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) miniMoved = true;
+      miniPos.right  = o.right  - dx;      /* 往右拖 → right 变小 */
+      miniPos.bottom = o.bottom - dy;
+      applyMiniPos();
+    },
+    function () { /* 松手不需要额外处理，位置已实时写入 */ }
+  );
+
+  /* 点击迷你头像 = 变大熊；但"拖动过"的那一次不算点击 */
+  mini.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (miniMoved) { miniMoved = false; return; }
+    setForm('big');
+  });
+
+  /* ---- 大熊：拖动 = 只移动大熊自己 ---- */
+  var bigMoved = false;
+
+  enableDrag(big,
+    function () {
+      bigMoved = false;
+      return { dx: bigPos.dx, dy: bigPos.dy };
+    },
+    function (dx, dy, o) {
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) bigMoved = true;
+      bigPos.dx = o.dx + dx;
+      bigPos.dy = o.dy + dy;
+      applyBigOffset();          /* 只移动大熊自己，不动小头像 */
+    },
+    function () {
+      bigMoved && clampBig();
+    }
+  );
+
+  /* 拖动结束后那次 click 不要做事（本阶段点大熊不弹任何面板） */
+  big.addEventListener('click', function (e) {
+    if (bigMoved) { bigMoved = false; return; }
+    e.stopPropagation();
+  });
+
+  /* ---- 位置应用 + 视口钳制（保证拖不出屏幕） ---- */
+  function applyMiniPos() {
+    var size = 84;                                   /* 迷你头像直径 */
+    var maxR = Math.max(6, window.innerWidth  - size - 6);
+    var maxB = Math.max(6, window.innerHeight - size - 6);
+    miniPos.right  = Math.min(Math.max(6, miniPos.right),  maxR);
+    miniPos.bottom = Math.min(Math.max(6, miniPos.bottom), maxB);
+    pet.style.right  = miniPos.right + 'px';
+    pet.style.bottom = miniPos.bottom + 'px';
+  }
+
+  /* 大熊的默认位置写在 CSS 里（right:0 / bottom:100px）。
+     拖动时只叠加 transform: translate(dx, dy)，
+     这样 dx=dy=0 就是默认位置，不会出现"初始跑到屏幕外"的问题。 */
+  function applyBigOffset() {
+    big.style.transform = 'translate(' + bigPos.dx + 'px, ' + bigPos.dy + 'px)';
+  }
+
+  function applyBigPos() {
+    applyBigOffset();
+    requestAnimationFrame(clampBig);
+  }
+
+  function clampBig() {
+    var r = big.getBoundingClientRect();
+    var dx = bigPos.dx, dy = bigPos.dy, changed = false;
+
+    if (r.left < 4) { dx += 4 - r.left; changed = true; }
+    if (r.right > window.innerWidth - 4) { dx -= r.right - (window.innerWidth - 4); changed = true; }
+    if (r.top < 4) { dy += 4 - r.top; changed = true; }
+    if (r.bottom > window.innerHeight - 4) { dy -= r.bottom - (window.innerHeight - 4); changed = true; }
+
+    if (changed) {
+      bigPos.dx = dx;
+      bigPos.dy = dy;
+      applyBigOffset();
+    }
+  }
+
+  /* ================= D. 闲置缩回 ================= */
+  /* 只在"大熊形态"下计时；任何鼠标活动 / 键盘 / 滚动都会重置 */
+  function resetIdle() {
+    if (form !== 'big') return;
+    stopIdle();
+    idleTimer = setTimeout(function () {
+      if (form === 'big') setForm('mini');     /* 20 秒没操作 → 缩回小头像 */
+    }, IDLE_MS);
+  }
+
+  function stopIdle() {
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+  }
+
+  document.addEventListener('keydown', resetIdle);
+  window.addEventListener('scroll', resetIdle, { passive: true });
+
+  /* ================= E. 初始化 ================= */
+  function init() {
+    applyMiniPos();          /* 迷你头像：右下角默认位置 */
+    setForm('mini');         /* 初始就是迷你形态 */
+    applyBigPos();           /* 先把大熊位置初始化好（隐藏状态下也算好） */
+  }
+
+  /* 窗口尺寸变化：把小熊拉回可视范围 */
+  window.addEventListener('resize', function () {
+    applyMiniPos();
+    if (form === 'big') clampBig();
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

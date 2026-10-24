@@ -3252,6 +3252,8 @@ html[data-theme="night"] .pw-random { box-shadow: 0 6px 16px rgba(0, 0, 0, .4); 
   position: absolute;
   right: 84px;
   bottom: 78px;
+  /* 容器宽度很小，绝对定位下若不显式撑开会让中文逐字换行 */
+  width: max-content;
   max-width: 250px;
   padding: 9px 13px;
   border-radius: 14px 14px 4px 14px;
