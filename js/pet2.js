@@ -10,10 +10,10 @@
 
   var BASE = 'assets/pet4-aligned/';
   var HEADS = [
-    'assets/pet/cartoon-1.png', 'assets/pet/cartoon-2.png',
-    'assets/pet/cartoon-3.png', 'assets/pet/cartoon-4.png',
-    'assets/pet/cartoon-5.png', 'assets/pet/cartoon-6.png',
-    'assets/pet/cartoon-7.png', 'assets/pet/cartoon-8.png'
+    'assets/pet/head/head-1.png', 'assets/pet/head/head-2.png',
+    'assets/pet/head/head-3.png', 'assets/pet/head/head-4.png',
+    'assets/pet/head/head-5.png', 'assets/pet/head/head-6.png',
+    'assets/pet/head/head-7.png', 'assets/pet/head/head-8.png'
   ];
 
   var SKINS = [
@@ -197,7 +197,7 @@
     }
   }
 
-  function openBig() { setForm('big'); saveJSON(K_FORM, 'big'); }
+  function openBig() { setForm('big'); saveJSON(K_FORM, 'big'); playGesture('big', 'wave'); playGesture('mini', 'wave'); }
   function closeBig() { setForm('mini'); }
 
   /* ---------------- 圆环 / 选项 ---------------- */
@@ -276,6 +276,7 @@
     look[catKey] = id;
     saveJSON(K_LOOK, look);
     applyLook();
+    playGesture('big', 'jump', 800);
     openArm(catKey);
   }
 
@@ -318,6 +319,62 @@
     el.big.style.transform = 'translate(' + bigPos.dx + 'px,' + bigPos.dy + 'px)';
   }
 
+  /* ---------------- 跟随鼠标（整只熊朝鼠标方向轻微倾斜 + 位移） ---------------- */
+  var mouseRaf = 0, lastMouse = 0;
+  function pointAtMouse() {
+    if (!el.stage) return;
+    var w = innerWidth || 1, h = innerHeight || 1;
+    var mx = (mouseX / w - 0.5) * 2;      /* -1 ~ 1 */
+    var my = (mouseY / h - 0.5) * 2;
+    var tilt = (mx * 3.4).toFixed(2) + 'deg';
+    var tiltBig = (mx * 2.6).toFixed(2) + 'deg';
+    el.stage.style.setProperty('--mo-x', (mx * 5).toFixed(1) + 'px');
+    el.stage.style.setProperty('--mo-y2', (my * 3).toFixed(1) + 'px');
+    el.stage.style.setProperty('--mo-tilt2', tiltBig);
+    if (el.mini) {
+      el.mini.style.setProperty('--mo-y', (my * 2).toFixed(1) + 'px');
+      el.mini.style.setProperty('--mo-tilt', tilt);
+    }
+  }
+  var mouseX = innerWidth * 0.7, mouseY = innerHeight * 0.7;
+  function bindMouseFollow() {
+    document.addEventListener('mousemove', function (e) {
+      mouseX = e.clientX; mouseY = e.clientY;
+      var now = Date.now();
+      if (now - lastMouse < 16) return;   /* 约 60fps 节流 */
+      lastMouse = now;
+      pointAtMouse();
+    }, { passive: true });
+  }
+
+  /* ---------------- 动作系统（平滑、不呆板） ---------------- */
+  var gestureTimer = null;
+  function playGesture(where, name, ms) {
+    var node = where === 'mini' ? el.mini : el.big;
+    if (!node) return;
+    var cls = 'is-' + name;
+    node.classList.remove('is-wave', 'is-jump', 'is-bow', 'is-think', 'is-heart');
+    /* 强制重排，保证同一个动作能连续触发 */
+    void node.offsetWidth;
+    node.classList.add(cls);
+    if (gestureTimer) clearTimeout(gestureTimer);
+    gestureTimer = setTimeout(function () { node.classList.remove(cls); }, ms || 1200);
+  }
+  function idleGesture() {
+    var pool = ['think', 'heart', 'wave', 'jump'];
+    var name = pool[Math.floor(Math.random() * pool.length)];
+    playGesture(form === 'big' ? 'big' : 'mini', name);
+  }
+  var idleGestureTimer = null;
+  function startIdleGesture() {
+    stopIdleGesture();
+    idleGestureTimer = setInterval(function () {
+      if (document.hidden) return;
+      idleGesture();
+    }, 11000 + Math.random() * 5000);
+  }
+  function stopIdleGesture() { if (idleGestureTimer) { clearInterval(idleGestureTimer); idleGestureTimer = null; } }
+
   function bindEvents() {
     /* 迷你头像：点击展开、拖动整体 */
     var miniStart = null, miniMoved = false, miniBase = { right: 26, bottom: 26 };
@@ -359,6 +416,8 @@
     var bigStart = null, bigMoved = false;
     el.big.addEventListener('pointerdown', function (e) {
       if (e.button !== undefined && e.button !== 0) return;
+      /* 点在圆环/选项上时不能拦截：否则 setPointerCapture 会把 click 吞掉，换装点了没反应 */
+      if (e.target.closest && e.target.closest('.pet2-cat, .pet2-opt')) return;
       bigStart = { x: e.clientX, y: e.clientY };
       bigMoved = false;
       el.big.setPointerCapture && el.big.setPointerCapture(e.pointerId);
@@ -371,7 +430,9 @@
       bigPos.dx = dx; bigPos.dy = dy;
       applyBigOffset();
     });
-    function bigFinish() {
+    function bigFinish(e) {
+      /* 事件来自圆环/选项时不要当作"点大熊"处理，否则选完配饰圆环会被关掉 */
+      if (e && e.target && e.target.closest && e.target.closest('.pet2-cat, .pet2-opt')) return;
       if (!bigStart) return;
       var moved = bigMoved;
       bigStart = null;
@@ -467,6 +528,9 @@
 
     applyLook();
     startHeadRotate();
+    bindMouseFollow();
+    startIdleGesture();
+    setTimeout(pointAtMouse, 120);
 
     var savedForm = loadJSON(K_FORM, 'mini');
     if (savedForm === 'big') setForm('big'); else setForm('mini');
