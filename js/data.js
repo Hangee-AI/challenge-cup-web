@@ -91,6 +91,38 @@ const CET_ZONE = {
       desc: '边打字边背单词，肌肉记忆记拼写，强推！',
       url: 'https://typewords.cc/words',
       type: 'web'
+    },
+    {
+      name: '四级历年真题（CET-4）',
+      tag: '四级真题',
+      emoji: '📃',
+      desc: '2015–2026 共 76 套 · 在线看整卷 + 下载 PDF/Word 解析',
+      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      type: 'web'
+    },
+    {
+      name: '六级历年真题（CET-6）',
+      tag: '六级真题',
+      emoji: '📄',
+      desc: '2015–2026 共 76 套 · 在线看整卷 + 下载 PDF/Word 解析',
+      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      type: 'web'
+    },
+    {
+      name: '考研英语（一）真题',
+      tag: '考研真题',
+      emoji: '📕',
+      desc: '2010–2026 共 17 套 · 整卷详情 + 分题型解析',
+      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      type: 'web'
+    },
+    {
+      name: '考研英语（二）真题',
+      tag: '考研真题',
+      emoji: '📙',
+      desc: '2010–2026 共 17 套 · 另含 1998–2009 旧卷 12 套',
+      url: 'https://english-exam.lazynote.cn/exam-papers/',
+      type: 'web'
     }
   ]
 };
