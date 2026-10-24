@@ -1,7 +1,7 @@
 /* ==========================================================
-   pet2.css · 学习搭子「小引」图片版
-   - 迷你头像：透明抠图 + 浮空/呼吸/随鼠标倾斜（无白圈）
-   - 大熊：真实素材四图层（本体→围巾→外套→眼镜）+ 呼吸 + 倾斜 + 动作
+   pet2.css · 学习搭子「小引」迷你头版
+   只保留迷你小熊头 + 气泡 + 聊天框。
+   迷你头跟随鼠标：有眼睛→轻微倾斜（像在看）；没眼睛→拉扯感（倾斜+错切+拉伸）
    ========================================================== */
 
 .pet2 {
@@ -14,7 +14,7 @@
   user-select: none;
 }
 
-/* ---------- 迷你头像（无白底，靠投影出体积） ---------- */
+/* ---------- 迷你头像 ---------- */
 .pet2-mini {
   width: 96px;
   height: 96px;
@@ -24,7 +24,13 @@
   cursor: pointer;
   touch-action: none;
   filter: drop-shadow(0 10px 16px rgba(20, 26, 48, .28)) drop-shadow(0 2px 4px rgba(20, 26, 48, .14));
-  transform: translateY(var(--mo-y, 0px)) rotate(var(--mo-tilt, 0deg));
+  /* 跟随鼠标：倾斜 + 上下位移 + 错切 + 拉伸 */
+  transform:
+    translateY(var(--mo-y, 0px))
+    rotate(var(--mo-tilt, 0deg))
+    skewX(var(--mo-skew, 0deg))
+    scale(var(--mo-sx, 1), var(--mo-sy, 1));
+  transform-origin: 50% 88%;
   transition: transform .16s ease-out, filter .2s ease;
 }
 .pet2-mini:hover { filter: drop-shadow(0 14px 22px rgba(20, 26, 48, .32)) drop-shadow(0 3px 6px rgba(20, 26, 48, .16)); }
@@ -42,22 +48,12 @@
   50%      { transform: translateY(-2px) scale(1.018); }
 }
 
-/* 迷你头的动作 */
-.pet2-mini.is-wave img { animation: pet2-wave .9s ease-in-out 2; }
-.pet2-mini.is-jump img { animation: pet2-jump .62s cubic-bezier(.3,1.6,.5,1); }
-@keyframes pet2-wave {
-  0%, 100% { transform: rotate(0deg); }
-  25%      { transform: rotate(-7deg); }
-  75%      { transform: rotate(7deg); }
-}
-@keyframes pet2-jump {
-  0%   { transform: translateY(0) scale(1); }
-  35%  { transform: translateY(-16px) scale(1.04, .97); }
-  70%  { transform: translateY(2px) scale(.98, 1.03); }
-  100% { transform: translateY(0) scale(1); }
+/* 没眼睛的表情：被拉扯时呼吸幅度略大，增强"软弹"感 */
+.pet2-mini:not(.has-eyes) img {
+  animation-duration: 3.2s;
 }
 
-/* ---------- 迷你小气泡 ---------- */
+/* ---------- 气泡 ---------- */
 .pet2-bubble {
   position: absolute;
   right: 104px;
@@ -77,176 +73,6 @@
   white-space: pre-wrap;
 }
 .pet2-bubble.is-on { opacity: 1; transform: translateY(0); }
-
-/* ---------- 大熊 ---------- */
-.pet2-big {
-  position: absolute;
-  right: 0;
-  bottom: 86px;
-  width: 250px;
-  height: 250px;
-  cursor: grab;
-  touch-action: none;
-  filter: drop-shadow(0 14px 22px rgba(20, 26, 48, .22));
-}
-.pet2-big:active { cursor: grabbing; }
-.pet2-big[hidden] { display: none !important; }
-
-.pet2-stage {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-origin: 50% 92%;
-  transform: translate(var(--mo-x, 0px), var(--mo-y2, 0px)) rotate(var(--mo-tilt2, 0deg));
-  transition: transform .18s ease-out;
-  animation: pet2-breathe-big 4.6s ease-in-out infinite;
-}
-@keyframes pet2-breathe-big {
-  0%   { scale: 1;       rotate: 0deg; }
-  25%  { scale: 1.008;   rotate: .22deg; }
-  50%  { scale: 1.014;   rotate: 0deg; }
-  75%  { scale: 1.006;   rotate: -.22deg; }
-  100% { scale: 1;       rotate: 0deg; }
-}
-
-.pet2-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
-.pet2-layer[data-layer="body"]    { z-index: 1; }
-.pet2-layer[data-layer="scarf"]   { z-index: 2; }
-.pet2-layer[data-layer="jacket"]  { z-index: 3; }
-.pet2-layer[data-layer="glasses"] { z-index: 4; }
-.pet2-layer[hidden] { display: none !important; }
-
-/* 配饰跟随感：围巾轻摆、眼镜微浮，像真的穿在身上有重量 */
-.pet2-layer[data-layer="scarf"]:not([hidden]) {
-  transform-origin: 50% 56%;
-  animation: pet2-scarf-sway 3.8s ease-in-out infinite;
-}
-.pet2-layer[data-layer="glasses"]:not([hidden]) {
-  animation: pet2-glasses-float 4.5s ease-in-out infinite;
-}
-.pet2-layer[data-layer="jacket"]:not([hidden]) {
-  transform-origin: 50% 30%;
-  animation: pet2-jacket-breathe 4.2s ease-in-out infinite;
-}
-@keyframes pet2-scarf-sway {
-  0%, 100% { transform: rotate(-1.4deg) translateX(-.5px); }
-  50%      { transform: rotate(1.4deg) translateX(.5px); }
-}
-@keyframes pet2-glasses-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-1.5px); }
-}
-@keyframes pet2-jacket-breathe {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.006); }
-}
-
-/* 穿戴动画：选中配饰时不是直接贴上去，而是"穿"到身上 */
-.pet2-layer.is-wearing[data-layer="glasses"] {
-  animation: pet2-wear-glasses .5s cubic-bezier(.3,1.6,.5,1) !important;
-}
-.pet2-layer.is-wearing[data-layer="scarf"] {
-  animation: pet2-wear-scarf .55s cubic-bezier(.3,1.5,.5,1) !important;
-}
-.pet2-layer.is-wearing[data-layer="jacket"] {
-  animation: pet2-wear-jacket .5s cubic-bezier(.3,1.5,.5,1) !important;
-}
-@keyframes pet2-wear-glasses {
-  0%   { transform: translateY(-65%) scale(.78); opacity: 0; }
-  60%  { transform: translateY(7%) scale(1.06); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-@keyframes pet2-wear-scarf {
-  0%   { transform: translateX(-42%) rotate(-22deg); opacity: 0; }
-  60%  { transform: translateX(6%) rotate(5deg); opacity: 1; }
-  100% { transform: translateX(0) rotate(0); opacity: 1; }
-}
-@keyframes pet2-wear-jacket {
-  0%   { transform: translateY(-52%) scale(.84); opacity: 0; }
-  60%  { transform: translateY(5%) scale(1.04); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-/* 大熊动作 */
-.pet2-big.is-wave .pet2-stage { animation: pet2-bigwave 1.1s ease-in-out 2; }
-.pet2-big.is-bow  .pet2-stage { animation: pet2-bow 1.1s ease-in-out; }
-.pet2-big.is-jump .pet2-stage { animation: pet2-bigjump .66s cubic-bezier(.3,1.6,.5,1); }
-.pet2-big.is-think .pet2-stage { animation: pet2-think 1.2s ease-in-out; }
-.pet2-big.is-heart .pet2-stage { animation: pet2-heart 1.1s ease-in-out; }
-
-@keyframes pet2-bigwave {
-  0%, 100% { rotate: 0deg; }
-  25%      { rotate: -3.5deg; }
-  75%      { rotate: 3.5deg; }
-}
-@keyframes pet2-bow {
-  0%, 100% { rotate: 0deg; translate: 0 0; }
-  45%      { rotate: 7deg; translate: 0 8px; }
-}
-@keyframes pet2-bigjump {
-  0%   { translate: 0 0; }
-  35%  { translate: 0 -18px; scale: 1 1.03; }
-  70%  { translate: 0 3px; scale: 1.02 .98; }
-  100% { translate: 0 0; }
-}
-@keyframes pet2-think {
-  0%, 100% { rotate: 0deg; }
-  30%      { rotate: -3deg; }
-  65%      { rotate: 2deg; }
-}
-@keyframes pet2-heart {
-  0%, 100% { scale: 1; }
-  40%      { scale: 1.035; }
-  70%      { scale: .995; }
-}
-
-/* ---------- 圆环 ---------- */
-.pet2-ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 30; }
-.pet2-ring[hidden] { display: none !important; }
-
-.pet2-cat {
-  position: absolute;
-  width: 54px; height: 54px; margin: -27px 0 0 -27px;
-  border: none; border-radius: 50%;
-  background: #fff; color: #2b3245;
-  font-size: 12px; font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(20, 26, 48, .18);
-  display: flex; align-items: center; justify-content: center;
-  transform: rotate(var(--a, 0deg)) translateY(-132px) rotate(calc(-1 * var(--a, 0deg)));
-  transition: transform .16s ease, box-shadow .16s ease;
-}
-.pet2-cat:hover { box-shadow: 0 8px 20px rgba(20, 26, 48, .26); }
-.pet2-cat.is-on { background: #4f6ef7; color: #fff; }
-.pet2-cat.is-off { opacity: .5; cursor: not-allowed; }
-
-/* ---------- 选项（海星式直线） ---------- */
-.pet2-arm { position: absolute; width: 0; height: 0; z-index: 31; }
-.pet2-arm[hidden] { display: none !important; }
-
-.pet2-opt {
-  position: absolute;
-  width: 56px; height: 56px; padding: 0;
-  border: 2px solid #fff; border-radius: 50%;
-  background: #f4f6fd; cursor: pointer; overflow: hidden;
-  box-shadow: 0 4px 12px rgba(20, 26, 48, .18);
-  transition: transform .14s ease, box-shadow .14s ease;
-}
-.pet2-opt:hover { box-shadow: 0 6px 16px rgba(20, 26, 48, .26); }
-.pet2-opt.is-on { border-color: #4f6ef7; box-shadow: 0 0 0 3px rgba(79, 110, 247, .18); }
-.pet2-opt img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.pet2-opt .pet2-opt-none {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 100%; font-size: 11px; color: #7b8398;
-}
 
 /* ---------- 聊天小窗口（可拖动） ---------- */
 .pet2-panel {
@@ -275,7 +101,6 @@
   padding: 10px 12px;
   background: linear-gradient(135deg, #f5f7ff, #eef1fc);
   border-bottom: 1px solid #e7ebf7;
-  cursor: move;
   cursor: grab;
   touch-action: none;
 }
@@ -350,19 +175,10 @@ html[data-theme="night"] .pet2-msg.ai { background: #242c45; color: #dfe4f5; }
 html[data-theme="night"] .pet2-inputrow { background: #1b2135; border-top-color: #2c3450; }
 html[data-theme="night"] .pet2-inputrow input { background: #232b45; border-color: #313a58; color: #e8ebf6; }
 html[data-theme="night"] .pet2-inputrow input:focus { background: #26304d; border-color: #5a6ea8; }
-
-/* ---------- 夜猫模式 ---------- */
 html[data-theme="night"] .pet2-bubble { background: #1f2740; color: #e8ebf6; }
-html[data-theme="night"] .pet2-cat { background: #1f2740; color: #e8ebf6; }
-html[data-theme="night"] .pet2-cat.is-on { background: #5b76ff; color: #fff; }
-html[data-theme="night"] .pet2-opt { background: #1f2740; border-color: #2b3350; }
 
 /* ---------- 窄屏 ---------- */
 @media (max-width: 640px) {
   .pet2-mini { width: 78px; height: 78px; }
   .pet2-mini img { width: 72px; height: 72px; }
-  .pet2-big { width: 200px; height: 200px; bottom: 74px; }
-  .pet2-cat { width: 46px; height: 46px; margin: -23px 0 0 -23px; font-size: 11px;
-              transform: rotate(var(--a, 0deg)) translateY(-108px) rotate(calc(-1 * var(--a, 0deg))); }
-  .pet2-opt { width: 48px; height: 48px; }
 }

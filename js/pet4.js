@@ -26,7 +26,8 @@
   var drag = null;
   var timers = { idle: null, blob: null, expr: null, bubble: null, blink: null };
   var curFace = 1;
-  var bigStart = null;
+  var openMenuRef = null;   /* bind() 里赋值的右键菜单函数 */
+  var quietUntil = 0;   /* 右键"安静 10 分钟"期间不乱眨眼/不提醒 */
 
   function $(id) { return document.getElementById(id); }
   function isDay() { var h = new Date().getHours(); return h >= 6 && h < 18; }
@@ -259,7 +260,6 @@
       { t: '🙈 安静 10 分钟', f: function () { quietUntil = Date.now() + 10 * 60 * 1000; el.root.style.opacity = '.45'; say('好，我先安静一会儿。'); } },
       { t: '👋 藏起来', f: function () { el.root.style.display = 'none'; setTimeout(function () { el.root.style.display = ''; say('我回来了。'); }, 20000); } }
     ];
-    var quietUntil = 0;
 
     el.orb.addEventListener('contextmenu', function (e) {
       e.preventDefault();
@@ -294,6 +294,7 @@
       var m = document.getElementById('pet4Menu');
       if (m) m.remove();
     }
+    openMenuRef = openMenu;
 
     /* ---- 喝水 / 休息提醒（像 pink-bear 的定时提醒） ---- */
     var waterAt = Date.now() + 40 * 60 * 1000;
@@ -333,7 +334,7 @@
     blink: blinkOnce,
     play: play,
     say: say,
-    menu: function () { openMenu(innerWidth - 200, innerHeight - 240); },
+    menu: function () { if (openMenuRef) openMenuRef(innerWidth - 220, innerHeight - 260); },
     nextFace: function () { var p = pool(); curFace = p[(p.indexOf(curFace) + 1) % p.length]; paint(); return curFace; }
   };
 })();
