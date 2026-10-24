@@ -1,7 +1,8 @@
 /* ==========================================================
    cs-courses-real.js · 计算机科学与技术：把占位关替换为真题（第一批）
-   覆盖：面向对象程序设计（C++）、数据结构、离散数学、
+   覆盖：数据结构、离散数学、
          数字逻辑、计算机组成与结构、概率论与数理统计
+   C++ 课程见 cpp-courses.js（按 40 个主题重写为 10 章）
    第二批见 cs-courses-real2.js，第三批见 cs-courses-real3.js
    ========================================================== */
 (function () {
@@ -16,38 +17,6 @@
   };
 
   var COURSES = {
-    '面向对象程序设计（C++）': [
-      { title: '类与对象', brief: '封装、构造析构与 this 指针。',
-        q: [
-          { stem: 'C++ 中实现封装主要依靠：', options: ['类的访问限定符（public/private/protected）', '全局变量', '宏定义', '头文件'], answer: 0, explain: '封装通过把数据与操作放在类中并限定访问权限实现。' },
-          { stem: '构造函数的作用是：', options: ['创建对象时初始化对象状态', '释放对象资源', '拷贝对象地址', '声明对象类型'], answer: 0, explain: '构造函数在对象创建时自动调用，用于初始化成员。' },
-          { stem: '析构函数在何时被调用：', options: ['对象生命周期结束时', '对象创建时', '调用 new 时', '程序编译时'], answer: 0, explain: '对象离开作用域或被 delete 时自动调用析构函数释放资源。' }
-        ],
-        doc: { lead: '这一章从「写函数」过渡到「设计类」。', sections: [
-          { id: 'k1', title: '封装', html: `<p>类把数据与成员函数组织在一起，通过 public/private/protected 控制可见性；this 指针指向当前对象。</p>` },
-          { id: 'k2', title: '生命周期', html: `<ul><li>构造函数：创建对象时初始化，可重载。</li><li>析构函数：对象销毁时释放资源，配合深浅拷贝处理动态内存。</li></ul>` }
-        ], refs: [REFS.ccf] } },
-      { title: '继承与多态', brief: '派生、虚函数与动态绑定。',
-        q: [
-          { stem: '实现运行时多态必须满足：', options: ['基类虚函数 + 通过指针或引用调用', '函数重载即可', '使用 static 成员', '把构造函数设为虚函数'], answer: 0, explain: '虚函数配合基类指针/引用调用才能触发动态绑定。' },
-          { stem: '下列关于构造函数为虚函数的说法正确的是：', options: ['构造函数不能是虚函数', '可以是虚函数', '必须是虚函数', '必须是纯虚函数'], answer: 0, explain: '构造对象时虚函数表尚未建立，构造函数不能为虚函数。' },
-          { stem: '纯虚函数的作用是：', options: ['定义接口并强制派生类实现', '提高运行速度', '禁止继承', '自动生成代码'], answer: 0, explain: '含纯虚函数的类是抽象类，派生类必须实现该接口。' }
-        ],
-        doc: { lead: '这一章是 C++ 面向对象设计的核心。', sections: [
-          { id: 'k1', title: '继承', html: `<p>派生类继承基类成员；public 继承表示「是一个」的关系，派生析构时先析构派生部分再析构基类部分。</p>` },
-          { id: 'k2', title: '多态', html: `<ul><li>虚函数表实现动态绑定：基类指针调用虚函数时按对象实际类型分派。</li><li>纯虚函数 → 抽象类 → 接口约束。</li></ul>` }
-        ], refs: [REFS.ccf] } },
-      { title: '模板与 STL', brief: '函数模板、类模板与常用容器。',
-        q: [
-          { stem: '模板的主要作用是：', options: ['实现与类型无关的泛型代码', '加快编译速度', '减少内存占用', '替代继承'], answer: 0, explain: '模板把类型参数化，一份代码适配多种类型。' },
-          { stem: '下列容器中查找平均时间复杂度为常数级的是：', options: ['unordered_map', 'vector', 'list', 'set'], answer: 0, explain: 'unordered_map 基于哈希表，平均 O(1)；set 为 O(log n)，vector/list 查找为 O(n)。' },
-          { stem: 'vector 在尾部频繁插入但偶尔扩容时，均摊复杂度为：', options: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'], answer: 0, explain: '扩容按倍数增长，均摊后尾部插入为 O(1)。' }
-        ],
-        doc: { lead: '这一章把 C++ 用到能写工程代码。', sections: [
-          { id: 'k1', title: '模板', html: `<p>函数模板与类模板在编译期实例化；typename/class 声明类型参数，支持特化与偏特化。</p>` },
-          { id: 'k2', title: 'STL', html: `<ul><li>序列容器：vector、deque、list。</li><li>关联容器：map/set（红黑树）与 unordered_map（哈希）。</li><li>算法：sort、find、lower_bound 等配合迭代器使用。</li></ul>` }
-        ], refs: [REFS.ccf] } }
-    ],
     '数据结构': [
       { title: '线性表、栈与队列', brief: '顺序表、链表与受限线性结构。',
         q: [
