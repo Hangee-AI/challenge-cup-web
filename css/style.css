@@ -2300,6 +2300,11 @@ button.doc-nav-label { display: flex; align-items: center; gap: 8px; }
 .doc-nav-stage[data-fold]:hover, .doc-nav-label[data-fold]:hover { color: var(--brand); }
 .doc-nav-group:not(.is-open) > .doc-nav-group-body { display: none; }
 .doc-nav-sub:not(.is-open) > .doc-nav-sub-body { display: none; }
+/* 电脑版：阶段 / 课程默认收起，点标题才展开 */
+.stage:not(.is-open) > .stage-body { display: none; }
+.module:not(.is-open) > .module-body { display: none; }
+/* 目录里当前课程高亮 */
+.doc-nav-sub.is-cur > .doc-nav-label { color: var(--brand); }
 
 /* 桌面端：目录卡片的折叠按钮不显示 */
 .doc-fold-btn { display: none; }
@@ -3585,11 +3590,14 @@ html[data-theme="night"] .pet-head {
 }
 
 @media (max-width: 640px) {
-  .search-hero { padding: 16px 14px 20px; }
-  .search-hero-input { font-size: 15px; }
-  .search-hero-box { padding: 12px 16px; }
+  /* 手机版：压扁搜索栏，减少首屏占用 */
+  .search-hero { padding: 10px 12px 12px; }
+  .search-hero-title { font-size: 12.5px; margin-bottom: 6px; }
+  .search-hero-box { padding: 8px 12px; gap: 8px; }
+  .search-hero-ico { font-size: 18px; }
+  .search-hero-input { font-size: 16px; }
   .search-results { max-height: 60vh; }
-  .search-hero-tags { gap: 6px; }
+  .search-hero-tags { gap: 6px; margin-top: 6px; }
   .search-hero-tags a { padding: 2px 10px; font-size: 12px; }
 }
 

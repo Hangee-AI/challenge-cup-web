@@ -81,6 +81,8 @@
   /* ---------------- 视图切换 ---------------- */
   var VIEWS = ['home', 'browse', 'style', 'major', 'subjects', 'map', 'doc', 'video', 'level', 'report', 'mistakes', 'profile', 'course'];
   var curView = 'home';
+  /* 折叠状态记忆：让阶段 / 课程的展开状态在重渲染后保持，默认全部收起 */
+  var foldOpenMap = {};
 
   /* 离开视频页即停止播放：B 站 iframe 无跨域暂停接口，清空 src 最可靠；
      再次进入视频页时 renderVideo() 会重新设置 src，不受影响 */
@@ -98,6 +100,10 @@
     if (name === 'course' && !state.courseId) name = 'home';
     if (name !== 'video') stopVideo();
     curView = name;
+
+    // 顶部搜索栏只在首页和「我的路径」出现，进入课程后隐藏
+    var hero = $('searchHero');
+    if (hero) hero.hidden = !(name === 'home' || name === 'major');
 
     VIEWS.forEach(function (v) {
       var node = $('view-' + v);
@@ -470,7 +476,7 @@
     }
 
     path.stages.forEach(function (stage, si) {
-      var stageOpen = si === focus.si;
+      var stageOpen = si === focus.si || !!foldOpenMap['stage:' + si];
       var wrap = el('div', 'stage fold' + (stageOpen ? ' is-open' : ''));
       var stageDone = 0, stageTotal = 0;
       stage.modules.forEach(function (mod) {
@@ -483,6 +489,7 @@
       var head = el('button', 'stage-head');
       head.type = 'button';
       head.setAttribute('data-fold', '');
+      head.setAttribute('data-fold-key', 'stage:' + si);
       head.setAttribute('aria-expanded', stageOpen ? 'true' : 'false');
       head.innerHTML =
         '<span class="stage-badge">' + (si + 1) + '</span>' +
@@ -496,13 +503,15 @@
 
       var mods = el('div', 'modules stage-body');
       stage.modules.forEach(function (mod, mi) {
-        var modOpen = stageOpen && mi === focus.mi;
+        var modOpen = !!foldOpenMap['mod:' + si + ':' + mi] ||
+          (isMobileView() && stageOpen && mi === focus.mi);
         var card = el('div', 'module fold' + (modOpen ? ' is-open' : ''));
         var modDone = mod.levels.filter(function (lv) { return !!state.done[lv.id]; }).length;
 
         var mh = el('button', 'module-head');
         mh.type = 'button';
         mh.setAttribute('data-fold', '');
+        mh.setAttribute('data-fold-key', 'mod:' + si + ':' + mi);
         mh.setAttribute('aria-expanded', modOpen ? 'true' : 'false');
         var modBook = (typeof textbookOf === 'function' && mod.levels[0] && mod.levels[0].sync)
           ? mod.levels[0].sync.book : null;
@@ -1326,13 +1335,13 @@
       });
     });
 
-    var desktopNav = !isMobileView();
     path.stages.forEach(function (stage, si) {
-      var groupOpen = desktopNav || si === curStage;
+      var groupOpen = si === curStage || !!foldOpenMap['docg:' + si];
       var group = el('div', 'doc-nav-group fold' + (groupOpen ? ' is-open' : ''));
       var stageHead = el('button', 'doc-nav-stage');
       stageHead.type = 'button';
       stageHead.setAttribute('data-fold', '');
+      stageHead.setAttribute('data-fold-key', 'docg:' + si);
       stageHead.setAttribute('aria-expanded', groupOpen ? 'true' : 'false');
       stageHead.innerHTML =
         '<span class="doc-nav-stage-txt">' + stage.title + '</span>' +
@@ -1341,11 +1350,15 @@
 
       var groupBody = el('div', 'doc-nav-group-body');
       stage.modules.forEach(function (mod, mi) {
-        var open = desktopNav || (si === curStage && mi === curModule);
-        var sub = el('div', 'doc-nav-sub fold' + (open ? ' is-open' : ''));
+        // 所有课程默认收起，点课程名才展开；当前课程高亮（下面会滚动到它的位置）
+        var isCur = si === curStage && mi === curModule;
+        var open = !!foldOpenMap['docm:' + si + ':' + mi] ||
+          (isMobileView() && si === curStage && mi === curModule);
+        var sub = el('div', 'doc-nav-sub fold' + (open ? ' is-open' : '') + (isCur ? ' is-cur' : ''));
         var modHead = el('button', 'doc-nav-label');
         modHead.type = 'button';
         modHead.setAttribute('data-fold', '');
+        modHead.setAttribute('data-fold-key', 'docm:' + si + ':' + mi);
         modHead.setAttribute('aria-expanded', open ? 'true' : 'false');
         modHead.innerHTML =
           '<span class="doc-nav-label-txt">' + mod.name + '</span>' +
@@ -1371,8 +1384,16 @@
       nav.appendChild(group);
     });
 
-    // 桌面端默认全展开（可点大标题收起）；手机端只展开当前阶段/课程
+    // 课程默认收起；侧边栏自动滚到当前课程，而不是一直停在顶端
     applyDocSideState();
+    var curSub = nav.querySelector('.doc-nav-sub.is-cur');
+    if (curSub && nav.clientHeight) {
+      var navTop = nav.getBoundingClientRect().top;
+      var subTop = curSub.getBoundingClientRect().top - navTop;
+      if (subTop < 0 || subTop > nav.clientHeight - 56) {
+        nav.scrollTop += subTop - 10;
+      }
+    }
 
     // 正文
     $('docCrumb').textContent = found.stage.title + ' / ' + found.module.name;
@@ -1431,7 +1452,7 @@
     } else {
       btn.hidden = true;
     }
-    $('docBack').textContent = '← 返回' + (state.fromMap ? '地图' : '路径');
+    $('docBack').textContent = '← 返回路径';
   }
 
   function currentLevel() {
@@ -2073,6 +2094,8 @@
       if (host) {
         var opened = host.classList.toggle('is-open');
         fold.setAttribute('aria-expanded', opened ? 'true' : 'false');
+        var fk = fold.getAttribute('data-fold-key');
+        if (fk) foldOpenMap[fk] = opened;
       }
       return;
     }
@@ -2124,7 +2147,7 @@
   $('openExplain').addEventListener('click', function (e) { e.preventDefault(); openExplainOfCurrentLevel(); });
   $('backToMajor2').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
   $('docStartQuiz').addEventListener('click', startQuiz);
-  $('docBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
+  $('docBack').addEventListener('click', function (e) { e.preventDefault(); show('major'); });
   $('courseBack').addEventListener('click', function (e) { e.preventDefault(); show('home'); });
   $('videoStartQuiz').addEventListener('click', startQuiz);
   $('videoBack').addEventListener('click', function (e) { e.preventDefault(); show(state.fromMap ? 'map' : 'major'); });
