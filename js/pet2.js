@@ -93,7 +93,19 @@
         '</div>' +
       '</div>' +
       '<div class="pet2-mini" id="pet2Mini"><img id="pet2Head" alt="小引" /></div>' +
-      '<div class="pet2-bubble" id="pet2Bubble"></div>';
+      '<div class="pet2-bubble" id="pet2Bubble"></div>' +
+      /* 聊天小窗口：可拖动，head 是拖拽把手 */
+      '<div class="pet2-panel" id="pet2Panel" hidden>' +
+        '<div class="pet2-panel-head" id="pet2PanelHead">' +
+          '<div class="pet2-panel-title">小引 · 学习搭子<span class="pet2-panel-sub" id="pet2Sub">正在连接…</span></div>' +
+          '<button class="pet2-panel-x" id="pet2Close" type="button" aria-label="收起">✕</button>' +
+        '</div>' +
+        '<div class="pet2-log" id="pet2Log"></div>' +
+        '<form class="pet2-inputrow" id="pet2Form">' +
+          '<input id="pet2Input" type="text" maxlength="300" placeholder="问点什么，比如：这关重点是什么？" autocomplete="off" />' +
+          '<button type="submit">发送</button>' +
+        '</form>' +
+      '</div>';
     document.body.appendChild(root);
 
     el.root = root;
@@ -104,6 +116,12 @@
     el.ring = $('pet2Ring');
     el.arm = $('pet2Arm');
     el.bubble = $('pet2Bubble');
+    el.panel = $('pet2Panel');
+    el.panelHead = $('pet2PanelHead');
+    el.log = $('pet2Log');
+    el.form = $('pet2Form');
+    el.input = $('pet2Input');
+    el.sub = $('pet2Sub');
     el.body = root.querySelector('[data-layer="body"]');
     el.scarf = root.querySelector('[data-layer="scarf"]');
     el.jacket = root.querySelector('[data-layer="jacket"]');
@@ -199,6 +217,116 @@
 
   function openBig() { setForm('big'); saveJSON(K_FORM, 'big'); playGesture('big', 'wave'); playGesture('mini', 'wave'); }
   function closeBig() { setForm('mini'); }
+
+  /* ---------------- 聊天小窗口 ---------------- */
+  var K_PANEL = 'pet2_panel_pos';
+  var waiting = false;
+
+  function showPanel() {
+    if (!el.panel) return;
+    el.panel.hidden = false;
+    if (!el.panel.dataset.placed) {
+      var p = loadJSON(K_PANEL, null);
+      if (p && typeof p.left === 'number') {
+        placePanel(p.left, p.top);
+      } else {
+        /* 默认贴在宠物左上方 */
+        var r = el.panel.getBoundingClientRect();
+        var pw = r.width || 300, ph = r.height || 320;
+        placePanel(Math.max(12, window.innerWidth - pw - 140),
+                   Math.max(12, window.innerHeight - ph - 120));
+      }
+      el.panel.dataset.placed = '1';
+    }
+    checkStatus();
+    setTimeout(function () { if (el.input) el.input.focus(); }, 60);
+  }
+  function hidePanel() { if (el.panel) el.panel.hidden = true; }
+
+  function placePanel(left, top) {
+    if (!el.panel) return;
+    var w = el.panel.offsetWidth || 300, h = el.panel.offsetHeight || 320;
+    left = Math.min(Math.max(8, left), Math.max(8, window.innerWidth - w - 8));
+    top  = Math.min(Math.max(8, top),  Math.max(8, window.innerHeight - h - 8));
+    el.panel.style.left = left + 'px';
+    el.panel.style.top = top + 'px';
+    el.panel.style.right = 'auto';
+    el.panel.style.bottom = 'auto';
+  }
+
+  function apiBase() {
+    try { if (window.Cloud && window.Cloud.apiBase) return window.Cloud.apiBase() || ''; } catch (e) { }
+    return '';
+  }
+  function apiUrl(p) { return apiBase() + p; }
+
+  function ctxLine() {
+    var s = '';
+    try {
+      var st = window.__YL && window.__YL.state;
+      if (st) {
+        if (st.majorId && window.MAJORS) {
+          var major = window.MAJORS.filter(function (m) { return m.id === st.majorId; })[0];
+          if (major) s += '专业：' + major.name + '；';
+        }
+        if (st.levelId) s += '当前关卡：' + st.levelId + '；';
+      }
+    } catch (e) { }
+    return s;
+  }
+
+  function localAnswer(q) {
+    if (/换装|衣服|穿|围巾|眼镜/.test(q)) return '点我旁边的大熊，圆环里选肤色、眼镜、围巾、外套，选完会记住～';
+    if (/重点|怎么学|方法/.test(q)) return '先把这一关的目标说清楚：看懂什么、动手做什么。不确定就点「这关重点是什么」，我按三句话讲。';
+    if (/卡住|不会|难/.test(q)) return '卡住时先把问题缩小：哪一行报错、哪一步不懂。把报错发我，我陪你拆。';
+    if (/多久|时间/.test(q)) return '一天 10 分钟，一学期就是一门课的量。先别追进度，先别断。';
+    return '我在。你可以问这一关的重点、要装什么工具，或者告诉我卡在哪一步。';
+  }
+
+  function addMsg(role, text) {
+    if (!el.log) return null;
+    var d = document.createElement('div');
+    d.className = 'pet2-msg ' + (role === 'me' ? 'me' : 'ai');
+    d.textContent = text;
+    el.log.appendChild(d);
+    el.log.scrollTop = el.log.scrollHeight;
+    return d;
+  }
+
+  function send(text) {
+    addMsg('me', text);
+    if (waiting) return;
+    waiting = true;
+    var t = addMsg('ai', '想想…');
+    if (t) t.classList.add('is-typing');
+    fetch(apiUrl('/api/chat'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, context: ctxLine() })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (t) t.textContent = j.reply || j.text || localAnswer(text);
+      if (el.sub && j.provider) el.sub.textContent = '在线 · ' + (j.model || j.provider);
+    }).catch(function () {
+      if (t) t.textContent = localAnswer(text);
+      if (el.sub) el.sub.textContent = '只连着本地（未接大模型）';
+    }).then(function () {
+      if (t) t.classList.remove('is-typing');
+      waiting = false;
+      if (el.log) el.log.scrollTop = el.log.scrollHeight;
+      if (form === 'big') resetIdle();
+    });
+  }
+
+  function checkStatus() {
+    if (!el.sub) return;
+    fetch(apiUrl('/api/chat/status')).then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.ready) el.sub.textContent = '在线 · ' + (j.model || j.provider || 'AI');
+      else el.sub.textContent = '只连着本地（未接大模型）';
+    }).catch(function () { if (el.sub) el.sub.textContent = '只连着本地'; });
+  }
 
   /* ---------------- 圆环 / 选项 ---------------- */
   function showRing() {
@@ -407,10 +535,47 @@
         saveJSON(K_POS, { right: parseFloat(st.right) || 26, bottom: parseFloat(st.bottom) || 26 });
       } else {
         openBig();
+        showPanel();
       }
     }
     el.mini.addEventListener('pointerup', miniFinish);
     el.mini.addEventListener('pointercancel', function () { miniStart = null; });
+
+    /* 聊天窗口：head 拖动 + 发送 + 收起 */
+    var panStart = null;
+    el.panelHead.addEventListener('pointerdown', function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      if (e.target.closest && e.target.closest('.pet2-panel-x')) return;
+      var r = el.panel.getBoundingClientRect();
+      panStart = { x: e.clientX, y: e.clientY, left: r.left, top: r.top };
+      el.panelHead.setPointerCapture && el.panelHead.setPointerCapture(e.pointerId);
+      el.panel.classList.add('is-dragging');
+      e.preventDefault();
+    });
+    el.panelHead.addEventListener('pointermove', function (e) {
+      if (!panStart) return;
+      placePanel(panStart.left + (e.clientX - panStart.x), panStart.top + (e.clientY - panStart.y));
+    });
+    function panFinish() {
+      if (!panStart) return;
+      panStart = null;
+      el.panel.classList.remove('is-dragging');
+      var st = el.panel.style;
+      saveJSON(K_PANEL, { left: parseFloat(st.left) || 0, top: parseFloat(st.top) || 0 });
+    }
+    el.panelHead.addEventListener('pointerup', panFinish);
+    el.panelHead.addEventListener('pointercancel', panFinish);
+
+    $('pet2Close').addEventListener('click', function () { hidePanel(); });
+    el.form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = el.input.value.trim();
+      if (!v) return;
+      el.input.value = '';
+      send(v);
+    });
+    /* 窗口里的输入/点击不要触发"点空白处收起圆环"等逻辑 */
+    el.panel.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
 
     /* 大熊：拖动只移动自己；单击展开/收起圆环 */
     var bigStart = null, bigMoved = false;
@@ -478,7 +643,11 @@
 
   function resetIdle() {
     stopIdle();
-    idleTimer = setTimeout(function () { closeBig(); }, IDLE_MS);
+    idleTimer = setTimeout(function () {
+      /* 聊天窗口开着的时候不自动收起大熊，避免打字打到一半宠物跑了 */
+      if (el.panel && !el.panel.hidden) return;
+      closeBig();
+    }, IDLE_MS);
   }
   function stopIdle() { if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; } }
 

@@ -1,0 +1,158 @@
+/* ==========================================================
+   pet3.css · 「光球小引」（纯 SVG/CSS 绘制，天然有生命感）
+   呼吸形变 / 光晕呼吸 / 眨眼 / 眼神跟随 / 鼠标吸引 / 点击挤压弹跳 / 拖拽拉伸
+   ========================================================== */
+
+.pet3 {
+  position: fixed;
+  right: 26px;
+  bottom: 24px;
+  z-index: 2147483000;
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: inherit;
+}
+
+/* ---- 球体 ---- */
+.pet3-orb {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  cursor: pointer;
+  touch-action: none;
+  transition: transform .18s cubic-bezier(.3, 1.4, .5, 1);
+  transform: translate(var(--mx, 0px), var(--my, 0px)) rotate(var(--mt, 0deg));
+  will-change: transform;
+}
+.pet3-orb:hover { transform: translate(var(--mx, 0px), var(--my, 0px)) rotate(var(--mt, 0deg)) scale(1.06); }
+
+/* 光晕（呼吸） */
+.pet3-halo {
+  position: absolute;
+  inset: -26%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(96, 156, 255, .55), rgba(80, 130, 255, .18) 45%, rgba(70, 120, 255, 0) 70%);
+  filter: blur(10px);
+  animation: pet3-halo 4.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pet3-halo {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50%      { opacity: .95; transform: scale(1.08); }
+}
+
+/* 球身：多层径向渐变 + 形变呼吸 */
+.pet3-body {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,0) 34%),
+    radial-gradient(circle at 62% 68%, #7fb4ff, rgba(127,180,255,0) 52%),
+    radial-gradient(circle at 46% 44%, #6aa6ff 0%, #3f7dff 42%, #2a55d8 72%, #1b348f 100%);
+  box-shadow:
+    inset 0 -10px 18px rgba(18, 40, 120, .45),
+    inset 0 8px 16px rgba(255, 255, 255, .22),
+    0 10px 26px rgba(28, 58, 160, .38);
+  border-radius: 48% 52% 46% 54% / 52% 48% 54% 46%;
+  animation: pet3-morph 7.2s ease-in-out infinite;
+  will-change: border-radius, transform;
+}
+@keyframes pet3-morph {
+  0%   { border-radius: 48% 52% 46% 54% / 52% 48% 54% 46%; transform: scale(1, 1); }
+  25%  { border-radius: 52% 48% 50% 50% / 49% 52% 48% 51%; transform: scale(1.02, .985); }
+  50%  { border-radius: 45% 55% 52% 48% / 54% 46% 52% 48%; transform: scale(.99, 1.015); }
+  75%  { border-radius: 50% 50% 45% 55% / 47% 53% 47% 53%; transform: scale(1.015, .99); }
+  100% { border-radius: 48% 52% 46% 54% / 52% 48% 54% 46%; transform: scale(1, 1); }
+}
+
+/* 眼睛 */
+.pet3-eyes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  pointer-events: none;
+  transform: translate(var(--ex, 0px), var(--ey, 0px));
+  transition: transform .16s ease-out;
+}
+.pet3-eye {
+  width: 13px;
+  height: 17px;
+  border-radius: 7px;
+  background: linear-gradient(#ffffff, #eaf1ff);
+  box-shadow: 0 0 8px rgba(255, 255, 255, .85), 0 0 2px rgba(255,255,255,.9) inset;
+  transform-origin: 50% 60%;
+  animation: pet3-blink 5.2s infinite;
+}
+.pet3-eye.r { animation-delay: .06s; }
+@keyframes pet3-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  94%, 97%      { transform: scaleY(.12); }
+}
+
+/* 悬浮（整体轻微上下浮动） */
+.pet3-float { animation: pet3-float 5.4s ease-in-out infinite; }
+@keyframes pet3-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* 动作：挤压弹跳 / 惊讶 / 摇头 */
+.pet3.is-hop .pet3-body { animation: pet3-hop .62s cubic-bezier(.3, 1.7, .5, 1); }
+@keyframes pet3-hop {
+  0%   { transform: scale(1, 1) translateY(0); }
+  28%  { transform: scale(1.14, .84) translateY(2px); }
+  52%  { transform: scale(.92, 1.12) translateY(-18px); }
+  76%  { transform: scale(1.06, .94) translateY(0); }
+  100% { transform: scale(1, 1) translateY(0); }
+}
+.pet3.is-wobble .pet3-body { animation: pet3-wobble .9s ease-in-out; }
+@keyframes pet3-wobble {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25%      { transform: rotate(-6deg) scale(1.03, .97); }
+  75%      { transform: rotate(6deg) scale(1.03, .97); }
+}
+.pet3.is-squash .pet3-body { animation: pet3-squash .7s ease-out; }
+@keyframes pet3-squash {
+  0%   { transform: scale(1, 1); }
+  35%  { transform: scale(1.16, .86); }
+  70%  { transform: scale(.95, 1.05); }
+  100% { transform: scale(1, 1); }
+}
+
+/* 大号（展开后） */
+.pet3-big { width: 168px; height: 168px; }
+.pet3-big .pet3-eye { width: 22px; height: 29px; border-radius: 11px; }
+.pet3-big .pet3-eyes { gap: 26px; }
+
+/* 气泡 */
+.pet3-bubble {
+  position: absolute;
+  right: 108px;
+  bottom: 30px;
+  max-width: 220px;
+  padding: 9px 13px;
+  border-radius: 15px 15px 5px 15px;
+  background: #fff;
+  color: #2b3245;
+  font-size: 12.5px;
+  line-height: 1.55;
+  box-shadow: 0 8px 22px rgba(20, 26, 48, .16);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .22s ease, transform .22s ease;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+.pet3-bubble.is-on { opacity: 1; transform: translateY(0); }
+
+html[data-theme="night"] .pet3-bubble { background: #1f2740; color: #e8ebf6; }
+
+@media (max-width: 640px) {
+  .pet3-orb { width: 74px; height: 74px; }
+  .pet3-big { width: 132px; height: 132px; }
+  .pet3-eye { width: 11px; height: 14px; }
+  .pet3-big .pet3-eye { width: 18px; height: 24px; }
+}

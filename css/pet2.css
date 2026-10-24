@@ -194,6 +194,109 @@
   width: 100%; height: 100%; font-size: 11px; color: #7b8398;
 }
 
+/* ---------- 聊天小窗口（可拖动） ---------- */
+.pet2-panel {
+  position: fixed;
+  left: 0; top: 0;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  display: flex; flex-direction: column;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(20, 26, 48, .22), 0 2px 8px rgba(20, 26, 48, .12);
+  overflow: hidden;
+  z-index: 2147483001;
+  -webkit-user-select: text;
+  user-select: text;
+  animation: pet2-panel-in .18s ease-out;
+}
+.pet2-panel[hidden] { display: none !important; }
+@keyframes pet2-panel-in {
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.pet2-panel-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #f5f7ff, #eef1fc);
+  border-bottom: 1px solid #e7ebf7;
+  cursor: move;
+  cursor: grab;
+  touch-action: none;
+}
+.pet2-panel.is-dragging .pet2-panel-head { cursor: grabbing; }
+.pet2-panel-title {
+  flex: 1; min-width: 0;
+  font-size: 13.5px; font-weight: 700; color: #2b3245;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.pet2-panel-sub { font-size: 11px; font-weight: 500; color: #7b8398; }
+.pet2-panel-x {
+  flex: none;
+  width: 26px; height: 26px;
+  border: none; border-radius: 8px;
+  background: transparent; color: #7b8398;
+  font-size: 13px; line-height: 1; cursor: pointer;
+  display: grid; place-items: center;
+}
+.pet2-panel-x:hover { background: #e6eaf6; color: #2b3245; }
+
+.pet2-log {
+  flex: 1;
+  max-height: 260px; min-height: 90px;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  background: #fbfcff;
+}
+.pet2-msg {
+  max-width: 84%;
+  padding: 8px 11px;
+  border-radius: 12px;
+  font-size: 13px; line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.pet2-msg.ai { align-self: flex-start; background: #eef2ff; color: #2b3245; border-bottom-left-radius: 4px; }
+.pet2-msg.me { align-self: flex-end; background: #4f6ef7; color: #fff; border-bottom-right-radius: 4px; }
+.pet2-msg.is-typing { opacity: .65; font-style: italic; }
+
+.pet2-inputrow {
+  display: flex; gap: 8px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid #eef1f9;
+  background: #fff;
+}
+.pet2-inputrow input {
+  flex: 1; min-width: 0;
+  height: 34px; padding: 0 10px;
+  border: 1px solid #e2e7f5; border-radius: 10px;
+  background: #f8faff; color: #2b3245;
+  font-size: 13px; outline: none;
+  -webkit-user-select: text; user-select: text;
+}
+.pet2-inputrow input:focus { border-color: #9fb2ff; background: #fff; }
+.pet2-inputrow button {
+  flex: none; height: 34px; padding: 0 14px;
+  border: none; border-radius: 10px;
+  background: #4f6ef7; color: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.pet2-inputrow button:hover { background: #4262ee; }
+
+/* 夜猫模式 */
+html[data-theme="night"] .pet2-panel { background: #1b2135; box-shadow: 0 18px 44px rgba(0, 0, 0, .5); }
+html[data-theme="night"] .pet2-panel-head { background: linear-gradient(135deg, #232b45, #1e253c); border-bottom-color: #2c3450; }
+html[data-theme="night"] .pet2-panel-title { color: #e8ebf6; }
+html[data-theme="night"] .pet2-panel-sub { color: #9aa3bd; }
+html[data-theme="night"] .pet2-panel-x:hover { background: #2c3450; color: #e8ebf6; }
+html[data-theme="night"] .pet2-log { background: #181d2e; }
+html[data-theme="night"] .pet2-msg.ai { background: #242c45; color: #dfe4f5; }
+html[data-theme="night"] .pet2-inputrow { background: #1b2135; border-top-color: #2c3450; }
+html[data-theme="night"] .pet2-inputrow input { background: #232b45; border-color: #313a58; color: #e8ebf6; }
+html[data-theme="night"] .pet2-inputrow input:focus { background: #26304d; border-color: #5a6ea8; }
+
 /* ---------- 夜猫模式 ---------- */
 html[data-theme="night"] .pet2-bubble { background: #1f2740; color: #e8ebf6; }
 html[data-theme="night"] .pet2-cat { background: #1f2740; color: #e8ebf6; }
