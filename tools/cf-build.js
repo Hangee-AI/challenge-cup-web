@@ -28,7 +28,7 @@ fs.mkdirSync(path.join(out, 'css'), { recursive: true });
 // 1. 收集 index.html 里的 <script src>，按顺序合并成一个包
 const htmlPath = path.join(root, 'index.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
-const tagRe = /<script\s+src="([^"]+)"\s*><\/script>\s*/g;
+const tagRe = /<script\b[^>]*\bsrc="([^"]+)"[^>]*>\s*<\/script>\s*/g;
 const srcs = [];
 let m;
 let firstIdx = -1;
