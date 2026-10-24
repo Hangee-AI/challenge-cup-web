@@ -1436,13 +1436,22 @@
   }
 
   // 解析展示兜底：部分课程数据里的 explain 很简短（如「生产力。」），
-  // 单独一句看起来像没有解析，这里自动补上正确答案内容
-  function fullExplain(explain, options, answer) {
-    var ans = 'ABCD'[answer] + ' · ' + (options && options[answer] != null ? options[answer] : '');
-    var ex = (explain || '').trim();
-    if (!ex) return '正确答案是 ' + ans + '。';
-    if (ex.length < 8) return ex + '（正确答案：' + ans + '）';
-    return ex;
+  // 单独一句看起来像没有解析，这里自动补上正确答案与考点
+  function fullExplain(explain, options, answer, userChoice, found) {
+    var raw = String(explain || '').trim();
+    if (raw.length >= 18) return raw;
+    var ansKey = 'ABCD'[answer];
+    var ansText = options && options[answer] != null ? options[answer] : '';
+    var key = raw.replace(/[。．.；;]+$/, '').trim();
+    var parts = [];
+    if (typeof userChoice === 'number' && userChoice !== answer && options) {
+      parts.push('你选的是 ' + 'ABCD'[userChoice] + '「' + options[userChoice] + '」，');
+    }
+    parts.push('正确答案是 ' + ansKey + '「' + ansText + '」。');
+    if (key && !/^[A-D]$/i.test(key)) parts.push('核心考点：' + key + '。');
+    var chap = found ? String(found.level.name || '').replace(/^第\s*\d+\s*[章关]\s*[·:：\-]?\s*/, '').trim() : '';
+    if (chap) parts.push('本题考查「' + chap + '」的基本概念，可回到讲义对应小节复习。');
+    return parts.join('');
   }
 
   function revealResult(q, userChoice, serverAnswer) {
@@ -1460,7 +1469,7 @@
     $('feedback').hidden = false;
     $('feedbackTitle').textContent = ok ? '✅ 答对了' : '❌ 再想想，正确答案是 ' + 'ABCD'[serverAnswer];
     $('feedbackTitle').className = ok ? 'fb-ok' : 'fb-bad';
-    $('feedbackExplain').textContent = fullExplain(q.explain, q.options, serverAnswer);
+    $('feedbackExplain').textContent = '📘 解析：' + fullExplain(q.explain, q.options, serverAnswer, userChoice, currentLevel());
   }
 
   function chooseOption(i) {
