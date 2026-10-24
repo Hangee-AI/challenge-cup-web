@@ -3420,7 +3420,9 @@ html[data-theme="night"] .pet-head {
   background: linear-gradient(135deg, #4f6ef7 0%, #7c5cf7 50%, #a855f7 100%);
   padding: 22px 20px 26px;
   position: relative;
-  z-index: 90;
+  /* 层级必须低于 sticky 导航（.nav z-index:20），否则滚动时会盖住导航栏
+     和手机版三横杠展开的下拉菜单 */
+  z-index: 5;
   box-shadow: 0 4px 20px rgba(79, 110, 247, .25);
 }
 .search-hero-inner {
