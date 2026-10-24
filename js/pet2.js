@@ -221,6 +221,8 @@
   /* ---------------- 聊天小窗口 ---------------- */
   var K_PANEL = 'pet2_panel_pos';
   var waiting = false;
+  /* 后端 /api/chat 只认 messages 数组（OpenAI 格式），这里维护一小段上下文 */
+  var chatHistory = [];
 
   function showPanel() {
     if (!el.panel) return;
@@ -294,23 +296,33 @@
   }
 
   function send(text) {
+    if (waiting) { addMsg('me', text); return; }
     addMsg('me', text);
-    if (waiting) return;
+    chatHistory.push({ role: 'user', content: text });
+    if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+
     waiting = true;
     var t = addMsg('ai', '想想…');
     if (t) t.classList.add('is-typing');
     fetch(apiUrl('/api/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, context: ctxLine() })
+      body: JSON.stringify({ messages: chatHistory, context: ctxLine() })
     }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }).then(function (j) {
-      if (t) t.textContent = j.reply || j.text || localAnswer(text);
+      var reply = j.reply || j.text || '';
+      if (!reply) throw new Error('empty');
+      if (t) t.textContent = reply;
+      chatHistory.push({ role: 'assistant', content: reply });
+      if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
       if (el.sub && j.provider) el.sub.textContent = '在线 · ' + (j.model || j.provider);
     }).catch(function () {
-      if (t) t.textContent = localAnswer(text);
+      var fallback = localAnswer(text);
+      if (t) t.textContent = fallback;
+      /* 失败的这轮不进上下文，避免把本地兜底话术当成模型回答喂回去 */
+      if (chatHistory.length && chatHistory[chatHistory.length - 1].role === 'user') chatHistory.pop();
       if (el.sub) el.sub.textContent = '只连着本地（未接大模型）';
     }).then(function () {
       if (t) t.classList.remove('is-typing');
@@ -404,6 +416,16 @@
     look[catKey] = id;
     saveJSON(K_LOOK, look);
     applyLook();
+    /* 穿戴动画：选中的配饰从对应方向"穿"到身上，而非直接贴图 */
+    var node = catKey === 'glasses' ? el.glasses
+             : catKey === 'scarf'   ? el.scarf
+             : catKey === 'jacket'  ? el.jacket : null;
+    if (node && !node.hidden) {
+      node.classList.remove('is-wearing');
+      void node.offsetWidth;                   /* 强制重排，保证动画可重播 */
+      node.classList.add('is-wearing');
+      setTimeout(function () { node.classList.remove('is-wearing'); }, 620);
+    }
     playGesture('big', 'jump', 800);
     openArm(catKey);
   }

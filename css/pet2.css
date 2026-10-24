@@ -99,11 +99,14 @@
   transform-origin: 50% 92%;
   transform: translate(var(--mo-x, 0px), var(--mo-y2, 0px)) rotate(var(--mo-tilt2, 0deg));
   transition: transform .18s ease-out;
-  animation: pet2-breathe-big 4.2s ease-in-out infinite;
+  animation: pet2-breathe-big 4.6s ease-in-out infinite;
 }
 @keyframes pet2-breathe-big {
-  0%, 100% { scale: 1; }
-  50%      { scale: 1.012; }
+  0%   { scale: 1;       rotate: 0deg; }
+  25%  { scale: 1.008;   rotate: .22deg; }
+  50%  { scale: 1.014;   rotate: 0deg; }
+  75%  { scale: 1.006;   rotate: -.22deg; }
+  100% { scale: 1;       rotate: 0deg; }
 }
 
 .pet2-layer {
@@ -120,6 +123,57 @@
 .pet2-layer[data-layer="jacket"]  { z-index: 3; }
 .pet2-layer[data-layer="glasses"] { z-index: 4; }
 .pet2-layer[hidden] { display: none !important; }
+
+/* 配饰跟随感：围巾轻摆、眼镜微浮，像真的穿在身上有重量 */
+.pet2-layer[data-layer="scarf"]:not([hidden]) {
+  transform-origin: 50% 56%;
+  animation: pet2-scarf-sway 3.8s ease-in-out infinite;
+}
+.pet2-layer[data-layer="glasses"]:not([hidden]) {
+  animation: pet2-glasses-float 4.5s ease-in-out infinite;
+}
+.pet2-layer[data-layer="jacket"]:not([hidden]) {
+  transform-origin: 50% 30%;
+  animation: pet2-jacket-breathe 4.2s ease-in-out infinite;
+}
+@keyframes pet2-scarf-sway {
+  0%, 100% { transform: rotate(-1.4deg) translateX(-.5px); }
+  50%      { transform: rotate(1.4deg) translateX(.5px); }
+}
+@keyframes pet2-glasses-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.5px); }
+}
+@keyframes pet2-jacket-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.006); }
+}
+
+/* 穿戴动画：选中配饰时不是直接贴上去，而是"穿"到身上 */
+.pet2-layer.is-wearing[data-layer="glasses"] {
+  animation: pet2-wear-glasses .5s cubic-bezier(.3,1.6,.5,1) !important;
+}
+.pet2-layer.is-wearing[data-layer="scarf"] {
+  animation: pet2-wear-scarf .55s cubic-bezier(.3,1.5,.5,1) !important;
+}
+.pet2-layer.is-wearing[data-layer="jacket"] {
+  animation: pet2-wear-jacket .5s cubic-bezier(.3,1.5,.5,1) !important;
+}
+@keyframes pet2-wear-glasses {
+  0%   { transform: translateY(-65%) scale(.78); opacity: 0; }
+  60%  { transform: translateY(7%) scale(1.06); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes pet2-wear-scarf {
+  0%   { transform: translateX(-42%) rotate(-22deg); opacity: 0; }
+  60%  { transform: translateX(6%) rotate(5deg); opacity: 1; }
+  100% { transform: translateX(0) rotate(0); opacity: 1; }
+}
+@keyframes pet2-wear-jacket {
+  0%   { transform: translateY(-52%) scale(.84); opacity: 0; }
+  60%  { transform: translateY(5%) scale(1.04); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
 
 /* 大熊动作 */
 .pet2-big.is-wave .pet2-stage { animation: pet2-bigwave 1.1s ease-in-out 2; }

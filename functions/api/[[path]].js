@@ -432,14 +432,16 @@ async function handleChat(env, request, ctx) {
   const base = (env.LLM_BASE || (isOpenRouter ? 'https://openrouter.ai/api/v1' : 'https://api.deepseek.com')).replace(/\/+$/, '');
   const model = env.LLM_MODEL || (isOpenRouter ? 'nvidia/nemotron-3-super-120b-a12b:free' : 'deepseek-chat');
   const payload = { model, messages, max_tokens: 500, temperature: 0.7 };
-  if (isOpenRouter) {
+  /* OpenRouter 的模型兜底列表只对它自己的接口有意义；
+     换成别家 OpenAI 兼容接口（如百炼 Qwen）时不要带这个额外字段，否则可能被判非法参数 */
+  if (isOpenRouter && base.includes('openrouter.ai')) {
     payload.models = (env.LLM_MODELS || 'nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
   }
   const headers = { 'content-type': 'application/json', authorization: 'Bearer ' + engine.key };
-  if (isOpenRouter) {
+  if (isOpenRouter && base.includes('openrouter.ai')) {
     headers['HTTP-Referer'] = 'https://yinlu.pages.dev';
     headers['X-Title'] = 'YinLu Study Companion';
   }
