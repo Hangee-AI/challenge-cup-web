@@ -38,6 +38,63 @@ const COMMON_COURSES = [
   }
 ];
 
+/* ---------------- 1.2 四六级专区：教学部分 + 自己学习部分 ----------------
+   type: 'video' → 点击在站内弹窗播放 B 站视频；type: 'web' → 外链打开网站 */
+const CET_ZONE = {
+  teach: [
+    {
+      name: '四六级考试全套精讲',
+      tag: '全套精讲',
+      emoji: '🎓',
+      desc: '零基础备考：听力 & 词汇 & 语法 & 阅读理解 & 翻译 & 写作，一个视频搞定',
+      url: 'https://www.bilibili.com/video/BV1oD4y1N7uH/',
+      type: 'video'
+    }
+  ],
+  learn: [
+    {
+      name: '20天背完四级核心词汇',
+      tag: '四级词汇',
+      emoji: '📘',
+      desc: '睡眠记忆版 · 跟着音频一起背四级单词',
+      url: 'https://www.bilibili.com/video/BV1GB4y1V7DD/',
+      type: 'video'
+    },
+    {
+      name: '20天背完六级词汇',
+      tag: '六级词汇',
+      emoji: '📗',
+      desc: '睡眠记忆版 · 跟着音频一起背六级单词',
+      url: 'https://www.bilibili.com/video/BV1CU4y1z7Eu/',
+      type: 'video'
+    },
+    {
+      name: '单词森林 WordForest',
+      tag: '背单词网站',
+      emoji: '🌲',
+      desc: '网页版背单词 · 内置单词小游戏，背词不枯燥',
+      url: 'https://wordforest.cn/',
+      type: 'web'
+    },
+    {
+      name: '背单词 365',
+      tag: '背单词网站',
+      emoji: '🔤',
+      desc: '在线背单词，计划 + 复习一条龙',
+      url: 'https://beidanci365.com/',
+      type: 'web'
+    },
+    {
+      name: 'TypeWords 打字背词',
+      tag: '强推 · 打字练习',
+      emoji: '⌨️',
+      desc: '边打字边背单词，肌肉记忆记拼写，强推！',
+      url: 'https://typewords.cc/words',
+      type: 'web'
+    }
+  ]
+};
+
 /* ---------------- 2. 专业（id, 门类, 名称, 图标, 一句话方向） ----------------
    ready = 1 表示已有可运行的示例关卡（目前只有计算机专业） */
 const MAJOR_ROWS = [

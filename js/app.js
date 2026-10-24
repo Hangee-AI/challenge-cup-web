@@ -110,7 +110,7 @@
     markStyleSwitch();
     window.scrollTo(0, 0);
 
-    if (name === 'home') { renderHomeCta(); renderHomeExtras(); renderHomeCommon(); renderCheckin(); }
+    if (name === 'home') { renderHomeCta(); renderHomeExtras(); renderHomeCommon(); renderCetZone(); renderCheckin(); }
     if (name === 'browse') renderBrowse();
     if (name === 'style') renderStyle();
     if (name === 'major') renderMajor();
@@ -234,6 +234,61 @@
         '<span class="common-go">' + (inApp ? '读重点整理 →' : '打开资料 ↗') + '</span>';
       box.appendChild(a);
     });
+  }
+
+  /* ---------------- 四六级专区 ----------------
+     数据来自 data.js 的 CET_ZONE：teach（教学视频）+ learn（词汇视频/背词网站）。
+     type='video' 点击在站内弹窗播放 B 站；type='web' 直接外链打开。 */
+  function renderCetZone() {
+    if (typeof CET_ZONE === 'undefined') return;
+    var teachBox = $('cetTeach');
+    var learnBox = $('cetLearn');
+    if (teachBox && !teachBox.childElementCount) {
+      CET_ZONE.teach.forEach(function (c) { teachBox.appendChild(cetCard(c)); });
+    }
+    if (learnBox && !learnBox.childElementCount) {
+      CET_ZONE.learn.forEach(function (c) { learnBox.appendChild(cetCard(c)); });
+    }
+  }
+
+  function cetCard(c) {
+    var isVideo = c.type === 'video';
+    var a = el('a', 'common-card cet-card' + (isVideo ? ' cet-card-video' : ' cet-card-web'));
+    if (isVideo) {
+      a.href = '#';
+      a.setAttribute('data-cet-video', c.url);
+      a.setAttribute('data-cet-title', c.name);
+    } else {
+      a.href = c.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+    }
+    a.innerHTML =
+      '<span class="cet-card-emoji">' + (c.emoji || '📚') + '</span>' +
+      '<span class="common-tag">' + (c.tag || '四六级') + '</span>' +
+      '<span class="common-name">' + c.name + '</span>' +
+      '<span class="common-desc">' + (c.desc || '') + '</span>' +
+      '<span class="common-go">' + (isVideo ? '▶ 站内播放' : '打开网站 ↗') + '</span>';
+    return a;
+  }
+
+  /* 四六级视频弹窗 */
+  function openCetVideo(url, title) {
+    var m = $('cetModal');
+    if (!m) return;
+    $('cetModalTitle').textContent = title || '四六级课程';
+    var embed = (typeof bvEmbedFromUrl === 'function') ? bvEmbedFromUrl(url) : '';
+    $('cetPlayer').src = embed || url;
+    $('cetOpenBili').href = url;
+    m.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeCetVideo() {
+    var m = $('cetModal');
+    if (!m) return;
+    $('cetPlayer').src = '';
+    m.hidden = true;
+    document.body.style.overflow = '';
   }
 
   /* ---------------- 选专业 ---------------- */
@@ -1993,6 +2048,10 @@
     if (mj) { e.preventDefault(); selectMajor(mj.getAttribute('data-major')); return; }
     var cs = e.target.closest('[data-course]');
     if (cs) { e.preventDefault(); openCourse(cs.getAttribute('data-course')); return; }
+    var cet = e.target.closest('[data-cet-video]');
+    if (cet) { e.preventDefault(); openCetVideo(cet.getAttribute('data-cet-video'), cet.getAttribute('data-cet-title')); return; }
+    var cetClose = e.target.closest('[data-cet-close]');
+    if (cetClose) { e.preventDefault(); closeCetVideo(); return; }
     var chn = e.target.closest('[data-ch]');
     if (chn) { e.preventDefault(); goChapter(chn.getAttribute('data-ch')); return; }
     var st = e.target.closest('[data-style]');
@@ -2558,6 +2617,7 @@
   });
   renderHomeCats();
   renderHomeCommon();
+  renderCetZone();
   renderCarousel();
   renderHomeExtras();
   startStudyTimer();
@@ -2577,7 +2637,7 @@
   }
   window.addEventListener('resize', syncNavMode);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeNavMenu();
+    if (e.key === 'Escape') { closeCetVideo(); closeNavMenu(); }
   });
   $('navMe').addEventListener('click', function (e) { e.preventDefault(); show('profile'); });
   $('quoteNext').addEventListener('click', showQuote);
@@ -2717,7 +2777,7 @@
 
     results.innerHTML = matches.map(function (c, i) {
       var icon = c.emoji || (c.type === 'external' ? '🔗' : '📚');
-      var badge = c.type === 'major' ? '专业' : c.type === 'common' ? '公共课' : '推荐';
+      var badge = c.type === 'major' ? '专业' : c.type === 'common' ? '公共课' : c.type === 'cet-video' ? '四六级' : '推荐';
       var badgeCls = 'search-badge-' + c.type;
       var subtitle = '';
       if (c.type === 'major') {
@@ -2761,6 +2821,8 @@
       else if (c.externalUrl) { window.open(c.externalUrl, '_blank', 'noopener'); }
     } else if (c.type === 'external') {
       window.open(c.url, '_blank', 'noopener');
+    } else if (c.type === 'cet-video') {
+      openCetVideo(c.url, c.name);
     }
   });
 

@@ -743,6 +743,62 @@ const COURSES_DATABASE = [
     externalUrl: 'https://zhuanlan.zhihu.com/p/1903463551391240879'
   },
 
+  /* ==================== 四六级专区 ==================== */
+  {
+    type: 'cet-video',
+    name: '四六级考试全套精讲',
+    category: '四六级 · 教学',
+    emoji: '🎓',
+    desc: '零基础备考：听力 & 词汇 & 语法 & 阅读理解 & 翻译 & 写作',
+    tags: ['四六级', 'CET4', 'CET6', '英语', '听力', '阅读', '写作', '翻译'],
+    url: 'https://www.bilibili.com/video/BV1oD4y1N7uH/'
+  },
+  {
+    type: 'cet-video',
+    name: '20天背完四级核心词汇（睡眠记忆版）',
+    category: '四六级 · 词汇',
+    emoji: '📘',
+    desc: '跟着音频一起背四级单词',
+    tags: ['四级', 'CET4', '单词', '词汇', '背单词'],
+    url: 'https://www.bilibili.com/video/BV1GB4y1V7DD/'
+  },
+  {
+    type: 'cet-video',
+    name: '20天背完六级词汇（睡眠记忆版）',
+    category: '四六级 · 词汇',
+    emoji: '📗',
+    desc: '跟着音频一起背六级单词',
+    tags: ['六级', 'CET6', '单词', '词汇', '背单词'],
+    url: 'https://www.bilibili.com/video/BV1CU4y1z7Eu/'
+  },
+  {
+    type: 'external',
+    name: '单词森林 WordForest',
+    category: '四六级 · 背单词',
+    emoji: '🌲',
+    desc: '网页版背单词 · 内置单词小游戏',
+    tags: ['背单词', '单词', '游戏', '四级', '六级'],
+    url: 'https://wordforest.cn/'
+  },
+  {
+    type: 'external',
+    name: '背单词 365',
+    category: '四六级 · 背单词',
+    emoji: '🔤',
+    desc: '在线背单词，计划 + 复习',
+    tags: ['背单词', '单词', '四级', '六级'],
+    url: 'https://beidanci365.com/'
+  },
+  {
+    type: 'external',
+    name: 'TypeWords 打字背词',
+    category: '四六级 · 背单词',
+    emoji: '⌨️',
+    desc: '边打字边背单词，肌肉记忆记拼写',
+    tags: ['背单词', '打字', '单词', '拼写', '四级', '六级'],
+    url: 'https://typewords.cc/words'
+  },
+
   /* ==================== 外部推荐课程（csdiy.wiki）==================== */
   {
     type: 'external',

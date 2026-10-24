@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -7,8 +7,8 @@
   <meta name="description" content="选一个专业，选一种讲解方式，然后一关一关把这条路走完。" />
   <link rel="preconnect" href="https://yinlu.pages.dev" crossorigin />
   <link rel="dns-prefetch" href="https://yinlu.pages.dev" />
-  <link rel="preload" as="style" href="css/style.css?v=20261027a" />
-  <link rel="stylesheet" href="css/style.css?v=20261027a" />
+  <link rel="preload" as="style" href="css/style.css?v=20261027b" />
+  <link rel="stylesheet" href="css/style.css?v=20261027b" />
 </head>
 <body>
 
@@ -191,6 +191,19 @@
       <h2 class="section-title">公共必修课</h2>
       <p class="section-sub">不管什么专业都要学，先把重点资料放在这里，后面会继续补。</p>
       <div class="common-grid" id="homeCommon"></div>
+    </div>
+
+    <div class="section" id="cet-zone">
+      <h2 class="section-title">四六级专区</h2>
+      <p class="section-sub">英语四六级备考一条龙：看课学方法，背词打基础。</p>
+
+      <h3 class="cet-subtitle"><span class="cet-sub-icon">🎬</span>教学部分</h3>
+      <p class="cet-sub-desc">跟着全套精讲课程，把听力、词汇、语法、阅读、翻译、写作一次性过一遍。</p>
+      <div class="common-grid" id="cetTeach"></div>
+
+      <h3 class="cet-subtitle"><span class="cet-sub-icon">📖</span>自己学习部分</h3>
+      <p class="cet-sub-desc">词汇跟背视频 + 三个好用的背单词网站，利用碎片时间反复刷。</p>
+      <div class="common-grid" id="cetLearn"></div>
     </div>
 
     <div class="section">
@@ -721,7 +734,26 @@
   </div>
 </div>
 
-<script defer src="js/data.js?v=20261024s"></script>
+<!-- 四六级专区：B 站视频弹窗 -->
+<div class="cet-modal" id="cetModal" hidden>
+  <div class="cet-modal-mask" data-cet-close></div>
+  <div class="cet-modal-box">
+    <div class="cet-modal-head">
+      <span class="cet-modal-title" id="cetModalTitle"></span>
+      <button class="cet-modal-close" type="button" data-cet-close aria-label="关闭">✕</button>
+    </div>
+    <div class="cet-modal-player">
+      <iframe id="cetPlayer" src="" allowfullscreen frameborder="0" scrolling="no"
+              allow="autoplay; fullscreen; picture-in-picture"></iframe>
+    </div>
+    <div class="cet-modal-foot">
+      <a class="btn btn-ghost" id="cetOpenBili" href="#" target="_blank" rel="noopener">在 B 站打开 ↗</a>
+      <span class="cet-modal-hint">💡 播放器黑屏/加载不出时，点右上角去 B 站看</span>
+    </div>
+  </div>
+</div>
+
+<script defer src="js/data.js?v=20261027b"></script>
 <script defer src="js/course-common.js?v=20261024c"></script>
 <script defer src="js/docs.js?v=20261024c"></script>
 <script defer src="js/philosophy.js?v=20261024c"></script>
@@ -951,8 +983,8 @@
 <script defer src="js/pad-real-foodreg.js?v=20261028u"></script>
 <script defer src="js/textbook-fit.js?v=20261024q"></script>
 <script defer src="js/docs-deepen.js?v=20261024o"></script>
-<script defer src="js/courses-database.js?v=20261023a"></script>
-<script defer src="js/app.js?v=20261027c"></script>
+<script defer src="js/courses-database.js?v=20261027b"></script>
+<script defer src="js/app.js?v=20261027b"></script>
 <script defer src="js/cloud.js?v=20261024c"></script>
 <script defer src="js/pet.js?v=20261024f"></script>
 </body>

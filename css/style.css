@@ -263,6 +263,67 @@ button { font: inherit; cursor: pointer; }
 .common-desc { font-size: 12.5px; color: var(--text-3); }
 .common-go { font-size: 12.5px; color: var(--brand); font-weight: 600; margin-top: 10px; }
 
+/* 四六级专区 */
+.cet-subtitle {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 700; color: var(--text);
+  margin: 32px 0 4px;
+}
+.cet-sub-icon { font-size: 18px; }
+.cet-sub-desc { font-size: 13px; color: var(--text-3); margin: 0 0 4px; }
+.cet-card { position: relative; padding-left: 56px; }
+.cet-card-emoji {
+  position: absolute; left: 18px; top: 18px;
+  width: 30px; height: 30px; border-radius: 9px;
+  background: var(--brand-soft); display: grid; place-items: center;
+  font-size: 17px;
+}
+.cet-card-video { border-color: color-mix(in srgb, #7a5bf7 28%, var(--line)); }
+.cet-card-video .common-go { color: #7a5bf7; }
+.cet-card-web { border-color: color-mix(in srgb, #0f9d8c 24%, var(--line)); }
+.cet-card-web .common-go { color: #0f9d8c; }
+
+/* 四六级视频弹窗 */
+.cet-modal {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.cet-modal[hidden] { display: none; }
+.cet-modal-mask {
+  position: absolute; inset: 0;
+  background: rgba(8, 10, 20, .55);
+  backdrop-filter: blur(3px);
+}
+.cet-modal-box {
+  position: relative; z-index: 1;
+  width: min(960px, 100%); max-height: 92vh;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.cet-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--line);
+}
+.cet-modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.cet-modal-close {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 16px; color: var(--text-3); width: 30px; height: 30px;
+  border-radius: 8px; display: grid; place-items: center;
+}
+.cet-modal-close:hover { background: var(--surface-2); color: var(--text); }
+.cet-modal-player {
+  position: relative; width: 100%; aspect-ratio: 16 / 9;
+  background: #000;
+}
+.cet-modal-player iframe { width: 100%; height: 100%; display: block; }
+.cet-modal-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 18px; flex-wrap: wrap;
+}
+.cet-modal-hint { font-size: 12px; color: var(--text-3); }
+
 /* 三步流程 */
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
 .step {
@@ -3494,6 +3555,10 @@ html[data-theme="night"] .pet-head {
   background: #fef3e2;
   color: #b57a14;
 }
+.search-badge-cet-video {
+  background: #f0ebff;
+  color: #7a5bf7;
+}
 .search-cat {
   font-size: 11px;
   color: var(--text-3);
@@ -3553,4 +3618,8 @@ html[data-theme="night"] .search-hero-clear:hover {
 html[data-theme="night"] .search-badge-external {
   background: #3a2e18;
   color: #e8c56a;
+}
+html[data-theme="night"] .search-badge-cet-video {
+  background: #2e2547;
+  color: #b9a8ff;
 }

@@ -73,6 +73,11 @@ function copyDirSync(src, dest) {
 }
 copyDirSync(path.join(root, 'assets'), path.join(out, 'assets'));
 
+// 5. Cloudflare Pages Functions（/api/* 后端接口）
+//    必须随静态资源一起进 dist-cf/，否则 wrangler pages deploy 找不到函数，
+//    /api/* 会回退到 SPA 的 index.html，导致照亮人数、打卡等功能全部失效。
+copyDirSync(path.join(root, 'functions'), path.join(out, 'functions'));
+
 const size = fs.statSync(path.join(out, 'js', 'bundle.js')).size;
 console.log(
   'Cloudflare 构建完成：' + srcs.length + ' 个脚本 → dist-cf/js/bundle.js（' +
